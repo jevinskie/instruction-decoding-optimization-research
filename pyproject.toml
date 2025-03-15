@@ -1,0 +1,56 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools>=75.8.0", "setuptools-scm>=8.2.0"]
+
+[project]
+authors = [
+  {name = "Jevin Sweval", email = "jevinsweval@gmail.com"}
+]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.12"
+]
+dependencies = [
+  "attrs>=25.3.0",
+  "path>=17.1.0",
+  "rich>=13.9.4"
+]
+description = "Python bindings and utilities for instruction decoding research"
+dynamic = ["version"]
+keywords = ["instruction decoding", "disassembly", "disassembler"]
+license = {text = "BSD-2-Clause"}
+name = "instdec"
+readme = {file = 'README.md', content-type = 'text/markdown'}
+requires-python = ">=3.12"
+
+[project.optional-dependencies]
+dev = [
+  "mypy>=1.15.0",
+  "pre-commit>=4.1.0",
+  "ruff>=0.9.7",
+  "ssort>=0.14.0"
+]
+
+[project.scripts]
+instdec-py-util = "instdec.tools.instdec_util:main"
+
+[project.urls]
+repository = "https://github.com/jevinskie/instruction-decoding-optimization-research"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+extend-select = ["I"]
+
+[tool.setuptools]
+package-dir = {"" = "python/src"}
+
+[tool.setuptools.dynamic]
+version = {attr = "instdec._version.__version__"}
+
+[tool.setuptools_scm]
+version_file = "python/src/instdec/_version.py"
