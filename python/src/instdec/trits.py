@@ -87,6 +87,7 @@ class TritRanges:
         self.ranges.append(rng)
 
     # FIXME: add mask!
+    # look up stnt1w_z_p_br_contiguous (stnt1w_z_p_br.html) for Rm != 1111 negative mask
     def merge(self) -> Trits:
         """
         Merge all trit ranges into a single 32-bit Trits object.
