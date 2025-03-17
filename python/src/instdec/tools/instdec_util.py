@@ -3,8 +3,8 @@
 import argparse
 
 import jsonyx as json
-from rich import print
 
+# from rich import print
 from instdec import arm_json
 
 
@@ -20,7 +20,8 @@ def real_main(args: argparse.Namespace):
     print(f"args: {args}")
     j = dict(json.load(open(args.instr_json)))
     r = arm_json.find_encodings(j)
-    print(r)
+    json.dump(r, open("inst-enc.json", "w"))
+    # print(r)
 
 
 def main():

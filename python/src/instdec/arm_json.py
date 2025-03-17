@@ -1,33 +1,48 @@
-def find_encodings(node, context=None, results=None):
+class NodeRef:
+    def __init__(self, node):
+        self.node = node
+
+    def __repr__(self):
+        # Only display a summary: id and keys of the dict
+        return f"<NodeRef id={id(self.node)} keys={list(self.node.keys())}>"
+
+
+def find_encodings(node, context=None, path=""):
     if context is None:
         context = []
-    if results is None:
-        results = []
+
+    results = []
 
     if isinstance(node, dict):
-        current_encoding = node.get("encoding")
-        # Update current context if encoding exists
-        new_context = context + [current_encoding] if current_encoding is not None else context
-        if current_encoding is not None:
-            results.append({"encoding": current_encoding, "context": context.copy()})
+        # Work on a copy of the current context for this branch
+        current_context = context.copy()
 
-        scan_objs = []
+        if "encoding" in node:
+            encoding_entry = {
+                "encoding": node["encoding"],
+                "context": current_context.copy(),  # Context as accumulated so far
+                "path": path + ".encoding",
+            }
+            results.append(encoding_entry)
+            # Append current node to the context, wrapping it with NodeRef to prevent recursive printing
+            # current_context.append({"encoding": node["encoding"], "object": NodeRef(node)})
+            current_context.append({"encoding": node["encoding"], "object": path})
+
+        # Process the 'children' field if present.
         children = node.get("children", [])
         if isinstance(children, dict):
             children = [children]
-        scan_objs += children
-        for k in node.keys():
-            if k == "children":
-                continue
-            # if k == "encoding":
-            #     continue
-            scan_objs.append(node[k])
-        for scan_obj in scan_objs:
-            find_encodings(scan_obj, new_context, results)
+        if isinstance(children, list):
+            for idx, child in enumerate(children):
+                results.extend(find_encodings(child, current_context, f"{path}.children[{idx}]"))
+
+        # Optionally, process other keys containing dicts or lists.
+        for key, value in node.items():
+            if key != "children" and isinstance(value, (dict, list)):
+                results.extend(find_encodings(value, context, f"{path}.{key}"))
 
     elif isinstance(node, list):
-        for item in node:
-            # print("in list")
-            find_encodings(item, context, results)
+        for idx, item in enumerate(node):
+            results.extend(find_encodings(item, context, f"{path}[{idx}]"))
 
     return results
