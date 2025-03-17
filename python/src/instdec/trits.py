@@ -1,21 +1,24 @@
+import attrs
+
+
+@attrs.define(eq=False)
 class Trits:
     """
     A class to represent and manipulate trit strings (0, 1, X).
     """
 
-    def __init__(self, value: str):
-        """
-        Initialize a Trits object from a string of trits.
+    @staticmethod
+    def normalize_trit_str(sval: str) -> str:
+        sval = sval.strip("'")
+        sval = sval.upper()
+        return sval
 
-        Args:
-            value: A string of '0', '1', 'X' (case-insensitive).
+    trits: str = attrs.field(converter=normalize_trit_str)
 
-        Raises:
-            ValueError: If the string contains invalid characters.
-        """
-        self.trits = value.upper()
-        if not all(c in "01X" for c in self.trits):
-            raise ValueError(f"trit string must only contain '0', '1', or 'X' got '{self.trits}")
+    @trits.validator
+    def _check_trits(self, _, value):
+        if not all(c in "01X" for c in value):
+            raise ValueError(f"trit string must only contain '0', '1', or 'X' got '{value}")
 
     def __repr__(self) -> str:
         return f"Trits('{self.trits}')"

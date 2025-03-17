@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import enum
 import sys
-from typing import Any, Union
+from collections.abc import Callable
+from typing import Any, TypeVar, Union
 
 import attrs
 import cattrs
@@ -11,8 +12,10 @@ from cattrs import Converter
 
 from instdec.trits import TritRange, TritRanges, Trits
 
+T = TypeVar("T")
 
-def defauto(*args, **kwargs):
+
+def defauto(*args, **kwargs) -> Callable[[type[T]], type[T]]:
     kwargs["auto_attribs"] = True
     kwargs["on_setattr"] = None
     kwargs["frozen"] = True
@@ -39,7 +42,7 @@ class Identifier:
 @defauto
 class Value:
     meaning: str | None
-    value: str
+    value: Trits
 
 
 @defauto
@@ -86,8 +89,8 @@ class Interpteter:
         return "TODO"
 
     def eval_func(self, cur_node: Function) -> Node:
-        print(f"evaluating AST.Function '{cur_node.name}")
-        return Bool(value=True)
+        print(f"evaluating AST.Function '{cur_node.name}'")
+        return Bool(True)
 
 
 # Set up cattrs converter with a custom structure hook
@@ -113,6 +116,16 @@ def structure_node(
 
 
 converter.register_structure_hook(Node, structure_node)
+
+
+def structure_trits(
+    obj: cattrs.dispatch.UnstructuredValue, ty: cattrs.dispatch.TargetType
+) -> cattrs.dispatch.StructuredValue:
+    # raise ValueError(f"Unknown obj: {obj} ty: {ty}")
+    return Trits(obj)
+
+
+converter.register_structure_hook(Trits, structure_trits)
 
 
 # Top-level class to match the JSON structure
