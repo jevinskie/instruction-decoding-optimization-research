@@ -32,9 +32,11 @@ class Trits:
         st = self.trits
         ot = other.trits
         if nbit < maxbit:
-            st += "0" * diff
+            eb = "0" if st[-1] != "X" else "X"
+            st += eb * diff
         if onbit < maxbit:
-            ot += "0" * diff
+            eb = "0" if ot[-1] != "X" else "X"
+            ot += eb * diff
         for i in range(maxbit):
             if st[i] == "0" and ot[i] != "X":
                 nvs[i] = "0"
@@ -56,9 +58,11 @@ class Trits:
         st = self.trits
         ot = other.trits
         if nbit < maxbit:
-            st += "0" * diff
+            eb = "0" if st[-1] != "X" else "X"
+            st += eb * diff
         if onbit < maxbit:
-            ot += "0" * diff
+            eb = "0" if ot[-1] != "X" else "X"
+            ot += eb * diff
         for i in range(maxbit):
             if st[i] == "1" or ot[i] == "1":
                 nvs[i] = "1"
@@ -94,9 +98,11 @@ class Trits:
         st = self.trits
         ot = other.trits
         if nbit < maxbit:
-            st += "0" * diff
+            eb = "0" if st[-1] != "X" else "X"
+            st += eb * diff
         if onbit < maxbit:
-            ot += "0" * diff
+            eb = "0" if ot[-1] != "X" else "X"
+            ot += eb * diff
         are_equal = True
         for i in range(maxbit):
             if st[i] == "1" and ot[i] == "0":
