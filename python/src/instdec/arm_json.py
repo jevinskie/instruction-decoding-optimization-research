@@ -4,12 +4,19 @@ import enum
 import sys
 from typing import Union
 
-import attr
 import cattrs
 import cattrs.dispatch
+from attrs import define
 from cattrs import Converter
 
 from instdec.trits import TritRange, TritRanges, Trits
+
+
+def defauto(*args, **kwargs):
+    kwargs["auto_attribs"] = True
+    kwargs["on_setattr"] = None
+    kwargs["frozen"] = True
+    return define(*args, **kwargs)
 
 
 class BinOp(enum.StrEnum):
@@ -17,28 +24,56 @@ class BinOp(enum.StrEnum):
     NE = "!="
     EQ = "=="
     OR = "||"
+    IN = "IN"
 
 
-@attr.s(auto_attribs=True)
+class UnOp(enum.StrEnum):
+    NOT = "!"
+
+
+@defauto
 class Identifier:
     value: str
 
 
-@attr.s(auto_attribs=True)
+@defauto
 class Value:
     meaning: str | None
     value: str
 
 
-@attr.s(auto_attribs=True)
+@defauto
+class Bool:
+    value: bool
+
+
+@defauto
+class Set:
+    values: set[Value]
+
+
+@defauto
 class BinaryOp:
     left: Node
     op: BinOp
     right: Node
 
 
+@defauto
+class UnaryOp:
+    expr: Node
+    op: UnOp
+
+
 # Define Node as a union of all possible node types
-Node = Union[BinaryOp, Identifier, Value]
+Node = Union[Bool, BinaryOp, Identifier, UnaryOp, Set, Value]
+
+
+@defauto
+class Function:
+    name: str
+    arguments: list[Node]
+
 
 # Set up cattrs converter with a custom structure hook
 converter = Converter()
@@ -49,7 +84,11 @@ def structure_node(
 ) -> cattrs.dispatch.StructuredValue:
     type_to_class = {
         "AST.BinaryOp": BinaryOp,
+        "AST.Bool": Bool,
+        "AST.Function": Function,
         "AST.Identifier": Identifier,
+        "AST.Set": Set,
+        "AST.UnaryOp": UnaryOp,
         "Values.Value": Value,
     }
     cls = type_to_class.get(obj["_type"])
@@ -62,7 +101,7 @@ converter.register_structure_hook(Node, structure_node)
 
 
 # Top-level class to match the JSON structure
-@attr.s(auto_attribs=True)
+@defauto
 class Condition:
     condition: Node
 
