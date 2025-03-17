@@ -1,6 +1,70 @@
+from __future__ import annotations
+
+import enum
 import sys
+from typing import Union
+
+import attr
+import cattrs
+import cattrs.dispatch
+from cattrs import Converter
 
 from instdec.trits import TritRange, TritRanges, Trits
+
+
+class BinOp(enum.StrEnum):
+    AND = "&&"
+    NE = "!="
+    EQ = "=="
+    OR = "||"
+
+
+@attr.s(auto_attribs=True)
+class Identifier:
+    value: str
+
+
+@attr.s(auto_attribs=True)
+class Value:
+    meaning: str | None
+    value: str
+
+
+@attr.s(auto_attribs=True)
+class BinaryOp:
+    left: Node
+    op: BinOp
+    right: Node
+
+
+# Define Node as a union of all possible node types
+Node = Union[BinaryOp, Identifier, Value]
+
+# Set up cattrs converter with a custom structure hook
+converter = Converter()
+
+
+def structure_node(
+    obj: cattrs.dispatch.UnstructuredValue, _: cattrs.dispatch.TargetType
+) -> cattrs.dispatch.StructuredValue:
+    type_to_class = {
+        "AST.BinaryOp": BinaryOp,
+        "AST.Identifier": Identifier,
+        "Values.Value": Value,
+    }
+    cls = type_to_class.get(obj["_type"])
+    if cls is None:
+        raise ValueError(f"Unknown _type: {obj['_type']}")
+    return converter.structure(obj, cls)
+
+
+converter.register_structure_hook(Node, structure_node)
+
+
+# Top-level class to match the JSON structure
+@attr.s(auto_attribs=True)
+class Condition:
+    condition: Node
 
 
 class NodeRef:
