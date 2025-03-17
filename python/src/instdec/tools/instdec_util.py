@@ -35,6 +35,8 @@ def real_main(args: argparse.Namespace):
         #     print(condition)
         #     sys.exit(0)
 
+    print(f"seen_function_names: {arm_json.seen_function_names}")
+
     json.dump(instructions, open("inst-enc.json", "w"))
 
 

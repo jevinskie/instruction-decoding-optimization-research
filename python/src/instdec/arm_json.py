@@ -34,6 +34,11 @@ class UnOp(enum.StrEnum):
     NOT = "!"
 
 
+class ConsOp(enum.StrEnum):
+    IMPLIES = "-->"
+    IFF = "<->"
+
+
 @defauto
 class Identifier:
     value: str
@@ -68,10 +73,16 @@ class UnaryOp:
     op: UnOp
 
 
+seen_function_names: set[str] = set()
+
+
 @defauto
 class Function:
     name: str
     arguments: list[Node]
+
+    def __attrs_post_init__(self):
+        seen_function_names.add(self.name)
 
 
 # Define Node as a union of all possible node types
@@ -83,14 +94,29 @@ class Interpteter:
     ast: Node
 
     def evaluate(self) -> Any:
-        cur_node: Node = self.ast
+        cur_node = self.ast
         if isinstance(cur_node, Function):
-            self.eval_func(cur_node)
-        return "TODO"
+            cur_node = self.eval_func(cur_node)
+        elif isinstance(cur_node, BinaryOp):
+            cur_node = self.eval_binop(cur_node, cur_node.left, cur_node.right)
+        elif isinstance(cur_node, Bool):
+            return cur_node
+        else:
+            raise NotImplementedError(
+                f"Interpteter.evaluate '{type(cur_node)}' unhandled\nast: {self.ast}"
+            )
 
     def eval_func(self, cur_node: Function) -> Node:
         print(f"evaluating AST.Function '{cur_node.name}'")
-        return Bool(True)
+        n = cur_node.name
+        if n == "IsFeatureImplemented":
+            return Value(meaning=n, value=Trits("X"))
+        else:
+            raise NotImplementedError(f"AST.Function eval but '{n}' unhandled")
+
+    def eval_binop(self, cur_node: BinaryOp, left: Node, right: Node) -> Node:
+        print(f"eval_binop op: {cur_node.op}")
+        return None
 
 
 # Set up cattrs converter with a custom structure hook
