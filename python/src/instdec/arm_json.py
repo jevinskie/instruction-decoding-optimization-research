@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import enum
 import sys
-from typing import Union
+from typing import Any, Union
 
+import attrs
 import cattrs
 import cattrs.dispatch
-from attrs import define
 from cattrs import Converter
 
 from instdec.trits import TritRange, TritRanges, Trits
@@ -16,7 +16,7 @@ def defauto(*args, **kwargs):
     kwargs["auto_attribs"] = True
     kwargs["on_setattr"] = None
     kwargs["frozen"] = True
-    return define(*args, **kwargs)
+    return attrs.define(*args, **kwargs)
 
 
 class BinOp(enum.StrEnum):
@@ -65,14 +65,22 @@ class UnaryOp:
     op: UnOp
 
 
-# Define Node as a union of all possible node types
-Node = Union[Bool, BinaryOp, Identifier, UnaryOp, Set, Value]
-
-
 @defauto
 class Function:
     name: str
     arguments: list[Node]
+
+
+# Define Node as a union of all possible node types
+Node = Union[Bool, BinaryOp, Function, Identifier, UnaryOp, Set, Value]
+
+
+@attrs.define(auto_attribs=True)
+class Interpteter:
+    ast: Node
+
+    def evaluate(self) -> Any:
+        return "TODO"
 
 
 # Set up cattrs converter with a custom structure hook
