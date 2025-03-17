@@ -100,13 +100,14 @@ class Function:
 
 # Define Node as a union of all possible node types
 Node = Union[Bool, BinaryOp, Function, Identifier, UnaryOp, Set, Value]
+Valueish = Union[Value, Set]
 
 
 @attrs.define(auto_attribs=True)
 class Interpteter:
     ast: Node
 
-    def evaluate(self) -> Value:
+    def evaluate(self) -> Valueish:
         cur_node = self.ast
         try:
             if isinstance(cur_node, Function):
@@ -115,11 +116,14 @@ class Interpteter:
                 lv = Interpteter(cur_node.left).evaluate()
                 rv = Interpteter(cur_node.right).evaluate()
                 return self.eval_binop(cur_node, lv, rv)
+            elif isinstance(cur_node, UnaryOp):
+                ov = Interpteter(cur_node.expr).evaluate()
+                return self.eval_unop(cur_node, ov)
             elif isinstance(cur_node, Bool):
                 return self.eval_bool(cur_node)
             elif isinstance(cur_node, Identifier):
                 return self.eval_id(cur_node)
-            elif isinstance(cur_node, Value):
+            elif isinstance(cur_node, (Value, Set)):
                 return cur_node
             else:
                 raise NotImplementedError(
@@ -186,8 +190,26 @@ class Interpteter:
         elif op == BinOp.NE:
             nv = left.value.ne_(right.value)
             return Value(meaning="NE", value=nv)
+        elif op == BinOp.IN:
+            if not isinstance(right, Set):
+                raise ValueError(
+                    f"righthand operator to IN isn't set. cur_node: {cur_node} left: {left}, right: {right}"
+                )
+            lv = left.value
+            tt = Trits("1")
+            for rv in right.values:
+                if lv.eq_(rv.value) == tt:
+                    return Value(meaning="IN-TRUE", value=Trits("1"))
+            return Value(meaning="IN-FALSE", value=Trits("0"))
         else:
             raise ValueError(f"eval_binop unhandled op: {op} cur_node: {cur_node}")
+
+    def eval_unop(self, cur_node: UnaryOp, val: Value) -> Value:
+        op = cur_node.op
+        if op == UnOp.NOT:
+            return Value(meaning="NOT", value=val.value.not_())
+        else:
+            raise ValueError(f"eval_unop unhandled op: '{op}' cur_node: {cur_node} val: {val}")
 
     def eval_bool(self, cur_node: Bool) -> Value:
         if cur_node.value:

@@ -24,12 +24,18 @@ class Trits:
 
     def and_(self, other: Self) -> Self:
         nbit = len(self)
-        if nbit != len(other):
-            raise ValueError(f"Bitwidth differs: self: {self} other: {other}")
-        nvs = [" "] * nbit
+        onbit = len(other)
+        minbit = min(nbit, onbit)
+        maxbit = max(nbit, onbit)
+        diff = maxbit - minbit
+        nvs = [" "] * maxbit
         st = self.trits
         ot = other.trits
-        for i in range(nbit):
+        if nbit < maxbit:
+            st += "0" * diff
+        if onbit < maxbit:
+            ot += "0" * diff
+        for i in range(maxbit):
             if st[i] == "0" and ot[i] != "X":
                 nvs[i] = "0"
             elif st[i] != "X" and ot[i] == "0":
@@ -42,12 +48,18 @@ class Trits:
 
     def or_(self, other: Self) -> Self:
         nbit = len(self)
-        if nbit != len(other):
-            raise ValueError(f"Bitwidth differs: self: {self} other: {other}")
-        nvs = [" "] * nbit
+        onbit = len(other)
+        minbit = min(nbit, onbit)
+        maxbit = max(nbit, onbit)
+        diff = maxbit - minbit
+        nvs = [" "] * maxbit
         st = self.trits
         ot = other.trits
-        for i in range(nbit):
+        if nbit < maxbit:
+            st += "0" * diff
+        if onbit < maxbit:
+            ot += "0" * diff
+        for i in range(maxbit):
             if st[i] == "1" or ot[i] == "1":
                 nvs[i] = "1"
             elif st[i] == "0" and ot[i] == "0":
@@ -75,12 +87,18 @@ class Trits:
 
     def eq_(self, other: Self, dont_care_ok: bool = False) -> Self:
         nbit = len(self)
-        if nbit != len(other):
-            raise ValueError(f"Bitwidth differs: self: {self} other: {other}")
+        onbit = len(other)
+        minbit = min(nbit, onbit)
+        maxbit = max(nbit, onbit)
+        diff = maxbit - minbit
         st = self.trits
         ot = other.trits
+        if nbit < maxbit:
+            st += "0" * diff
+        if onbit < maxbit:
+            ot += "0" * diff
         are_equal = True
-        for i in range(nbit):
+        for i in range(maxbit):
             if st[i] == "1" and ot[i] == "0":
                 are_equal = False
                 break
