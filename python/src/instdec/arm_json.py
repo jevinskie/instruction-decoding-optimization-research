@@ -39,9 +39,15 @@ class ConsOp(enum.StrEnum):
     IFF = "<->"
 
 
+seen_identifiers: set[str] = set()
+
+
 @defauto
 class Identifier:
     value: str
+
+    def __attrs_post_init__(self):
+        seen_identifiers.add(self.value)
 
 
 @defauto
@@ -102,18 +108,26 @@ class Interpteter:
 
     def evaluate(self) -> Value:
         cur_node = self.ast
-        if isinstance(cur_node, Function):
-            return self.eval_func(cur_node)
-        elif isinstance(cur_node, BinaryOp):
-            lv = Interpteter(cur_node.left).evaluate()
-            rv = Interpteter(cur_node.right).evaluate()
-            return self.eval_binop(cur_node, lv, rv)
-        elif isinstance(cur_node, Bool):
-            return self.eval_bool(cur_node)
-        else:
-            raise NotImplementedError(
-                f"Interpteter.evaluate '{type(cur_node)}' unhandled\nast: {self.ast}"
-            )
+        try:
+            if isinstance(cur_node, Function):
+                return self.eval_func(cur_node)
+            elif isinstance(cur_node, BinaryOp):
+                lv = Interpteter(cur_node.left).evaluate()
+                rv = Interpteter(cur_node.right).evaluate()
+                return self.eval_binop(cur_node, lv, rv)
+            elif isinstance(cur_node, Bool):
+                return self.eval_bool(cur_node)
+            elif isinstance(cur_node, Identifier):
+                return self.eval_id(cur_node)
+            elif isinstance(cur_node, Value):
+                return cur_node
+            else:
+                raise NotImplementedError(
+                    f"Interpteter.evaluate '{type(cur_node)}' unhandled\nast: {self.ast}"
+                )
+        except Exception as e:
+            print(f"eval got exc: {e}\ncur ast: {cur_node}")
+            raise e
 
     def eval_func(self, cur_node: Function) -> Value:
         print(f"evaluating AST.Function '{cur_node.name}'")
@@ -125,6 +139,22 @@ class Interpteter:
 
     def eval_binop(self, cur_node: BinaryOp, left: Value, right: Value) -> Value:
         print(f"eval_binop op: {cur_node.op}")
+        # FIXME: the following is problematic
+        # BinaryOp(
+        #     left=BinaryOp(
+        #         left=Function(
+        #             name="IsFeatureImplemented", arguments=[Identifier(value="FEAT_SVE")]
+        #         ),
+        #         op=BinOp.OR,
+        #         right=Function(
+        #             name="IsFeatureImplemented", arguments=[Identifier(value="FEAT_SME")]
+        #         ),
+        #     ),
+        #     op=BinOp.AND,
+        #     right=BinaryOp(
+        #         left=Identifier(value="U"), op=BinOp.EQ, right=Value(meaning=None, value=Trits("0"))
+        #     ),
+        # )
         assert isinstance(left, Value)
         assert isinstance(right, Value)
         op = cur_node.op
@@ -138,6 +168,9 @@ class Interpteter:
             return Value(meaning="Bool", value=Trits("1"))
         else:
             return Value(meaning="Bool", value=Trits("0"))
+
+    def eval_id(self, cur_node: Identifier) -> Value:
+        return Value(meaning=f"ID.{cur_node.value}", value=Trits("X"))
 
 
 # Set up cattrs converter with a custom structure hook
