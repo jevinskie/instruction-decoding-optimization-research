@@ -1,3 +1,6 @@
+import sys
+
+
 class NodeRef:
     def __init__(self, node):
         self.node = node
@@ -26,7 +29,9 @@ def find_encodings(node, context=None, path=""):
             results.append(encoding_entry)
             # Append current node to the context, wrapping it with NodeRef to prevent recursive printing
             # current_context.append({"encoding": node["encoding"], "object": NodeRef(node)})
-            current_context.append({"encoding": node["encoding"], "object": path})
+            current_context.append(
+                {"encoding": node["encoding"], "object": node.get("name", "no_name")}
+            )
 
         # Process the 'children' field if present.
         children = node.get("children", [])
@@ -46,3 +51,44 @@ def find_encodings(node, context=None, path=""):
             results.extend(find_encodings(item, context, f"{path}[{idx}]"))
 
     return results
+
+
+def find_leafs_helper(instrs: dict | list) -> list:
+    results = []
+    if isinstance(instrs, dict):
+        instrs = [instrs]
+    elif not isinstance(instrs, list):
+        print(f"type missing: {type(instrs)}", file=sys.stderr)
+    assert isinstance(instrs, list)
+    for x in instrs:
+        if isinstance(x, dict):
+            if "encoding" in x and (
+                ("children" in x and len(x["children"]) == 0) or ("children" not in x)
+            ):
+                # we are leaf
+                xc = x.copy()
+                for band in ("assembly", "assemble", "condition"):
+                    if band in xc:
+                        del xc[band]
+                results.append(xc)
+                continue
+            for k in x:
+                if k == "children":
+                    # future extension point
+                    results += find_leafs_helper(x["children"])
+                else:
+                    v = x[k]
+                    if isinstance(v, (list, dict)):
+                        results += find_leafs_helper(v)
+        elif isinstance(x, list):
+            results += find_leafs_helper(x)
+    return results
+
+
+def find_leafs(ijson: dict) -> list:
+    instrsl = ijson["instructions"]
+    if len(instrsl) != 1:
+        raise ValueError("instructions list isn't size 1")
+    instrs_root = instrsl[0]
+    leafs = find_leafs_helper(instrs_root)
+    return leafs
