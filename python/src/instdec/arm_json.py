@@ -1,5 +1,7 @@
 import sys
 
+from instdec.trits import TritRange, TritRanges, Trits
+
 
 class NodeRef:
     def __init__(self, node):
@@ -104,3 +106,41 @@ def find_leafs(ijson: dict) -> list:
     instrs_root = instrsl[0]
     leafs = find_leafs_helper(instrs_root)
     return leafs
+
+
+def parse_instruction_encoding(inst: dict) -> tuple[str, Trits, int, int, int]:
+    """Parse instruction encoding into trits and counts.
+
+    Args:
+        inst: Instruction dictionary from JSON
+
+    Returns:
+        tuple of (name, Trits object, count_0, count_1, count_X)
+    """
+    enc = inst["encoding"]
+    if "width" in enc and enc["width"] != 32:
+        raise ValueError(f"inst enc width isn't 32 it is {enc['width']}")
+    assert enc["_type"] == "Instruction.Encodeset.Encodeset"
+
+    trit_ranges = TritRanges()
+    for v in enc["values"]:
+        assert v["_type"] in ("Instruction.Encodeset.Bits", "Instruction.Encodeset.Field")
+        rng = v["range"]
+        assert rng["_type"] == "Range"
+        val = v["value"]
+        assert val["_type"] == "Values.Value"
+
+        start = rng["start"]
+        width = rng["width"]
+        end = start + width
+        assert 0 <= start <= 31
+        assert 1 <= end <= 32
+        assert width > 0
+
+        valval = val["value"].replace("'", "")
+        sbmt = TritRange(start, width, valval)
+        trit_ranges.add_range(sbmt)
+
+    mtrits = trit_ranges.merge()
+    mts = str(mtrits)
+    return (inst["name"], mtrits, mts.count("0"), mts.count("1"), mts.count("X"))
