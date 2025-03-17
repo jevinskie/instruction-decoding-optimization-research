@@ -1,0 +1,212 @@
+{
+  "_type": "Instruction.Instruction",
+  "assemble": null,
+  "assembly": {
+    "_type": "Instruction.Assembly",
+    "description": null,
+    "symbols": [
+      {
+        "_type": "Instruction.Symbols.Literal",
+        "value": "STNT1W"
+      },
+      {
+        "_type": "Instruction.Symbols.RuleReference",
+        "rule_id": "SPACE"
+      },
+      {
+        "_type": "Instruction.Symbols.Literal",
+        "value": "{"
+      },
+      {
+        "_type": "Instruction.Symbols.RuleReference",
+        "rule_id": "OPT_SPACE"
+      },
+      {
+        "_type": "Instruction.Symbols.RuleReference",
+        "rule_id": "Zt"
+      },
+      {
+        "_type": "Instruction.Symbols.Literal",
+        "value": ".S"
+      },
+      {
+        "_type": "Instruction.Symbols.RuleReference",
+        "rule_id": "OPT_SPACE"
+      },
+      {
+        "_type": "Instruction.Symbols.Literal",
+        "value": "}"
+      },
+      {
+        "_type": "Instruction.Symbols.RuleReference",
+        "rule_id": "COMMA"
+      },
+      {
+        "_type": "Instruction.Symbols.RuleReference",
+        "rule_id": "Pg"
+      },
+      {
+        "_type": "Instruction.Symbols.RuleReference",
+        "rule_id": "COMMA"
+      },
+      {
+        "_type": "Instruction.Symbols.Literal",
+        "value": "["
+      },
+      {
+        "_type": "Instruction.Symbols.RuleReference",
+        "rule_id": "XnSP__3"
+      },
+      {
+        "_type": "Instruction.Symbols.RuleReference",
+        "rule_id": "COMMA"
+      },
+      {
+        "_type": "Instruction.Symbols.RuleReference",
+        "rule_id": "Xm__4"
+      },
+      {
+        "_type": "Instruction.Symbols.RuleReference",
+        "rule_id": "COMMA"
+      },
+      {
+        "_type": "Instruction.Symbols.Literal",
+        "value": "LSL"
+      },
+      {
+        "_type": "Instruction.Symbols.RuleReference",
+        "rule_id": "OPT_SPACE"
+      },
+      {
+        "_type": "Instruction.Symbols.RuleReference",
+        "rule_id": "hash"
+      },
+      {
+        "_type": "Instruction.Symbols.Literal",
+        "value": "2]"
+      }
+    ]
+  },
+  "assertions": null,
+  "children": [],
+  "condition": {
+    "_type": "AST.BinaryOp",
+    "left": {
+      "_type": "AST.BinaryOp",
+      "left": {
+        "_type": "AST.Identifier",
+        "value": "Rm"
+      },
+      "op": "!=",
+      "right": {
+        "_type": "Values.Value",
+        "meaning": null,
+        "value": "'11111'"
+      }
+    },
+    "op": "&&",
+    "right": {
+      "_type": "AST.BinaryOp",
+      "left": {
+        "_type": "AST.Identifier",
+        "value": "msz"
+      },
+      "op": "==",
+      "right": {
+        "_type": "Values.Value",
+        "meaning": null,
+        "value": "'10'"
+      }
+    }
+  },
+  "decode": null,
+  "disassemble": null,
+  "encoding": {
+    "_type": "Instruction.Encodeset.Encodeset",
+    "values": [
+      {
+        "_type": "Instruction.Encodeset.Field",
+        "name": "msz",
+        "range": {
+          "_type": "Range",
+          "start": 23,
+          "width": 2
+        },
+        "should_be_mask": {
+          "_type": "Values.Value",
+          "meaning": null,
+          "value": "'00'"
+        },
+        "value": {
+          "_type": "Values.Value",
+          "meaning": null,
+          "value": "'xx'"
+        }
+      },
+      {
+        "_type": "Instruction.Encodeset.Field",
+        "name": "Pg",
+        "range": {
+          "_type": "Range",
+          "start": 10,
+          "width": 3
+        },
+        "should_be_mask": {
+          "_type": "Values.Value",
+          "meaning": null,
+          "value": "'000'"
+        },
+        "value": {
+          "_type": "Values.Value",
+          "meaning": null,
+          "value": "'xxx'"
+        }
+      },
+      {
+        "_type": "Instruction.Encodeset.Field",
+        "name": "Rn",
+        "range": {
+          "_type": "Range",
+          "start": 5,
+          "width": 5
+        },
+        "should_be_mask": {
+          "_type": "Values.Value",
+          "meaning": null,
+          "value": "'00000'"
+        },
+        "value": {
+          "_type": "Values.Value",
+          "meaning": null,
+          "value": "'xxxxx'"
+        }
+      },
+      {
+        "_type": "Instruction.Encodeset.Field",
+        "name": "Zt",
+        "range": {
+          "_type": "Range",
+          "start": 0,
+          "width": 5
+        },
+        "should_be_mask": {
+          "_type": "Values.Value",
+          "meaning": null,
+          "value": "'00000'"
+        },
+        "value": {
+          "_type": "Values.Value",
+          "meaning": null,
+          "value": "'xxxxx'"
+        }
+      }
+    ],
+    "width": 32
+  },
+  "name": "stnt1w_z_p_br_contiguous",
+  "operation_id": "stnt1w_z_p_br",
+  "operational_note": null,
+  "preferred": null,
+  "properties": {},
+  "title": null
+}
