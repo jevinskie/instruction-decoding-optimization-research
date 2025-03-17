@@ -1,6 +1,9 @@
 import enum
+from typing import Final
 
 # https://github.com/jevinskie/mips--/blob/master/project4/source/common.vhd
+
+OpBits: Final[int] = 6
 
 
 class PMIPSOpcode(enum.IntEnum):
