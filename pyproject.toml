@@ -10,7 +10,8 @@ classifiers = [
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.13",
-  "Programming Language :: Python :: 3.12"
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.11"
 ]
 dependencies = [
   "attrs>=25.3.0",
@@ -24,7 +25,7 @@ keywords = ["instruction decoding", "disassembly", "disassembler"]
 license = {text = "BSD-2-Clause"}
 name = "instdec"
 readme = {file = 'README.md', content-type = 'text/markdown'}
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 
 [project.optional-dependencies]
 dev = [
@@ -42,7 +43,7 @@ repository = "https://github.com/jevinskie/instruction-decoding-optimization-res
 
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+target-version = "py311"
 
 [tool.ruff.lint]
 extend-select = ["I"]
