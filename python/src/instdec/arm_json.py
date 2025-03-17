@@ -68,9 +68,6 @@ def find_leafs_helper(instrs: dict | list, encoding_stack: list | None = None) -
     assert isinstance(instrs, list)
     for x in instrs:
         if isinstance(x, dict):
-            if "encoding" in x:
-                assert x["encoding"]["_type"] == "Instruction.Encodeset.Encodeset"
-                encoding_stack.append(x["encoding"])
             if "encoding" in x and (
                 ("children" in x and len(x["children"]) == 0) or ("children" not in x)
             ):
@@ -82,6 +79,9 @@ def find_leafs_helper(instrs: dict | list, encoding_stack: list | None = None) -
                 xc["parent_encodings"] = encoding_stack.copy()
                 results.append(xc)
                 continue
+            if "encoding" in x:
+                assert x["encoding"]["_type"] == "Instruction.Encodeset.Encodeset"
+                encoding_stack.append((x["name"], x["encoding"]))
             for k in x:
                 if k == "children":
                     # future extension point
