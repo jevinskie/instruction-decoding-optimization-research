@@ -3,7 +3,7 @@ from __future__ import annotations
 import enum
 import sys
 from collections.abc import Callable
-from typing import Any, TypeVar, Union
+from typing import TypeVar, Union
 
 import attrs
 import cattrs
@@ -49,6 +49,13 @@ class Value:
     meaning: str | None
     value: Trits
 
+    @property
+    def mean(self) -> str:
+        if self.meaning is not None:
+            return self.meaning
+        else:
+            return ""
+
 
 @defauto
 class Bool:
@@ -93,20 +100,22 @@ Node = Union[Bool, BinaryOp, Function, Identifier, UnaryOp, Set, Value]
 class Interpteter:
     ast: Node
 
-    def evaluate(self) -> Any:
+    def evaluate(self) -> Value:
         cur_node = self.ast
         if isinstance(cur_node, Function):
-            cur_node = self.eval_func(cur_node)
+            return self.eval_func(cur_node)
         elif isinstance(cur_node, BinaryOp):
-            cur_node = self.eval_binop(cur_node, cur_node.left, cur_node.right)
+            lv = Interpteter(cur_node.left).evaluate()
+            rv = Interpteter(cur_node.right).evaluate()
+            return self.eval_binop(cur_node, lv, rv)
         elif isinstance(cur_node, Bool):
-            return cur_node
+            return self.eval_bool(cur_node)
         else:
             raise NotImplementedError(
                 f"Interpteter.evaluate '{type(cur_node)}' unhandled\nast: {self.ast}"
             )
 
-    def eval_func(self, cur_node: Function) -> Node:
+    def eval_func(self, cur_node: Function) -> Value:
         print(f"evaluating AST.Function '{cur_node.name}'")
         n = cur_node.name
         if n == "IsFeatureImplemented":
@@ -114,9 +123,21 @@ class Interpteter:
         else:
             raise NotImplementedError(f"AST.Function eval but '{n}' unhandled")
 
-    def eval_binop(self, cur_node: BinaryOp, left: Node, right: Node) -> Node:
+    def eval_binop(self, cur_node: BinaryOp, left: Value, right: Value) -> Value:
         print(f"eval_binop op: {cur_node.op}")
+        assert isinstance(left, Value)
+        assert isinstance(right, Value)
+        op = cur_node.op
+        if op == BinOp.AND:
+            nv = left.value.and_(right.value)
+            return Value(meaning="AND", value=nv)
         return None
+
+    def eval_bool(self, cur_node: Bool) -> Value:
+        if cur_node.value:
+            return Value(meaning="Bool", value=Trits("1"))
+        else:
+            return Value(meaning="Bool", value=Trits("0"))
 
 
 # Set up cattrs converter with a custom structure hook

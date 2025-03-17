@@ -1,3 +1,5 @@
+from typing import Self
+
 import attrs
 
 
@@ -19,6 +21,27 @@ class Trits:
     def _check_trits(self, _, value):
         if not all(c in "01X" for c in value):
             raise ValueError(f"trit string must only contain '0', '1', or 'X' got '{value}'")
+
+    def and_(self, other: Self) -> Self:
+        nbit = len(self)
+        if nbit != len(other):
+            raise ValueError(f"Bitwidth differs: self: {self} other: {other}")
+        nvs = [" "] * nbit
+        st = self.trits
+        ot = other.trits
+        for i in range(nbit):
+            if st[i] == "0" and ot[i] != "X":
+                nvs[i] = "0"
+            elif st[i] != "X" and ot[i] == "0":
+                nvs[i] = "0"
+            elif st[i] == "1" and ot[i] == "1":
+                nvs[i] = "1"
+            else:
+                nvs[i] = "X"
+        return Trits("".join(nvs))
+
+    def __len__(self) -> int:
+        return len(self.trits)
 
     def __repr__(self) -> str:
         return f"Trits('{self.trits}')"
