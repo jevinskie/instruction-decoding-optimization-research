@@ -15,9 +15,9 @@ classifiers = [
 ]
 dependencies = [
   "attrs>=25.3.0",
-  "jsonyx>=1.2.1",
   "path>=17.1.0",
-  "rich>=13.9.4"
+  "rich>=13.9.4",
+  "simplejson>=3.20.1"
 ]
 description = "Python bindings and utilities for instruction decoding research"
 dynamic = ["version"]
