@@ -155,13 +155,39 @@ class Interpteter:
         #         left=Identifier(value="U"), op=BinOp.EQ, right=Value(meaning=None, value=Trits("0"))
         #     ),
         # )
-        assert isinstance(left, Value)
-        assert isinstance(right, Value)
+
+        # Also ponder:
+        # BinaryOp(
+        #     left=BinaryOp(
+        #         left=Identifier(value="U"), op=BinOp.EQ, right=Value(meaning=None, value=Trits("0"))
+        #     ),
+        #     op=BinOp.AND,
+        #     right=BinaryOp(
+        #         left=Identifier(value="size"),
+        #         op=BinOp.EQ,
+        #         right=Value(meaning=None, value=Trits("01")),
+        #     ),
+        # )
+        # ValueError: Bitwidth differs: self: Trits('X') other: Trits('01')
+
+        # assert isinstance(left, (Value, BinaryOp))
+        # assert isinstance(right, (Value, BinaryOp))
+
         op = cur_node.op
         if op == BinOp.AND:
             nv = left.value.and_(right.value)
             return Value(meaning="AND", value=nv)
-        return None
+        elif op == BinOp.OR:
+            nv = left.value.or_(right.value)
+            return Value(meaning="OR", value=nv)
+        elif op == BinOp.EQ:
+            nv = left.value.eq_(right.value)
+            return Value(meaning="EQ", value=nv)
+        elif op == BinOp.NE:
+            nv = left.value.ne_(right.value)
+            return Value(meaning="NE", value=nv)
+        else:
+            raise ValueError(f"eval_binop unhandled op: {op} cur_node: {cur_node}")
 
     def eval_bool(self, cur_node: Bool) -> Value:
         if cur_node.value:

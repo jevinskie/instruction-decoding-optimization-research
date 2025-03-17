@@ -40,6 +40,72 @@ class Trits:
                 nvs[i] = "X"
         return Trits("".join(nvs))
 
+    def or_(self, other: Self) -> Self:
+        nbit = len(self)
+        if nbit != len(other):
+            raise ValueError(f"Bitwidth differs: self: {self} other: {other}")
+        nvs = [" "] * nbit
+        st = self.trits
+        ot = other.trits
+        for i in range(nbit):
+            if st[i] == "1" or ot[i] == "1":
+                nvs[i] = "1"
+            elif st[i] == "0" and ot[i] == "0":
+                nvs[i] = "0"
+            elif st[i] == "X" or ot[i] == "X":
+                nvs[i] = "X"
+            else:
+                raise ValueError(f"Trit.or_ unhandled case: self: {self} other: {other}")
+        return Trits("".join(nvs))
+
+    def not_(self) -> Self:
+        nbit = len(self)
+        nvs = [" "] * nbit
+        st = self.trits
+        for i in range(nbit):
+            if st[i] == "1":
+                nvs[i] = "0"
+            elif st[i] == "0":
+                nvs[i] = "1"
+            elif st[i] == "X":
+                nvs[i] = "X"
+            else:
+                raise ValueError(f"Trit.not_ unhandled case: self: {self}")
+        return Trits("".join(nvs))
+
+    def eq_(self, other: Self, dont_care_ok: bool = False) -> Self:
+        nbit = len(self)
+        if nbit != len(other):
+            raise ValueError(f"Bitwidth differs: self: {self} other: {other}")
+        st = self.trits
+        ot = other.trits
+        are_equal = True
+        for i in range(nbit):
+            if st[i] == "1" and ot[i] == "0":
+                are_equal = False
+                break
+            elif st[i] == "0" and ot[i] == "1":
+                are_equal = False
+                break
+            elif st[i] == "X" and ot[i] != "X":
+                if not dont_care_ok:
+                    are_equal = False
+                    break
+            elif st[i] != "X" or ot[i] == "X":
+                if not dont_care_ok:
+                    are_equal = False
+                    break
+            elif st[i] == "X" and ot[i] == "X":
+                if not dont_care_ok:
+                    are_equal = False
+                    break
+            else:
+                raise ValueError(f"Trit.or_ unhandled case: self: {self} other: {other}")
+        return Trits("1" if are_equal else "0")
+
+    def ne_(self, other: Self) -> Self:
+        return self.eq_(other).not_()
+
     def __len__(self) -> int:
         return len(self.trits)
 
