@@ -134,7 +134,6 @@ class Interpteter:
             raise e
 
     def eval_func(self, cur_node: Function) -> Value:
-        print(f"evaluating AST.Function '{cur_node.name}'")
         n = cur_node.name
         if n == "IsFeatureImplemented":
             return Value(meaning=n, value=Trits("X"))
@@ -142,41 +141,6 @@ class Interpteter:
             raise NotImplementedError(f"AST.Function eval but '{n}' unhandled")
 
     def eval_binop(self, cur_node: BinaryOp, left: Value, right: Value) -> Value:
-        print(f"eval_binop op: {cur_node.op}")
-        # FIXME: the following is problematic
-        # BinaryOp(
-        #     left=BinaryOp(
-        #         left=Function(
-        #             name="IsFeatureImplemented", arguments=[Identifier(value="FEAT_SVE")]
-        #         ),
-        #         op=BinOp.OR,
-        #         right=Function(
-        #             name="IsFeatureImplemented", arguments=[Identifier(value="FEAT_SME")]
-        #         ),
-        #     ),
-        #     op=BinOp.AND,
-        #     right=BinaryOp(
-        #         left=Identifier(value="U"), op=BinOp.EQ, right=Value(meaning=None, value=Trits("0"))
-        #     ),
-        # )
-
-        # Also ponder:
-        # BinaryOp(
-        #     left=BinaryOp(
-        #         left=Identifier(value="U"), op=BinOp.EQ, right=Value(meaning=None, value=Trits("0"))
-        #     ),
-        #     op=BinOp.AND,
-        #     right=BinaryOp(
-        #         left=Identifier(value="size"),
-        #         op=BinOp.EQ,
-        #         right=Value(meaning=None, value=Trits("01")),
-        #     ),
-        # )
-        # ValueError: Bitwidth differs: self: Trits('X') other: Trits('01')
-
-        # assert isinstance(left, (Value, BinaryOp))
-        # assert isinstance(right, (Value, BinaryOp))
-
         op = cur_node.op
         if op == BinOp.AND:
             nv = left.value.and_(right.value)
