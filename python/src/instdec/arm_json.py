@@ -75,7 +75,7 @@ def find_leafs_helper(instrs: dict | list, encoding_stack: list | None = None) -
             ):
                 # we are leaf
                 xc = x.copy()
-                for band in ("assembly", "assemble", "condition"):
+                for band in ("assembly", "assemble"):
                     if band in xc:
                         del xc[band]
                 xc["parent_encodings"] = encoding_stack.copy()

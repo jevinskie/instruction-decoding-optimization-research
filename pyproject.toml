@@ -15,6 +15,7 @@ classifiers = [
 ]
 dependencies = [
   "attrs>=25.3.0",
+  "cattrs>=24.1.2",
   "path>=17.1.0",
   "rich>=13.9.4",
   "simplejson>=3.20.1"

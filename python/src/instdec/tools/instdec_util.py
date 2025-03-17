@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import sys
 
 import simplejson as json
 from rich import print
@@ -24,6 +25,9 @@ def real_main(args: argparse.Namespace):
     for inst in instructions:
         name, mtrits, n0, n1, nX = arm_json.parse_instruction_encoding(inst)
         print(f"inst: {name:32} mtrits: {mtrits} #0: {n0:2} #1: {n1:2} #X: {nX:2}")
+        if name == "stnt1w_z_p_br_contiguous":
+            print(f"stnt1w_z_p_br_contiguous:\n{inst}")
+            sys.exit(0)
 
     json.dump(instructions, open("inst-enc.json", "w"))
 
