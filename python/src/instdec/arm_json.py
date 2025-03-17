@@ -119,10 +119,9 @@ converter.register_structure_hook(Node, structure_node)
 
 
 def structure_trits(
-    obj: cattrs.dispatch.UnstructuredValue, ty: cattrs.dispatch.TargetType
+    trit_str: cattrs.dispatch.UnstructuredValue, _: cattrs.dispatch.TargetType
 ) -> cattrs.dispatch.StructuredValue:
-    # raise ValueError(f"Unknown obj: {obj} ty: {ty}")
-    return Trits(obj)
+    return Trits(trit_str)
 
 
 converter.register_structure_hook(Trits, structure_trits)

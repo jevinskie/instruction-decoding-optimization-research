@@ -18,7 +18,7 @@ class Trits:
     @trits.validator
     def _check_trits(self, _, value):
         if not all(c in "01X" for c in value):
-            raise ValueError(f"trit string must only contain '0', '1', or 'X' got '{value}")
+            raise ValueError(f"trit string must only contain '0', '1', or 'X' got '{value}'")
 
     def __repr__(self) -> str:
         return f"Trits('{self.trits}')"
