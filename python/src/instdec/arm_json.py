@@ -80,7 +80,14 @@ class Interpteter:
     ast: Node
 
     def evaluate(self) -> Any:
+        cur_node: Node = self.ast
+        if isinstance(cur_node, Function):
+            self.eval_func(cur_node)
         return "TODO"
+
+    def eval_func(self, cur_node: Function) -> Node:
+        print(f"evaluating AST.Function '{cur_node.name}")
+        return Bool(value=True)
 
 
 # Set up cattrs converter with a custom structure hook
