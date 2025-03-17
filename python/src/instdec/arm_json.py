@@ -53,8 +53,14 @@ def find_encodings(node, context=None, path=""):
     return results
 
 
-def find_leafs_helper(instrs: dict | list) -> list:
+def are_encodesets_consistent(a: dict, b: dict) -> bool:
+    return False
+
+
+def find_leafs_helper(instrs: dict | list, encoding_stack: list | None = None) -> list:
     results = []
+    if encoding_stack is None:
+        encoding_stack = []
     if isinstance(instrs, dict):
         instrs = [instrs]
     elif not isinstance(instrs, list):
@@ -62,6 +68,9 @@ def find_leafs_helper(instrs: dict | list) -> list:
     assert isinstance(instrs, list)
     for x in instrs:
         if isinstance(x, dict):
+            if "encoding" in x:
+                assert x["encoding"]["_type"] == "Instruction.Encodeset.Encodeset"
+                encoding_stack.append(x["encoding"])
             if "encoding" in x and (
                 ("children" in x and len(x["children"]) == 0) or ("children" not in x)
             ):
@@ -70,18 +79,21 @@ def find_leafs_helper(instrs: dict | list) -> list:
                 for band in ("assembly", "assemble", "condition"):
                     if band in xc:
                         del xc[band]
+                xc["parent_encodings"] = encoding_stack.copy()
                 results.append(xc)
                 continue
             for k in x:
                 if k == "children":
                     # future extension point
-                    results += find_leafs_helper(x["children"])
+                    results += find_leafs_helper(x["children"], encoding_stack=encoding_stack)
                 else:
                     v = x[k]
                     if isinstance(v, (list, dict)):
-                        results += find_leafs_helper(v)
+                        results += find_leafs_helper(v, encoding_stack=encoding_stack)
+            if "encoding" in x:
+                encoding_stack.pop()
         elif isinstance(x, list):
-            results += find_leafs_helper(x)
+            results += find_leafs_helper(x, encoding_stack=encoding_stack)
     return results
 
 
