@@ -2,8 +2,10 @@ from typing import Self
 
 import attrs
 
+from .util import defauto
 
-@attrs.define(frozen=True, on_setattr=None, auto_attribs=True)
+
+@defauto
 class Trits:
     """
     A class to represent and manipulate trit strings (0, 1, X).
@@ -137,44 +139,43 @@ class Trits:
         return f"Trits('{self.trits}')"
 
 
+@defauto
 class TritRange:
     """
     Represents a range of trits within a 32-bit instruction word.
     """
 
-    def __init__(self, start: int, width: int, trits: str):
-        """
-        Initialize a TritRange object.
+    start: int = attrs.field()
+    width: int = attrs.field()
+    trits: Trits = attrs.field()
 
-        Args:
-            start: Starting index (0-31).
-            width: Width of the range (0-32).
-            trits: String of trits ('0', '1', 'X') of length `width`.
+    @start.validator
+    def _check_start(self, _, value):
+        if not (0 <= value < 32):
+            raise ValueError(f"start must be in [0, 32) got {value}")
+        if not (value + self.width <= 33):
+            raise ValueError(f"start + width must be  <= 32 got {value + self.width}")
 
-        Raises:
-            ValueError: If start, width, or trits are invalid.
-        """
-        # Validate start index
-        if not (0 <= start < 32):
-            raise ValueError("start must be between 0 and 31")
-        # Validate width, ensuring start + width <= 32
-        if not (0 <= width <= 32 - start):
-            raise ValueError(f"width must be between 0 and {32 - start}")
-        # Validate trit string length
-        if len(trits) != width:
-            raise ValueError(f"trits must have length {width}")
-        self.start = start
-        self.width = width
-        self.trits = trits.upper()
-        # Validate trit characters
-        if not all(c in "01X" for c in self.trits):
-            raise ValueError("trits must only contain '0', '1', or 'X'")
+    @width.validator
+    def _check_width(self, _, value):
+        if not (1 <= value <= 32):
+            raise ValueError(f"width must be in [1, 32] got {value}")
+        if not (value + self.start <= 33):
+            raise ValueError(f"start + width must be  <= 32 got {value + self.start}")
+        if value != len(self.trits):
+            raise ValueError(
+                f"width != len(trits) width: {value} len(trits): {len(self.trits)} trits: {self.trits}"
+            )
 
-    def __repr__(self) -> str:
-        return f"TritRange(start={self.start}, width={self.width}, trits='{self.trits}')"
+    @trits.validator
+    def _check_trits(self, _, value):
+        if len(value) != self.width:
+            raise ValueError(
+                f"width != len(trits) width: {self.width} len(trits): {len(value)} trits: {value}"
+            )
 
     def __str__(self) -> str:
-        return self.trits
+        return self.trits.trits
 
 
 class TritRanges:
@@ -220,7 +221,7 @@ class TritRanges:
             for i in range(rng.width):
                 pos = rng.start + i
                 current = merged[pos]
-                new_trit = rng.trits[i]
+                new_trit = rng.trits.trits[i]
                 if current == "X":
                     # If current position is unspecified, take the new trit
                     merged[pos] = new_trit

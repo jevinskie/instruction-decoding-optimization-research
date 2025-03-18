@@ -1,24 +1,15 @@
 from __future__ import annotations
 
 import enum
-from collections.abc import Callable
-from typing import TypeVar, Union
+from typing import Union
 
 import attrs
 import cattrs
 import cattrs.dispatch
 from cattrs import Converter
 
-from instdec.trits import TritRange, TritRanges, Trits
-
-T = TypeVar("T")
-
-
-def defauto(*args, **kwargs) -> Callable[[type[T]], type[T]]:
-    kwargs["auto_attribs"] = True
-    kwargs["on_setattr"] = None
-    kwargs["frozen"] = True
-    return attrs.define(*args, **kwargs)
+from .trits import TritRange, TritRanges, Trits
+from .util import defauto
 
 
 class BinOp(enum.StrEnum):
@@ -110,6 +101,54 @@ class Function:
 Expression = Union[Bool, BinaryOp, Function, Identifier, UnaryOp, Set, Value]
 Valueish = Union[Value, Set]
 
+# Set up cattrs converter with a custom structure hook
+converter = Converter()
+
+
+def structure_node(
+    obj: cattrs.dispatch.UnstructuredValue, _: cattrs.dispatch.TargetType
+) -> cattrs.dispatch.StructuredValue:
+    type_to_class = {
+        "AST.BinaryOp": BinaryOp,
+        "AST.Bool": Bool,
+        "AST.Function": Function,
+        "AST.Identifier": Identifier,
+        "AST.Set": Set,
+        "AST.UnaryOp": UnaryOp,
+        "Values.Value": Value,
+    }
+    cls = type_to_class.get(obj["_type"])
+    if cls is None:
+        raise ValueError(f"Unknown _type: {obj['_type']}")
+    return converter.structure(obj, cls)
+
+
+converter.register_structure_hook(Expression, structure_node)
+
+
+def structure_trits(
+    trit_str: cattrs.dispatch.UnstructuredValue, _: cattrs.dispatch.TargetType
+) -> cattrs.dispatch.StructuredValue:
+    return Trits(trit_str)
+
+
+converter.register_structure_hook(Trits, structure_trits)
+
+
+# Top-level class to match the JSON structure
+@defauto
+class Condition:
+    condition: Expression
+
+
+class NodeRef:
+    def __init__(self, node):
+        self.node = node
+
+    def __repr__(self):
+        # Only display a summary: id and keys of the dict
+        return f"<NodeRef id={id(self.node)} keys={list(self.node.keys())}>"
+
 
 @attrs.define(auto_attribs=True)
 class Interpteter:
@@ -198,55 +237,6 @@ class Interpteter:
 
     def eval_id(self, cur_node: Identifier) -> Value:
         return Value(meaning=f"ID.{cur_node.value}", value=Trits("X"))
-
-
-# Set up cattrs converter with a custom structure hook
-converter = Converter()
-
-
-def structure_node(
-    obj: cattrs.dispatch.UnstructuredValue, _: cattrs.dispatch.TargetType
-) -> cattrs.dispatch.StructuredValue:
-    type_to_class = {
-        "AST.BinaryOp": BinaryOp,
-        "AST.Bool": Bool,
-        "AST.Function": Function,
-        "AST.Identifier": Identifier,
-        "AST.Set": Set,
-        "AST.UnaryOp": UnaryOp,
-        "Values.Value": Value,
-    }
-    cls = type_to_class.get(obj["_type"])
-    if cls is None:
-        raise ValueError(f"Unknown _type: {obj['_type']}")
-    return converter.structure(obj, cls)
-
-
-converter.register_structure_hook(Expression, structure_node)
-
-
-def structure_trits(
-    trit_str: cattrs.dispatch.UnstructuredValue, _: cattrs.dispatch.TargetType
-) -> cattrs.dispatch.StructuredValue:
-    return Trits(trit_str)
-
-
-converter.register_structure_hook(Trits, structure_trits)
-
-
-# Top-level class to match the JSON structure
-@defauto
-class Condition:
-    condition: Expression
-
-
-class NodeRef:
-    def __init__(self, node):
-        self.node = node
-
-    def __repr__(self):
-        # Only display a summary: id and keys of the dict
-        return f"<NodeRef id={id(self.node)} keys={list(self.node.keys())}>"
 
 
 def find_encodings(node, context=None, path=""):
@@ -376,7 +366,7 @@ def parse_instruction_encoding(inst: dict) -> tuple[str, Trits, int, int, int]:
         assert width > 0
 
         valval = val["value"].replace("'", "")
-        sbmt = TritRange(start, width, valval)
+        sbmt = TritRange(start, width, Trits(valval))
         trit_ranges.add_range(sbmt)
 
     mtrits = trit_ranges.merge()
