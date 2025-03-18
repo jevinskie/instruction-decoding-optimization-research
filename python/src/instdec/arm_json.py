@@ -74,14 +74,14 @@ class Set:
 
 @defauto
 class BinaryOp:
-    left: Node
+    left: Expression
     op: BinOp
-    right: Node
+    right: Expression
 
 
 @defauto
 class UnaryOp:
-    expr: Node
+    expr: Expression
     op: UnOp
 
 
@@ -91,20 +91,20 @@ seen_function_names: set[str] = set()
 @defauto
 class Function:
     name: str
-    arguments: list[Node]
+    arguments: list[Expression]
 
     def __attrs_post_init__(self):
         seen_function_names.add(self.name)
 
 
-# Define Node as a union of all possible node types
-Node = Union[Bool, BinaryOp, Function, Identifier, UnaryOp, Set, Value]
+# Define Expression as a union of all possible AST node types
+Expression = Union[Bool, BinaryOp, Function, Identifier, UnaryOp, Set, Value]
 Valueish = Union[Value, Set]
 
 
 @attrs.define(auto_attribs=True)
 class Interpteter:
-    ast: Node
+    ast: Expression
 
     def evaluate(self) -> Valueish:
         cur_node = self.ast
@@ -213,7 +213,7 @@ def structure_node(
     return converter.structure(obj, cls)
 
 
-converter.register_structure_hook(Node, structure_node)
+converter.register_structure_hook(Expression, structure_node)
 
 
 def structure_trits(
@@ -228,7 +228,7 @@ converter.register_structure_hook(Trits, structure_trits)
 # Top-level class to match the JSON structure
 @defauto
 class Condition:
-    condition: Node
+    condition: Expression
 
 
 class NodeRef:
@@ -285,6 +285,9 @@ def find_encodings(node, context=None, path=""):
 
 def are_encodesets_consistent(a: dict, b: dict) -> bool:
     return False
+
+
+# def constrain_instr(encset: En)
 
 
 def find_leafs_helper(instrs: dict | list, encoding_stack: list | None = None) -> list:
