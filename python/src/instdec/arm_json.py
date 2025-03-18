@@ -135,19 +135,44 @@ def structure_trits(
 converter.register_structure_hook(Trits, structure_trits)
 
 
-# Top-level class to match the JSON structure
+@defauto
+class Instruction:
+    condition: Expression
+
+
 @defauto
 class Condition:
     condition: Expression
 
 
-class NodeRef:
+def structure_instruction(
+    obj: cattrs.dispatch.UnstructuredValue, _: cattrs.dispatch.TargetType
+) -> cattrs.dispatch.StructuredValue:
+    type_to_class = {
+        "Instruction.Instruction": Instruction,
+        "AST.Bool": Bool,
+        "AST.Function": Function,
+        "AST.Identifier": Identifier,
+        "AST.Set": Set,
+        "AST.UnaryOp": UnaryOp,
+        "Values.Value": Value,
+    }
+    cls = type_to_class.get(obj["_type"])
+    if cls is None:
+        raise ValueError(f"Unknown _type: {obj['_type']}")
+    return converter.structure(obj, cls)
+
+
+converter.register_structure_hook(Instruction, structure_instruction)
+
+
+class ExprRef:
     def __init__(self, node):
         self.node = node
 
     def __repr__(self):
         # Only display a summary: id and keys of the dict
-        return f"<NodeRef id={id(self.node)} keys={list(self.node.keys())}>"
+        return f"<ExprRef id={id(self.node)} keys={list(self.node.keys())}>"
 
 
 @attrs.define(auto_attribs=True)
@@ -256,8 +281,8 @@ def find_encodings(node, context=None, path=""):
                 "path": path + ".encoding",
             }
             results.append(encoding_entry)
-            # Append current node to the context, wrapping it with NodeRef to prevent recursive printing
-            # current_context.append({"encoding": node["encoding"], "object": NodeRef(node)})
+            # Append current node to the context, wrapping it with ExprRef to prevent recursive printing
+            # current_context.append({"encoding": node["encoding"], "object": ExprRef(node)})
             current_context.append(
                 {"encoding": node["encoding"], "object": node.get("name", "no_name")}
             )
