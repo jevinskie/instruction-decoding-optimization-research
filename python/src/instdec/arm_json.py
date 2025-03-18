@@ -49,10 +49,19 @@ class Identifier:
         seen_identifiers.add(self.value)
 
 
+seen_value_meanings: set[str] = set()
+seen_value_values: set[Trits] = set()
+
+
 @defauto
 class Value:
     meaning: str | None
     value: Trits
+
+    def __attrs_post_init__(self):
+        if self.meaning is not None:
+            seen_value_meanings.add(self.meaning)
+        seen_value_values.add(self.value)
 
     @property
     def mean(self) -> str:

@@ -3,7 +3,7 @@ from typing import Self
 import attrs
 
 
-@attrs.define(eq=False)
+@attrs.define(frozen=True, on_setattr=None, auto_attribs=True)
 class Trits:
     """
     A class to represent and manipulate trit strings (0, 1, X).
