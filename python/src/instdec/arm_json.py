@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import enum
-import sys
 from collections.abc import Callable
 from typing import TypeVar, Union
 
@@ -152,6 +151,13 @@ class Interpteter:
             nv = left.value.eq_(right.value)
             return Value(meaning="EQ", value=nv)
         elif op == BinOp.NE:
+            if (
+                isinstance(left, Identifier)
+                and left.value == "Rm"
+                and isinstance(right, Value)
+                and right.value == Trits("11111")
+            ):
+                return Value(meaning="FORCE_RM_NE_1S", value=Trits("1"))
             nv = left.value.ne_(right.value)
             return Value(meaning="NE", value=nv)
         elif op == BinOp.IN:
@@ -287,8 +293,6 @@ def find_leafs_helper(instrs: dict | list, encoding_stack: list | None = None) -
         encoding_stack = []
     if isinstance(instrs, dict):
         instrs = [instrs]
-    elif not isinstance(instrs, list):
-        print(f"type missing: {type(instrs)}", file=sys.stderr)
     assert isinstance(instrs, list)
     for x in instrs:
         if isinstance(x, dict):
