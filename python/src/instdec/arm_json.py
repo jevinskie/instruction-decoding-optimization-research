@@ -241,9 +241,9 @@ cattrs.strategies.configure_tagged_union(
 )
 
 
-def structure_trit(obj: str, unk: Any):
-    print(f"structure_trit obj: '{obj}' unk: {unk}")
-    return Trits(obj)
+def structure_trit(obj: str, cls: type):
+    # print(f"structure_trit obj: '{obj}' cls: {cls}")
+    return cls(obj)
 
 
 converter.register_structure_hook(Trits, structure_trit)
