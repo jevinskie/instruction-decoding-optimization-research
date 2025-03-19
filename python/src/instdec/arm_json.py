@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import enum
-from typing import Union
 
 import attrs
 import cattrs
 import cattrs.dispatch
+import cattrs.strategies
 from cattrs import Converter
 
 from .trits import TritRange, TritRanges, Trits
@@ -35,6 +35,7 @@ seen_identifiers: set[str] = set()
 @defauto
 class Identifier:
     value: str
+    _type: str = "AST.Identifier"
 
     def __attrs_post_init__(self):
         seen_identifiers.add(self.value)
@@ -48,6 +49,7 @@ seen_value_values: set[Trits] = set()
 class Value:
     meaning: str | None
     value: Trits
+    _type: str = "Value.Value"
 
     def __attrs_post_init__(self):
         if self.meaning is not None:
@@ -65,11 +67,13 @@ class Value:
 @defauto
 class Bool:
     value: bool
+    _type: str = "AST.Bool"
 
 
 @defauto
 class Set:
     values: set[Value]
+    _type: str = "AST.Set"
 
 
 @defauto
@@ -77,12 +81,14 @@ class BinaryOp:
     left: Expression
     op: BinOp
     right: Expression
+    _type: str = "AST.BinaryOp"
 
 
 @defauto
 class UnaryOp:
     expr: Expression
     op: UnOp
+    _type: str = "AST.UnaryOp"
 
 
 seen_function_names: set[str] = set()
@@ -92,20 +98,22 @@ seen_function_names: set[str] = set()
 class Function:
     name: str
     arguments: list[Expression]
+    _type: str = "AST.Function"
 
     def __attrs_post_init__(self):
         seen_function_names.add(self.name)
 
 
 # Define Expression as a union of all possible AST node types
-Expression = Union[Bool, BinaryOp, Function, Identifier, UnaryOp, Set, Value]
-Valueish = Union[Value, Set]
+Expression = Bool | BinaryOp | Function | Identifier | UnaryOp | Set | Value
+Valueish = Value | Set
 
 
 @defauto
 class Range:
     start: int
     width: int
+    _type: str = "Range"
 
     @property
     def end(self) -> int:
@@ -117,6 +125,7 @@ class EncodesetBits:
     value: Value
     range: Range
     should_be_mask: Value
+    _type: str = "Instruction.Encodeset.Bits"
 
 
 @defauto
@@ -125,26 +134,30 @@ class EncodesetField:
     range: Range
     value: Value
     should_be_mask: Value
+    _type: str = "Instruction.Encodeset.Field"
 
 
 @defauto
 class EncodsetShouldBeBits:
     value: Value
     range: Range
+    _type: str = "Instruction.Encodeset.ShouldBeBits"
 
 
-EncodesetValues = Union[EncodesetBits | EncodesetField | EncodsetShouldBeBits]
+EncodesetValues = EncodesetBits | EncodesetField | EncodsetShouldBeBits
 
 
 @defauto
 class Encodeset:
     values: list[EncodesetValues]
     width: int
+    _type: str = "Instruction.Encodeset.Encodeset"
 
 
 @defauto
 class Instruction:
     encoding: Encodeset
+    _type: str = "Instruction.Instruction"
 
 
 @defauto
@@ -180,33 +193,27 @@ def structure_json_schema(
     return converter.structure(obj, cls)
 
 
-JSONSchemaObject = Union[
-    BinaryOp,
-    Bool,
-    Function,
-    Identifier,
-    Set,
-    UnaryOp,
-    EncodesetBits,
-    Encodeset,
-    EncodesetField,
-    EncodsetShouldBeBits,
-    Instruction,
-    Range,
-    Value,
-]
+JSONSchemaObject = (
+    BinaryOp
+    | Bool
+    | Function
+    | Identifier
+    | Set
+    | UnaryOp
+    | EncodesetBits
+    | Encodeset
+    | EncodesetField
+    | EncodsetShouldBeBits
+    | Instruction
+    | Range
+    | Value
+)
 
 
-converter.register_structure_hook(JSONSchemaObject, structure_json_schema)
-
-
-def structure_trits(
-    trit_str: cattrs.dispatch.UnstructuredValue, _: cattrs.dispatch.TargetType
-) -> cattrs.dispatch.StructuredValue:
-    return Trits(trit_str)
-
-
-converter.register_structure_hook(Trits, structure_trits)
+# converter.register_structure_hook(JSONSchemaObject, structure_json_schema)
+cattrs.strategies.configure_tagged_union(
+    JSONSchemaObject, converter, tag_generator=lambda cl: cl._type
+)
 
 
 class ExprRef:

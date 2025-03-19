@@ -24,12 +24,12 @@ def real_main(args: argparse.Namespace):
     for inst in instructions:
         name, mtrits, n0, n1, nX = arm_json.parse_instruction_encoding(inst)
         print(f"inst: {name:32} mtrits: {mtrits} #0: {n0:2} #1: {n1:2} #X: {nX:2}")
-        cond = arm_json.converter.structure(inst, arm_json.Condition)
-        interp = arm_json.Interpteter(cond.condition)
+        inst_dec = arm_json.converter.structure(inst, arm_json.JSONSchemaObject)
+        print(f"inst_dec: {inst_dec}")
+        cond = inst_dec.condition
+        interp = arm_json.Interpteter(cond)
         interp_res = interp.evaluate()
         print(f"interp_res: {interp_res}")
-        inst_dec = arm_json.converter.structure(inst, arm_json.Instruction)
-        print(f"inst_dec: {inst_dec}")
         # if name == "stnt1w_z_p_br_contiguous":
         #     print(f"stnt1w_z_p_br_contiguous:\n{inst}")
         #     condition = arm_json.converter.structure(inst, arm_json.Condition)
