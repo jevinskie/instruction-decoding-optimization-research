@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "setuptools.build_meta"
-requires = ["setuptools>=75.8.0", "setuptools-scm>=8.2.0"]
+requires = ["setuptools>=76.1.0", "setuptools-scm>=8.2.1"]
 
 [project]
 authors = [
@@ -30,7 +30,7 @@ requires-python = ">=3.11"
 [project.optional-dependencies]
 dev = [
   "mypy>=1.15.0",
-  "pre-commit>=4.1.0",
+  "pre-commit>=4.2.0",
   "ruff>=0.9.7",
   "ssort>=0.14.0"
 ]

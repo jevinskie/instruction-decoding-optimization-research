@@ -2,10 +2,10 @@ from typing import Self
 
 import attrs
 
-from .util import defauto
+from .util import defauto, tag
 
 
-# @tag("Trits")
+@tag("Trits")
 @defauto
 class Trits:
     """

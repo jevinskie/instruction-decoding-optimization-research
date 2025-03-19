@@ -1,5 +1,5 @@
 # Note the order is intentional to avoid multiple passes of the hooks
-minimum_pre_commit_version: 4.0.1
+minimum_pre_commit_version: 4.2.0
 repos:
 - repo: meta
   hooks:
