@@ -51,14 +51,14 @@ seen_value_meanings: set[str] = set()
 seen_value_values: set[Trits] = set()
 
 
+def str_none_nil_xfrm(v: str | None) -> str:
+    return v if v is not None else "(nil)"
+
+
 @tag("Value.Value")
 @defauto
 class Value:
-    @staticmethod
-    def normalize_meaning(meaning_raw: str | None) -> str:
-        return meaning_raw if meaning_raw is not None else "(nil)"
-
-    meaning: str = attrs.field(converter=normalize_meaning)
+    meaning: str = attrs.field(converter=str_none_nil_xfrm)
     value: Trits
 
     def __attrs_post_init__(self):
@@ -156,13 +156,32 @@ class Encodeset:
     width: int
 
 
+@tag("Instruction.InstructionInstance")
+@defauto
+class InstructionInstance:
+    name: str
+    condition: Expression
+    children: list[InstructionInstance]
+
+
+@tag("Instruction.InstructionAlias")
+@defauto
+class InstructionAlias:
+    name: str
+    operation_id: str
+    condition: Expression
+
+
 @tag("Instruction.Instruction")
 @defauto
 class Instruction:
     name: str
+    operation_id: str
     encoding: Encodeset
     condition: Expression
-    children: list[Instruction]
+    children: list[Instruction | InstructionInstance | InstructionAlias]
+    title: str = attrs.field(converter=str_none_nil_xfrm)
+    preferred: Expression | None
 
 
 @tag("Instruction.InstructionGroup")
@@ -173,7 +192,7 @@ class InstructionGroup:
     encoding: Encodeset
     condition: Expression
     children: list[Instruction | InstructionGroup]
-    operation_id: str | None
+    operation_id: str = attrs.field(converter=str_none_nil_xfrm)
 
 
 @tag("Instruction.InstructionSet")
@@ -184,7 +203,7 @@ class InstructionSet:
     read_width: int
     condition: Expression
     children: list[Instruction | InstructionGroup]
-    operation_id: str | None
+    operation_id: str = attrs.field(converter=str_none_nil_xfrm)
 
 
 @tag("Instruction.Operation")
@@ -221,7 +240,10 @@ JSONSchemaObject = (
     | Expression
     | Identifier
     | Instruction
+    | InstructionInstance
+    | InstructionAlias
     | InstructionGroup
+    | Instructions
     | InstructionSet
     | Operation
     | OperationAlias
@@ -239,7 +261,10 @@ JSONSchemaObjectClasses = (
     Function,
     Identifier,
     Instruction,
+    InstructionInstance,
+    InstructionAlias,
     InstructionGroup,
+    Instructions,
     InstructionSet,
     Operation,
     OperationAlias,

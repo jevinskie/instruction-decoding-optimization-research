@@ -25,6 +25,11 @@ def dump_instructions_old(raw_json: dict | list) -> None:
         #     print("condition:")
         #     print(condition)
         #     sys.exit(0)
+    json.dump(instructions, open("inst-enc-old.json", "w"))
+
+
+def dump_instructions(raw_json: dict | list) -> None:
+    instructions = arm_json.converter.structure(raw_json, arm_json.JSONSchemaObject)
     json.dump(instructions, open("inst-enc.json", "w"))
 
 
@@ -40,7 +45,8 @@ def real_main(args: argparse.Namespace):
     print(f"args: {args}")
     raw_json = dict(json.load(open(args.instr_json)))
 
-    dump_instructions_old(raw_json)
+    # dump_instructions_old(raw_json)
+    dump_instructions(raw_json)
 
     print(f"seen_identifiers: {arm_json.seen_identifiers}")
     print(f"seen_function_names: {arm_json.seen_function_names}")
