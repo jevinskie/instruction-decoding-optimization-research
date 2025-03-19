@@ -105,14 +105,13 @@ seen_function_names: set[str] = set()
 class Function:
     name: str
     arguments: list[Expression]
-    _type: str = "AST.Function"
 
     def __attrs_post_init__(self):
         seen_function_names.add(self.name)
 
 
 # Define Expression as a union of all possible AST node types
-Expression = Bool | BinaryOp | Function | Identifier | UnaryOp | Set | Value
+Expression = Bool | BinaryOp | Function | Identifier | Set | UnaryOp | Value
 Valueish = Value | Set
 
 
@@ -159,7 +158,6 @@ EncodesetValues = EncodesetBits | EncodesetField | EncodsetShouldBeBits
 class Encodeset:
     values: list[EncodesetValues]
     width: int
-    _type: str = "Instruction.Encodeset.Encodeset"
 
 
 @tag("Instruction.Instruction")
@@ -167,35 +165,34 @@ class Encodeset:
 class Instruction:
     encoding: Encodeset
     condition: Expression
-    _type: str = "Instruction.Instruction"
 
 
 # Set up cattrs converter with a custom structure hook
 converter = Converter()
 
 
-def structure_json_schema(
-    obj: cattrs.dispatch.UnstructuredValue, _: cattrs.dispatch.TargetType
-) -> cattrs.dispatch.StructuredValue:
-    type_to_class = {
-        "AST.BinaryOp": BinaryOp,
-        "AST.Bool": Bool,
-        "AST.Function": Function,
-        "AST.Identifier": Identifier,
-        "AST.Set": Set,
-        "AST.UnaryOp": UnaryOp,
-        "Instruction.Encodeset.Bits": EncodesetBits,
-        "Instruction.Encodeset.Encodeset": Encodeset,
-        "Instruction.Encodeset.Field": EncodesetField,
-        "Instruction.Encodeset.ShouldBeBits": EncodsetShouldBeBits,
-        "Instruction.Instruction": Instruction,
-        "Range": Range,
-        "Values.Value": Value,
-    }
-    cls = type_to_class.get(obj["_type"])
-    if cls is None:
-        raise ValueError(f"Unknown _type: {obj['_type']}")
-    return converter.structure(obj, cls)
+# def structure_json_schema(
+#     obj: cattrs.dispatch.UnstructuredValue, _: cattrs.dispatch.TargetType
+# ) -> cattrs.dispatch.StructuredValue:
+#     type_to_class = {
+#         "AST.BinaryOp": BinaryOp,
+#         "AST.Bool": Bool,
+#         "AST.Function": Function,
+#         "AST.Identifier": Identifier,
+#         "AST.Set": Set,
+#         "AST.UnaryOp": UnaryOp,
+#         "Instruction.Encodeset.Bits": EncodesetBits,
+#         "Instruction.Encodeset.Encodeset": Encodeset,
+#         "Instruction.Encodeset.Field": EncodesetField,
+#         "Instruction.Encodeset.ShouldBeBits": EncodsetShouldBeBits,
+#         "Instruction.Instruction": Instruction,
+#         "Range": Range,
+#         "Values.Value": Value,
+#     }
+#     cls = type_to_class.get(obj["_type"])
+#     if cls is None:
+#         raise ValueError(f"Unknown _type: {obj['_type']}")
+#     return converter.structure(obj, cls)
 
 
 JSONSchemaObject = (
@@ -218,6 +215,7 @@ JSONSchemaObject = (
 def my_tag_generator(cl: Any) -> Any:
     # rich.inspect(cl, all=True)
     # rich.inspect(cl._type, all=True)
+    print(f"cl: {cl}")
     return cl._type
 
 
