@@ -39,6 +39,7 @@ seen_identifiers: set[str] = set()
 class Identifier:
     # valuex: str = attrs.field(alias="value")
     value: str
+    _sentinel: str
 
     def __attrs_post_init__(self):
         seen_identifiers.add(self.value)
