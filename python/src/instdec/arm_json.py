@@ -42,6 +42,10 @@ class Identifier:
     def __attrs_post_init__(self):
         seen_identifiers.add(self.value)
 
+    @property
+    def value(self) -> str:
+        return self.valuex
+
 
 seen_value_meanings: set[str] = set()
 seen_value_values: set[Trits] = set()
@@ -162,6 +166,7 @@ class Instruction:
 
 # Set up cattrs converter with a custom structure hook
 converter = Converter()
+converter.detailed_validation = True
 
 
 # def structure_json_schema(
