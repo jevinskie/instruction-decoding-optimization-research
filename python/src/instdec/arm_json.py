@@ -1,13 +1,11 @@
 from __future__ import annotations
 
 import enum
-from typing import Any
 
 import attrs
 import cattrs
 import cattrs.dispatch
 import cattrs.strategies
-import rich
 from cattrs import Converter
 
 from .trits import TritRange, TritRanges, Trits
@@ -161,38 +159,71 @@ class Encodeset:
 @tag("Instruction.Instruction")
 @defauto
 class Instruction:
+    name: str
     encoding: Encodeset
     condition: Expression
+    children: list[Instruction]
+
+
+@tag("Instruction.InstructionGroup")
+@defauto
+class InstructionGroup:
+    name: str
+    title: str
+    encoding: Encodeset
+    condition: Expression
+    children: list[Instruction | InstructionGroup]
+    operation_id: str | None
+
+
+@tag("Instruction.InstructionSet")
+@defauto
+class InstructionSet:
+    name: str
+    encoding: Encodeset
+    read_width: int
+    condition: Expression
+    children: list[Instruction | InstructionGroup]
+    operation_id: str | None
+
+
+@tag("Instruction.Instructions")
+@defauto
+class Instructions:
+    instructions: InstructionSet
 
 
 JSONSchemaObject = (
-    Expression
-    | Identifier
+    Encodeset
     | EncodesetBits
-    | Encodeset
     | EncodesetField
     | EncodsetShouldBeBits
+    | Expression
+    | Identifier
     | Instruction
+    | InstructionGroup
+    | InstructionSet
     | Range
     | Trits
 )
 
 JSONSchemaObjectClasses = (
-    Bool,
     BinaryOp,
-    Function,
-    Identifier,
-    Set,
-    UnaryOp,
-    Value,
-    Identifier,
-    EncodesetBits,
+    Bool,
     Encodeset,
+    EncodesetBits,
     EncodesetField,
     EncodsetShouldBeBits,
+    Function,
+    Identifier,
     Instruction,
+    InstructionGroup,
+    InstructionSet,
     Range,
+    Set,
     Trits,
+    UnaryOp,
+    Value,
 )
 
 for cls in JSONSchemaObjectClasses:
@@ -203,35 +234,7 @@ converter = Converter()
 converter.detailed_validation = True
 
 
-# def structure_json_schema(
-#     obj: cattrs.dispatch.UnstructuredValue, _: cattrs.dispatch.TargetType
-# ) -> cattrs.dispatch.StructuredValue:
-#     type_to_class = {
-#         "AST.BinaryOp": BinaryOp,
-#         "AST.Bool": Bool,
-#         "AST.Function": Function,
-#         "AST.Identifier": Identifier,
-#         "AST.Set": Set,
-#         "AST.UnaryOp": UnaryOp,
-#         "Instruction.Encodeset.Bits": EncodesetBits,
-#         "Instruction.Encodeset.Encodeset": Encodeset,
-#         "Instruction.Encodeset.Field": EncodesetField,
-#         "Instruction.Encodeset.ShouldBeBits": EncodsetShouldBeBits,
-#         "Instruction.Instruction": Instruction,
-#         "Range": Range,
-#         "Values.Value": Value,
-#     }
-#     cls = type_to_class.get(obj["_type"])
-#     if cls is None:
-#         raise ValueError(f"Unknown _type: {obj['_type']}")
-#     return converter.structure(obj, cls)
-
-
-def my_tag_generator(cl: Any) -> Any:
-    # rich.inspect(cl, all=True)
-    # rich.inspect(cl._type, all=True)
-    rich.print(f"cl._type: {cl._type} cl: {cl}")
-    print(f"cl: {cl}")
+def my_tag_generator(cl: type) -> str:
     return cl._type
 
 
