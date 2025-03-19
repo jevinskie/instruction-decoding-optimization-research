@@ -39,7 +39,7 @@ seen_identifiers: set[str] = set()
 class Identifier:
     # valuex: str = attrs.field(alias="value")
     value: str
-    _sentinel: str
+    _sentinel: str  # FIXME: this has to go, right? or a converter?
 
     def __attrs_post_init__(self):
         seen_identifiers.add(self.value)
