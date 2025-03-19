@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 import enum
+from typing import Any
 
 import attrs
 import cattrs
 import cattrs.dispatch
 import cattrs.strategies
+import rich
 from cattrs import Converter
 
 from .trits import TritRange, TritRanges, Trits
-from .util import defauto
+from .util import defauto, tag
 
 
 class BinOp(enum.StrEnum):
@@ -45,11 +47,11 @@ seen_value_meanings: set[str] = set()
 seen_value_values: set[Trits] = set()
 
 
+@tag("Value.Value")
 @defauto
 class Value:
     meaning: str | None
     value: Trits
-    _type: str = "Value.Value"
 
     def __attrs_post_init__(self):
         if self.meaning is not None:
@@ -64,36 +66,37 @@ class Value:
             return ""
 
 
+@tag("AST.Bool")
 @defauto
 class Bool:
     value: bool
-    _type: str = "AST.Bool"
 
 
+@tag("AST.Set")
 @defauto
 class Set:
     values: set[Value]
-    _type: str = "AST.Set"
 
 
+@tag("AST.BinaryOp")
 @defauto
 class BinaryOp:
     left: Expression
     op: BinOp
     right: Expression
-    _type: str = "AST.BinaryOp"
 
 
+@tag("AST.UnaryOp")
 @defauto
 class UnaryOp:
     expr: Expression
     op: UnOp
-    _type: str = "AST.UnaryOp"
 
 
 seen_function_names: set[str] = set()
 
 
+@tag("AST.Function")
 @defauto
 class Function:
     name: str
@@ -109,44 +112,45 @@ Expression = Bool | BinaryOp | Function | Identifier | UnaryOp | Set | Value
 Valueish = Value | Set
 
 
+@tag("Range")
 @defauto
 class Range:
     start: int
     width: int
-    _type: str = "Range"
 
     @property
     def end(self) -> int:
         return self.start + self.width
 
 
+@tag("Instruction.Encodeset.Bits")
 @defauto
 class EncodesetBits:
     value: Value
     range: Range
     should_be_mask: Value
-    _type: str = "Instruction.Encodeset.Bits"
 
 
+@tag("Instruction.Encodeset.Field")
 @defauto
 class EncodesetField:
     name: str
     range: Range
     value: Value
     should_be_mask: Value
-    _type: str = "Instruction.Encodeset.Field"
 
 
+@tag("Instruction.Encodeset.ShouldBeBits")
 @defauto
 class EncodsetShouldBeBits:
     value: Value
     range: Range
-    _type: str = "Instruction.Encodeset.ShouldBeBits"
 
 
 EncodesetValues = EncodesetBits | EncodesetField | EncodsetShouldBeBits
 
 
+@tag("Instruction.Encodeset.Encodeset")
 @defauto
 class Encodeset:
     values: list[EncodesetValues]
@@ -154,15 +158,11 @@ class Encodeset:
     _type: str = "Instruction.Encodeset.Encodeset"
 
 
+@tag("Instruction.Instruction")
 @defauto
 class Instruction:
     encoding: Encodeset
     _type: str = "Instruction.Instruction"
-
-
-@defauto
-class Condition:
-    condition: Expression
 
 
 # Set up cattrs converter with a custom structure hook
@@ -210,9 +210,15 @@ JSONSchemaObject = (
 )
 
 
+def my_tag_generator(cl: Any) -> Any:
+    rich.inspect(cl, all=True)
+    rich.inspect(cl._type, all=True)
+    return cl._type
+
+
 # converter.register_structure_hook(JSONSchemaObject, structure_json_schema)
 cattrs.strategies.configure_tagged_union(
-    JSONSchemaObject, converter, tag_generator=lambda cl: cl._type
+    JSONSchemaObject, converter, tag_generator=my_tag_generator
 )
 
 

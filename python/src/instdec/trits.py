@@ -2,9 +2,10 @@ from typing import Self
 
 import attrs
 
-from .util import defauto
+from .util import defauto, tag
 
 
+@tag("Trits")
 @defauto
 class Trits:
     """
@@ -18,7 +19,6 @@ class Trits:
         return sval
 
     trits: str = attrs.field(converter=normalize_trit_str)
-    _type: str = "Trits"
 
     @trits.validator
     def _check_trits(self, _, value):
