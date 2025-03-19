@@ -136,8 +136,18 @@ converter.register_structure_hook(Trits, structure_trits)
 
 
 @defauto
+class Range:
+    start: int
+    width: int
+
+    @property
+    def end(self) -> int:
+        return self.start + self.width
+
+
+@defauto
 class Instruction:
-    condition: Expression
+    encoding: dict
 
 
 @defauto
@@ -145,17 +155,15 @@ class Condition:
     condition: Expression
 
 
+Widget = Union[Instruction, Range]
+
+
 def structure_instruction(
     obj: cattrs.dispatch.UnstructuredValue, _: cattrs.dispatch.TargetType
 ) -> cattrs.dispatch.StructuredValue:
     type_to_class = {
         "Instruction.Instruction": Instruction,
-        "AST.Bool": Bool,
-        "AST.Function": Function,
-        "AST.Identifier": Identifier,
-        "AST.Set": Set,
-        "AST.UnaryOp": UnaryOp,
-        "Values.Value": Value,
+        "Range": Range,
     }
     cls = type_to_class.get(obj["_type"])
     if cls is None:
@@ -163,7 +171,7 @@ def structure_instruction(
     return converter.structure(obj, cls)
 
 
-converter.register_structure_hook(Instruction, structure_instruction)
+converter.register_structure_hook(Widget, structure_instruction)
 
 
 class ExprRef:

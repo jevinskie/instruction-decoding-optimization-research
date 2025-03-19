@@ -28,6 +28,8 @@ def real_main(args: argparse.Namespace):
         interp = arm_json.Interpteter(cond.condition)
         interp_res = interp.evaluate()
         print(f"interp_res: {interp_res}")
+        inst_dec = arm_json.converter.structure(inst, arm_json.Instruction)
+        print(f"inst_dec: {inst_dec}")
         # if name == "stnt1w_z_p_br_contiguous":
         #     print(f"stnt1w_z_p_br_contiguous:\n{inst}")
         #     condition = arm_json.converter.structure(inst, arm_json.Condition)
