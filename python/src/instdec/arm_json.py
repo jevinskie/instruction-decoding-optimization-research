@@ -101,39 +101,6 @@ class Function:
 Expression = Union[Bool, BinaryOp, Function, Identifier, UnaryOp, Set, Value]
 Valueish = Union[Value, Set]
 
-# Set up cattrs converter with a custom structure hook
-converter = Converter()
-
-
-def structure_node(
-    obj: cattrs.dispatch.UnstructuredValue, _: cattrs.dispatch.TargetType
-) -> cattrs.dispatch.StructuredValue:
-    type_to_class = {
-        "AST.BinaryOp": BinaryOp,
-        "AST.Bool": Bool,
-        "AST.Function": Function,
-        "AST.Identifier": Identifier,
-        "AST.Set": Set,
-        "AST.UnaryOp": UnaryOp,
-        "Values.Value": Value,
-    }
-    cls = type_to_class.get(obj["_type"])
-    if cls is None:
-        raise ValueError(f"Unknown _type: {obj['_type']}")
-    return converter.structure(obj, cls)
-
-
-converter.register_structure_hook(Expression, structure_node)
-
-
-def structure_trits(
-    trit_str: cattrs.dispatch.UnstructuredValue, _: cattrs.dispatch.TargetType
-) -> cattrs.dispatch.StructuredValue:
-    return Trits(trit_str)
-
-
-converter.register_structure_hook(Trits, structure_trits)
-
 
 @defauto
 class Range:
@@ -185,19 +152,27 @@ class Condition:
     condition: Expression
 
 
-Widget = Union[Instruction, Range]
+# Set up cattrs converter with a custom structure hook
+converter = Converter()
 
 
-def structure_instruction(
+def structure_json_schema(
     obj: cattrs.dispatch.UnstructuredValue, _: cattrs.dispatch.TargetType
 ) -> cattrs.dispatch.StructuredValue:
     type_to_class = {
-        "Instruction.Instruction": Instruction,
-        "Instruction.Encodeset.Encodeset": Encodeset,
+        "AST.BinaryOp": BinaryOp,
+        "AST.Bool": Bool,
+        "AST.Function": Function,
+        "AST.Identifier": Identifier,
+        "AST.Set": Set,
+        "AST.UnaryOp": UnaryOp,
         "Instruction.Encodeset.Bits": EncodesetBits,
+        "Instruction.Encodeset.Encodeset": Encodeset,
         "Instruction.Encodeset.Field": EncodesetField,
         "Instruction.Encodeset.ShouldBeBits": EncodsetShouldBeBits,
+        "Instruction.Instruction": Instruction,
         "Range": Range,
+        "Values.Value": Value,
     }
     cls = type_to_class.get(obj["_type"])
     if cls is None:
@@ -205,7 +180,33 @@ def structure_instruction(
     return converter.structure(obj, cls)
 
 
-converter.register_structure_hook(Widget, structure_instruction)
+JSONSchemaObject = Union[
+    BinaryOp,
+    Bool,
+    Function,
+    Identifier,
+    Set,
+    UnaryOp,
+    EncodesetBits,
+    Encodeset,
+    EncodesetField,
+    EncodsetShouldBeBits,
+    Instruction,
+    Range,
+    Value,
+]
+
+
+converter.register_structure_hook(JSONSchemaObject, structure_json_schema)
+
+
+def structure_trits(
+    trit_str: cattrs.dispatch.UnstructuredValue, _: cattrs.dispatch.TargetType
+) -> cattrs.dispatch.StructuredValue:
+    return Trits(trit_str)
+
+
+converter.register_structure_hook(Trits, structure_trits)
 
 
 class ExprRef:
