@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dis
 import enum
 from typing import Any
 
@@ -7,11 +8,14 @@ import attrs
 import cattrs
 import cattrs.dispatch
 import cattrs.strategies
-import rich
+import uncompyle6
 from cattrs import Converter
 
 from .trits import TritRange, TritRanges, Trits
 from .util import defauto, tag
+
+uncompyle6
+dis
 
 
 class BinOp(enum.StrEnum):
@@ -162,6 +166,7 @@ class Encodeset:
 @defauto
 class Instruction:
     encoding: Encodeset
+    condition: Expression
     _type: str = "Instruction.Instruction"
 
 
@@ -211,8 +216,8 @@ JSONSchemaObject = (
 
 
 def my_tag_generator(cl: Any) -> Any:
-    rich.inspect(cl, all=True)
-    rich.inspect(cl._type, all=True)
+    # rich.inspect(cl, all=True)
+    # rich.inspect(cl._type, all=True)
     return cl._type
 
 
@@ -220,6 +225,13 @@ def my_tag_generator(cl: Any) -> Any:
 cattrs.strategies.configure_tagged_union(
     JSONSchemaObject, converter, tag_generator=my_tag_generator
 )
+
+
+def structure_trit(obj: str, _):
+    return Trits(obj)
+
+
+converter.register_structure_hook(Trits, structure_trit)
 
 
 class ExprRef:
