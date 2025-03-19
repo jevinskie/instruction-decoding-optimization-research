@@ -187,10 +187,30 @@ class InstructionSet:
     operation_id: str | None
 
 
+@tag("Instruction.Operation")
+@defauto
+class Operation:
+    operation: str
+    decode: str
+    description: str
+    brief: str
+    title: str
+
+
+@tag("Instruction.OperationAlias")
+@defauto
+class OperationAlias:
+    operation_id: str
+    description: str
+    brief: str
+    title: str
+
+
 @tag("Instruction.Instructions")
 @defauto
 class Instructions:
     instructions: InstructionSet
+    operations: dict[str, Operation | OperationAlias]
 
 
 JSONSchemaObject = (
@@ -203,6 +223,8 @@ JSONSchemaObject = (
     | Instruction
     | InstructionGroup
     | InstructionSet
+    | Operation
+    | OperationAlias
     | Range
     | Trits
 )
@@ -219,6 +241,8 @@ JSONSchemaObjectClasses = (
     Instruction,
     InstructionGroup,
     InstructionSet,
+    Operation,
+    OperationAlias,
     Range,
     Set,
     Trits,
