@@ -241,11 +241,12 @@ cattrs.strategies.configure_tagged_union(
 )
 
 
-# def structure_trit(obj: str, _):
-#     return Trits(obj)
+def structure_trit(obj: str, unk: Any):
+    print(f"structure_trit obj: '{obj}' unk: {unk}")
+    return Trits(obj)
 
 
-# converter.register_structure_hook(Trits, structure_trit)
+converter.register_structure_hook(Trits, structure_trit)
 
 
 class ExprRef:
