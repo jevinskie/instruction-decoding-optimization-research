@@ -54,12 +54,12 @@ seen_value_values: set[Trits] = set()
 @tag("Value.Value")
 @defauto
 class Value:
-    meaning: str
-    value: Trits
-
     @staticmethod
     def normalize_meaning(meaning_raw: str | None) -> str:
         return meaning_raw if meaning_raw is not None else "(nil)"
+
+    meaning: str = attrs.field(converter=normalize_meaning)
+    value: Trits
 
     def __attrs_post_init__(self):
         if self.meaning is not None:
@@ -217,11 +217,11 @@ cattrs.strategies.configure_tagged_union(
 )
 
 
-# def structure_trit(obj: str, _):
-#     return Trits(obj)
+def structure_trit(obj: str, _):
+    return Trits(obj)
 
 
-# converter.register_structure_hook(Trits, structure_trit)
+converter.register_structure_hook(Trits, structure_trit)
 
 
 class ExprRef:
