@@ -37,14 +37,15 @@ seen_identifiers: set[str] = set()
 @tag("AST.Identifier")
 @defauto
 class Identifier:
-    valuex: str = attrs.field(alias="value")
+    # valuex: str = attrs.field(alias="value")
+    value: str
 
     def __attrs_post_init__(self):
         seen_identifiers.add(self.value)
 
-    @property
-    def value(self) -> str:
-        return self.valuex
+    # @property
+    # def value(self) -> str:
+    #     return self.valuex
 
 
 seen_value_meanings: set[str] = set()
