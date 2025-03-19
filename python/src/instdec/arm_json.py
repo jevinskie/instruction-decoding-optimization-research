@@ -41,7 +41,7 @@ seen_identifiers: set[str] = set()
 @tag("AST.Identifier")
 @defauto
 class Identifier:
-    value: str
+    valuex: str = attrs.field(alias="value")
 
     def __attrs_post_init__(self):
         seen_identifiers.add(self.value)
@@ -54,20 +54,17 @@ seen_value_values: set[Trits] = set()
 @tag("Value.Value")
 @defauto
 class Value:
-    meaning: str | None
+    meaning: str
     value: Trits
+
+    @staticmethod
+    def normalize_meaning(meaning_raw: str | None) -> str:
+        return meaning_raw if meaning_raw is not None else "(nil)"
 
     def __attrs_post_init__(self):
         if self.meaning is not None:
             seen_value_meanings.add(self.meaning)
         seen_value_values.add(self.value)
-
-    @property
-    def mean(self) -> str:
-        if self.meaning is not None:
-            return self.meaning
-        else:
-            return ""
 
 
 @tag("AST.Bool")
