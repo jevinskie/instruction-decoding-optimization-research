@@ -196,19 +196,14 @@ converter = Converter()
 
 
 JSONSchemaObject = (
-    BinaryOp
-    | Bool
-    | Function
+    Expression
     | Identifier
-    | Set
-    | UnaryOp
     | EncodesetBits
     | Encodeset
     | EncodesetField
     | EncodsetShouldBeBits
     | Instruction
     | Range
-    | Value
 )
 
 
