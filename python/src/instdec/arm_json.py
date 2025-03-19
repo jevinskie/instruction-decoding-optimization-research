@@ -38,10 +38,10 @@ class ConsOp(enum.StrEnum):
 seen_identifiers: set[str] = set()
 
 
+@tag("AST.Identifier")
 @defauto
 class Identifier:
     value: str
-    _type: str = "AST.Identifier"
 
     def __attrs_post_init__(self):
         seen_identifiers.add(self.value)
