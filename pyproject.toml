@@ -10,8 +10,7 @@ classifiers = [
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.13",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: 3.11"
+  "Programming Language :: Python :: 3.12"
 ]
 dependencies = [
   "attrs>=25.3.0",
@@ -44,7 +43,7 @@ repository = "https://github.com/jevinskie/instruction-decoding-optimization-res
 
 [tool.ruff]
 line-length = 100
-target-version = "py311"
+target-version = "py312"
 
 [tool.ruff.lint]
 extend-select = ["I"]

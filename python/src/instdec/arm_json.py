@@ -146,8 +146,38 @@ class Range:
 
 
 @defauto
+class EncodesetBits:
+    value: Value
+    range: Range
+    should_be_mask: Value
+
+
+@defauto
+class EncodesetField:
+    name: str
+    range: Range
+    value: Value
+    should_be_mask: Value
+
+
+@defauto
+class EncodsetShouldBeBits:
+    value: Value
+    range: Range
+
+
+EncodesetValues = Union[EncodesetBits | EncodesetField | EncodsetShouldBeBits]
+
+
+@defauto
+class Encodeset:
+    values: list[EncodesetValues]
+    width: int
+
+
+@defauto
 class Instruction:
-    encoding: dict
+    encoding: Encodeset
 
 
 @defauto
@@ -163,6 +193,10 @@ def structure_instruction(
 ) -> cattrs.dispatch.StructuredValue:
     type_to_class = {
         "Instruction.Instruction": Instruction,
+        "Instruction.Encodeset.Encodeset": Encodeset,
+        "Instruction.Encodeset.Bits": EncodesetBits,
+        "Instruction.Encodeset.Field": EncodesetField,
+        "Instruction.Encodeset.ShouldBeBits": EncodsetShouldBeBits,
         "Range": Range,
     }
     cls = type_to_class.get(obj["_type"])
