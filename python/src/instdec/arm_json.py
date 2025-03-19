@@ -63,8 +63,7 @@ class Value:
     value: Trits
 
     def __attrs_post_init__(self):
-        if self.meaning is not None:
-            seen_value_meanings.add(self.meaning)
+        seen_value_meanings.add(self.meaning)
         seen_value_values.add(self.value)
 
 
@@ -165,6 +164,39 @@ class Instruction:
     condition: Expression
 
 
+JSONSchemaObject = (
+    Expression
+    | Identifier
+    | EncodesetBits
+    | Encodeset
+    | EncodesetField
+    | EncodsetShouldBeBits
+    | Instruction
+    | Range
+    | Trits
+)
+
+JSONSchemaObjectClasses = (
+    Bool,
+    BinaryOp,
+    Function,
+    Identifier,
+    Set,
+    UnaryOp,
+    Value,
+    Identifier,
+    EncodesetBits,
+    Encodeset,
+    EncodesetField,
+    EncodsetShouldBeBits,
+    Instruction,
+    Range,
+    Trits,
+)
+
+for cls in JSONSchemaObjectClasses:
+    attrs.resolve_types(cls, globals(), locals())
+
 # Set up cattrs converter with a custom structure hook
 converter = Converter()
 converter.detailed_validation = True
@@ -192,19 +224,6 @@ converter.detailed_validation = True
 #     if cls is None:
 #         raise ValueError(f"Unknown _type: {obj['_type']}")
 #     return converter.structure(obj, cls)
-
-
-JSONSchemaObject = (
-    Expression
-    | Identifier
-    | EncodesetBits
-    | Encodeset
-    | EncodesetField
-    | EncodsetShouldBeBits
-    | Instruction
-    | Range
-    | Trits
-)
 
 
 def my_tag_generator(cl: Any) -> Any:
