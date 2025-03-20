@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import enum
+import typing
 
 import attrs
 import cattrs
@@ -172,6 +173,11 @@ class InstructionAlias:
     condition: Expression
 
 
+Instructionish = typing.Union["Instruction", InstructionInstance, InstructionAlias]
+
+InstructionChildren = list[Instructionish]
+
+
 @tag("Instruction.Instruction")
 @defauto
 class Instruction:
@@ -179,9 +185,13 @@ class Instruction:
     operation_id: str
     encoding: Encodeset
     condition: Expression
-    children: list[Instruction | InstructionInstance | InstructionAlias]
+    children: InstructionChildren
     title: str = attrs.field(converter=str_none_nil_xfrm)
     preferred: Expression | None
+
+
+InstructionGroupish = typing.Union[Instruction, "InstructionGroup"]
+InstructionGroupSetChildren = list[InstructionGroupish]
 
 
 @tag("Instruction.InstructionGroup")
@@ -191,7 +201,7 @@ class InstructionGroup:
     title: str
     encoding: Encodeset
     condition: Expression
-    children: list[Instruction | InstructionGroup]
+    children: InstructionGroupSetChildren
     operation_id: str = attrs.field(converter=str_none_nil_xfrm)
 
 
@@ -202,7 +212,7 @@ class InstructionSet:
     encoding: Encodeset
     read_width: int
     condition: Expression
-    children: list[Instruction | InstructionGroup]
+    children: InstructionGroupSetChildren
     operation_id: str = attrs.field(converter=str_none_nil_xfrm)
 
 
@@ -225,11 +235,15 @@ class OperationAlias:
     title: str
 
 
+Operationish = Operation | OperationAlias
+Operations = dict[str, Operationish]
+
+
 @tag("Instruction.Instructions")
 @defauto
 class Instructions:
     instructions: InstructionSet
-    operations: dict[str, Operation | OperationAlias]
+    operations: Operations
 
 
 JSONSchemaObject = (
@@ -249,6 +263,37 @@ JSONSchemaObject = (
     | OperationAlias
     | Range
     | Trits
+)
+
+TheTypes = (
+    BinaryOp,
+    Bool,
+    Encodeset,
+    EncodesetBits,
+    EncodesetField,
+    EncodsetShouldBeBits,
+    Function,
+    Identifier,
+    Instruction,
+    InstructionInstance,
+    InstructionAlias,
+    InstructionGroup,
+    Instructions,
+    InstructionSet,
+    Operation,
+    OperationAlias,
+    Range,
+    Set,
+    Trits,
+    UnaryOp,
+    Value,
+    Valueish,
+    InstructionChildren,
+    InstructionGroupish,
+    InstructionGroupSetChildren,
+    Instructionish,
+    Operationish,
+    Operations,
 )
 
 JSONSchemaObjectClasses = (
