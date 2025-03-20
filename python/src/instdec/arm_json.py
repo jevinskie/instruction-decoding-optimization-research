@@ -108,8 +108,8 @@ class Function:
 
 
 # Define Expression as a union of all possible AST node types
-Expression = Bool | BinaryOp | Function | Identifier | Set | UnaryOp | Value
-Valueish = Value | Set
+Expression = typing.Union[Bool, BinaryOp, Function, Identifier, Set, UnaryOp, Value]
+Valueish = typing.Union[Value, Set]
 
 
 @tag("Range")
@@ -147,7 +147,7 @@ class EncodsetShouldBeBits:
     range: Range
 
 
-EncodesetValues = EncodesetBits | EncodesetField | EncodsetShouldBeBits
+EncodesetValues = typing.Union[EncodesetBits, EncodesetField, EncodsetShouldBeBits]
 
 
 @tag("Instruction.Encodeset.Encodeset")
@@ -190,7 +190,9 @@ class Instruction:
     preferred: Expression | None
 
 
-InstructionGroupish = typing.Union[Instruction, "InstructionGroup"]
+InstructionGroupish = typing.Union[
+    Instruction, typing.ForwardRef("InstructionGroup", is_argument=False)
+]
 InstructionGroupSetChildren = list[InstructionGroupish]
 
 
@@ -235,7 +237,7 @@ class OperationAlias:
     title: str
 
 
-Operationish = Operation | OperationAlias
+Operationish = typing.Union[Operation, OperationAlias]
 Operations = dict[str, Operationish]
 
 
@@ -246,24 +248,24 @@ class Instructions:
     operations: Operations
 
 
-JSONSchemaObject = (
-    Encodeset
-    | EncodesetBits
-    | EncodesetField
-    | EncodsetShouldBeBits
-    | Expression
-    | Identifier
-    | Instruction
-    | InstructionInstance
-    | InstructionAlias
-    | InstructionGroup
-    | Instructions
-    | InstructionSet
-    | Operation
-    | OperationAlias
-    | Range
-    | Trits
-)
+JSONSchemaObject = typing.Union[
+    Encodeset,
+    EncodesetBits,
+    EncodesetField,
+    EncodsetShouldBeBits,
+    Expression,
+    Identifier,
+    Instruction,
+    InstructionInstance,
+    InstructionAlias,
+    InstructionGroup,
+    Instructions,
+    InstructionSet,
+    Operation,
+    OperationAlias,
+    Range,
+    Trits,
+]
 
 TheTypes = (
     BinaryOp,
@@ -295,6 +297,13 @@ TheTypes = (
     Operationish,
     Operations,
 )
+
+for i in range(7):
+    for t in TheTypes:
+        try:
+            typing.get_type_hints(t, globalns=globals(), localns=locals())
+        except Exception as e:
+            print(f"did {t} got {e}")
 
 JSONSchemaObjectClasses = (
     BinaryOp,
