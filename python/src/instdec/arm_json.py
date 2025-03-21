@@ -33,14 +33,9 @@ class ConsOp(enum.StrEnum):
 seen_identifiers: set[str] = set()
 
 
-class JSONObject:
-    _type: typing.LiteralString
-
-
-# @tag("AST.Identifier")
+@tag("AST.Identifier")
 @defauto
-class Identifier(JSONObject):
-    _type: typing.Final[typing.Literal["AST.Identifier"]] = "AST.Identifier"
+class Identifier:
     # valuex: str = attrs.field(alias="value")
     value: str
     _sentinel: str  # FIXME: this has to go, right? or a converter?
@@ -189,10 +184,10 @@ class Instruction:
     name: str
     operation_id: str
     encoding: Encodeset
-    condition: Expression
-    children: InstructionChildren
-    title: str = attrs.field(converter=str_none_nil_xfrm)
-    preferred: Expression | None
+    condition: Expression | None = attrs.field(default=None)
+    children: InstructionChildren | None = attrs.field(default=None)
+    title: str | None = attrs.field(default=None)
+    preferred: Expression | None = attrs.field(default=None)
 
 
 InstructionGroupish = typing.Union[
@@ -205,11 +200,11 @@ InstructionGroupSetChildren = list[InstructionGroupish]
 @defauto
 class InstructionGroup:
     name: str
-    title: str
     encoding: Encodeset
-    condition: Expression
-    children: InstructionGroupSetChildren
-    operation_id: str = attrs.field(converter=str_none_nil_xfrm)
+    title: str | None = attrs.field(default=None)
+    condition: Expression | None = attrs.field(default=None)
+    children: InstructionGroupSetChildren | None = attrs.field(default=None)
+    operation_id: str | None = attrs.field(default=None)
 
 
 @tag("Instruction.InstructionSet")
@@ -218,19 +213,19 @@ class InstructionSet:
     name: str
     encoding: Encodeset
     read_width: int
-    condition: Expression
-    children: InstructionGroupSetChildren
-    operation_id: str = attrs.field(converter=str_none_nil_xfrm)
+    condition: Expression | None = attrs.field(default=None)
+    children: InstructionGroupSetChildren | None = attrs.field(default=None)
+    operation_id: str | None = attrs.field(default=None)
 
 
 @tag("Instruction.Operation")
 @defauto
 class Operation:
     operation: str
-    decode: str
     description: str
     brief: str
     title: str
+    decode: str | None = attrs.field(default=None)
 
 
 @tag("Instruction.OperationAlias")
