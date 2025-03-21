@@ -33,9 +33,14 @@ class ConsOp(enum.StrEnum):
 seen_identifiers: set[str] = set()
 
 
-@tag("AST.Identifier")
+class JSONObject:
+    _type: typing.LiteralString
+
+
+# @tag("AST.Identifier")
 @defauto
-class Identifier:
+class Identifier(JSONObject):
+    _type: typing.Final[typing.Literal["AST.Identifier"]] = "AST.Identifier"
     # valuex: str = attrs.field(alias="value")
     value: str
     _sentinel: str  # FIXME: this has to go, right? or a converter?
@@ -353,6 +358,10 @@ def structure_operations(obj: dict[str, Operation], _: type) -> Operations:
     return result
 
 
+# Register a custom structure hook for Operations
+converter.register_structure_hook(Operations, structure_operations)
+
+
 def my_tag_generator(cl: type) -> str:
     return cl._type
 
@@ -361,10 +370,6 @@ def my_tag_generator(cl: type) -> str:
 cattrs.strategies.configure_tagged_union(
     JSONSchemaObject, converter, tag_generator=my_tag_generator
 )
-
-
-# Register a custom structure hook for Operations
-converter.register_structure_hook(Operations, structure_operations)
 
 
 def structure_trit(obj: str, cls: type):
