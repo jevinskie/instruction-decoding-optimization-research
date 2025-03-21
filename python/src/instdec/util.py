@@ -109,10 +109,8 @@ def traverse_nested(
     ):
         # Get attributes, either from __dict__ or using dir()
         attributes = (
-            {k: getattr(data, k) for k in data.__slots__}
-            if hasattr(data, "__slots__")
-            else vars(data)
-            if hasattr(data, "__dict__")
+            vars(data)
+            if hasattr(data, "__dict__") and not hasattr(data, "__slots__")
             else {
                 attr: getattr(data, attr)
                 for attr in dir(data)
