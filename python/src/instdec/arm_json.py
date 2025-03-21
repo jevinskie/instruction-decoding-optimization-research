@@ -237,7 +237,7 @@ class OperationAlias:
     title: str
 
 
-Operationish = typing.Union[Operation, OperationAlias]
+Operationish = Operation | OperationAlias
 
 
 class Operations(dict[str, Operationish]):
@@ -264,10 +264,10 @@ JSONSchemaObject = typing.Union[
     InstructionGroup,
     Instructions,
     InstructionSet,
-    Operation,
-    OperationAlias,
     Range,
     Trits,
+    Operation,
+    OperationAlias,
 ]
 
 TheTypes = (
@@ -285,8 +285,6 @@ TheTypes = (
     InstructionGroup,
     Instructions,
     InstructionSet,
-    Operation,
-    OperationAlias,
     Range,
     Set,
     Trits,
@@ -299,6 +297,8 @@ TheTypes = (
     Instructionish,
     Operationish,
     Operations,
+    Operation,
+    OperationAlias,
 )
 
 for i in range(7):
@@ -323,13 +323,13 @@ JSONSchemaObjectClasses = (
     InstructionGroup,
     Instructions,
     InstructionSet,
-    Operation,
-    OperationAlias,
     Range,
     Set,
     Trits,
     UnaryOp,
     Value,
+    Operation,
+    OperationAlias,
 )
 
 for cls in JSONSchemaObjectClasses:
@@ -353,10 +353,6 @@ def structure_operations(obj: dict[str, Operation], _: type) -> Operations:
     return result
 
 
-# Register a custom structure hook for Operations
-converter.register_structure_hook(Operations, structure_operations)
-
-
 def my_tag_generator(cl: type) -> str:
     return cl._type
 
@@ -365,6 +361,10 @@ def my_tag_generator(cl: type) -> str:
 cattrs.strategies.configure_tagged_union(
     JSONSchemaObject, converter, tag_generator=my_tag_generator
 )
+
+
+# Register a custom structure hook for Operations
+converter.register_structure_hook(Operations, structure_operations)
 
 
 def structure_trit(obj: str, cls: type):
