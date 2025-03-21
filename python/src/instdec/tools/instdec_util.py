@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
 import argparse
+from typing import Any
 
 import simplejson as json
+from rich import print
 
-# from rich import print
 # import rich
 from instdec import arm_json
+from instdec.util import traverse_nested
 
 
 def dump_instructions_old(raw_json: dict | list) -> None:
@@ -33,6 +35,14 @@ def dump_instructions(raw_json: dict | list) -> None:
     instructions = arm_json.converter.structure(raw_json, arm_json.JSONSchemaObject)
     if instructions is None:
         raise ValueError("got None instructions")
+
+    def inst_group_finder(o: Any, path: str) -> None:
+        if not hasattr(o, "_type") or o._type != "Instruction.InstructionGroup":
+            return None
+        print(f"@ {path} o.name: {o.name}")
+        return None
+
+    traverse_nested(instructions, inst_group_finder)
     # print(list(instructions.operations.keys()))
     # json.dump(instructions, open("inst-enc.json", "w"))
 

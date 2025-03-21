@@ -1,7 +1,8 @@
-from collections.abc import Callable
+import inspect
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from typing import Any, TypeVar
 
 import attrs
-from typing_extensions import TypeVar
 
 T = TypeVar("T")
 
@@ -24,3 +25,116 @@ def tag(value: str):
         return Wrapped
 
     return decorator
+
+
+def traverse_nested(
+    data: Any,
+    callback: Callable[[Any, str], T | None],
+    path: str = "$",
+    max_depth: int = -1,
+    include_private: bool = False,
+    skip_callables: bool = True,
+    visited: set[int] | None = None,
+) -> None:
+    """
+    Traverse deeply nested data structures and call a callback for each object found.
+
+    Args:
+        data: The nested data structure to traverse
+        callback: Function that takes (object, path) and returns optional result
+                 If callback returns non-None, traversal stops for that branch
+        path: The current path in XPath-style notation (default: "$")
+        max_depth: Maximum recursion depth (-1 means no limit)
+        include_private: Whether to include private attributes (starting with _)
+        skip_callables: Whether to skip callable attributes
+        visited: Set of object ids already visited (for cycle detection)
+    """
+    # Initialize visited set for cycle detection
+    if visited is None:
+        visited = set()
+
+    # Skip None values and already visited objects
+    if data is None or id(data) in visited:
+        return
+
+    # Call the callback on the current object
+    result = callback(data, path)
+    visited.add(id(data))
+
+    # Stop recursion if max_depth is reached or callback returns non-None
+    if max_depth == 0 or result is not None:
+        return
+
+    next_depth = max_depth - 1 if max_depth > 0 else -1
+
+    # Handle mapping types (dict-like)
+    if isinstance(data, Mapping):
+        for key, value in data.items():
+            if key is None or value is None:
+                continue
+
+            # Format path based on key type
+            key_path = (
+                f"{path}['{key}']"
+                if isinstance(key, str) and not key.isidentifier()
+                else f"{path}.{key}"
+                if isinstance(key, str)
+                else f"{path}[{key}]"
+            )
+
+            traverse_nested(
+                value, callback, key_path, next_depth, include_private, skip_callables, visited
+            )
+
+    # Handle sequence types (list-like, but not strings)
+    elif isinstance(data, Sequence) and not isinstance(data, (str, bytes, bytearray)):
+        for i, item in enumerate(data):
+            traverse_nested(
+                item, callback, f"{path}[{i}]", next_depth, include_private, skip_callables, visited
+            )
+
+    # Handle other iterables
+    elif isinstance(data, Iterable) and not isinstance(data, (str, bytes, bytearray)):
+        for i, item in enumerate(data):
+            traverse_nested(
+                item, callback, f"{path}[{i}]", next_depth, include_private, skip_callables, visited
+            )
+
+    # Handle objects with attributes
+    elif (
+        hasattr(data, "__slots")
+        or hasattr(data, "__dict__")
+        or inspect.isclass(data)
+        or inspect.ismodule(data)
+    ):
+        # Get attributes, either from __dict__ or using dir()
+        attributes = (
+            {k: getattr(data, k) for k in data.__slots__}
+            if hasattr(data, "__slots__")
+            else vars(data)
+            if hasattr(data, "__dict__")
+            else {
+                attr: getattr(data, attr)
+                for attr in dir(data)
+                if not (skip_callables and callable(getattr(data, attr)))
+            }
+        )
+
+        for attr_name, attr_value in attributes.items():
+            # Skip private attributes if requested
+            if not include_private and attr_name.startswith("_"):
+                continue
+
+            # Skip callable attributes if requested
+            if skip_callables and callable(attr_value):
+                continue
+
+            traverse_nested(
+                attr_value,
+                callback,
+                f"{path}.{attr_name}",
+                next_depth,
+                include_private,
+                skip_callables,
+                visited,
+            )
