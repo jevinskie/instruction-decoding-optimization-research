@@ -58,6 +58,7 @@ class OperationAlias:
 Operationish = Operation | OperationAlias
 
 
+@tag("Instructions.Operations")  # fake
 class Operations(dict[str, Operationish]):
     pass
 
@@ -76,7 +77,7 @@ class Instructions:
     operations: Operations
 
 
-DaTypes = Operation | OperationAlias | Instruction | Instructions
+DaTypes = Operation | OperationAlias | Instruction | Instructions | Operations
 
 
 attrs.resolve_types(Operation, globals(), locals())
@@ -102,8 +103,12 @@ def structure_operations(obj: dict[str, Operation], _: type) -> Operations:
 
 
 def my_tag_generator(cl: type) -> str:
-    print(f"cl._type: {cl._type} type(cl): {type(cl)}")
-    return cl._type
+    if hasattr(cl, "_type"):
+        print(f"cl._type: {cl._type} cl: {cl} cl.__name__: {cl.__name__}")
+        return str(cl._type)
+    else:
+        print(f"cl._type: N/A cl: {cl} cl.__name__: {cl.__name__}")
+        return type(cl).__name__
 
 
 # converter.register_structure_hook(JSONSchemaObject, structure_json_schema)
@@ -121,6 +126,7 @@ dumb_isa = {
         {"_type": "Instruction.Instruction", "name": "xor", "opc": 42},
     ],
     "operations": {
+        "_type": "Instruction.Operations",
         "add_op": {
             "_type": "Instruction.Operation",
             "operation": "add_op_op",
