@@ -58,7 +58,7 @@ class OperationAlias:
 Operationish = Operation | OperationAlias
 
 
-@tag("Instructions.Operations")  # fake
+# @tag("Instructions.Operations")  # fake
 class Operations(dict[str, Operationish]):
     pass
 
@@ -89,17 +89,25 @@ converter = cattrs.Converter()
 converter.detailed_validation = True
 
 
-def structure_operations(obj: dict[str, Operation], _: type) -> Operations:
+def structure_operations(obj: Operations, _: type) -> Operations:
     result = {}
+    print(f"structure_operations: obj: {obj}")
     for key, value in obj.items():
         # Determine the type based on the _type field and structure accordingly
         if value.get("_type") == "Instruction.Operation":
+            print("structure: Operation")
             result[key] = converter.structure(value, Operation)
         elif value.get("_type") == "Instruction.OperationAlias":
+            print("structure: OperationAlias")
             result[key] = converter.structure(value, OperationAlias)
         else:
             raise ValueError(f"Unknown operation type: {value.get('_type')}")
+    print(f"structure_operations: result: {result}")
     return result
+
+
+# Register a custom structure hook for Operations
+converter.register_structure_hook(Operations, structure_operations)
 
 
 def my_tag_generator(cl: type) -> str:
@@ -108,15 +116,12 @@ def my_tag_generator(cl: type) -> str:
         return str(cl._type)
     else:
         print(f"cl._type: N/A cl: {cl} cl.__name__: {cl.__name__}")
-        return type(cl).__name__
+        # return type(cl).__name__
+        return "Instructions.Operations"
 
 
 # converter.register_structure_hook(JSONSchemaObject, structure_json_schema)
 cattrs.strategies.configure_tagged_union(DaTypes, converter, tag_generator=my_tag_generator)
-
-
-# Register a custom structure hook for Operations
-converter.register_structure_hook(Operations, structure_operations)
 
 
 dumb_isa = {
@@ -126,7 +131,7 @@ dumb_isa = {
         {"_type": "Instruction.Instruction", "name": "xor", "opc": 42},
     ],
     "operations": {
-        "_type": "Instruction.Operations",
+        # "_type": "Instruction.Operations",
         "add_op": {
             "_type": "Instruction.Operation",
             "operation": "add_op_op",
