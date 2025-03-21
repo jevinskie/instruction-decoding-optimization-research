@@ -362,6 +362,14 @@ def my_tag_generator(cl: type) -> str:
     return cl._type
 
 
+cattrs.strategies.configure_tagged_union(
+    Instruction | InstructionInstance | InstructionAlias, converter, tag_generator=my_tag_generator
+)
+
+cattrs.strategies.configure_tagged_union(
+    Instruction | InstructionGroup, converter, tag_generator=my_tag_generator
+)
+
 # converter.register_structure_hook(JSONSchemaObject, structure_json_schema)
 cattrs.strategies.configure_tagged_union(
     JSONSchemaObject, converter, tag_generator=my_tag_generator

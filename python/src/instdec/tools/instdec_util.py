@@ -30,7 +30,9 @@ def dump_instructions_old(raw_json: dict | list) -> None:
 
 def dump_instructions(raw_json: dict | list) -> None:
     instructions = arm_json.converter.structure(raw_json, arm_json.JSONSchemaObject)
-    json.dump(instructions, open("inst-enc.json", "w"))
+    if instructions is None:
+        raise ValueError("got None instructions")
+    # json.dump(instructions, open("inst-enc.json", "w"))
 
 
 def get_arg_parser() -> argparse.ArgumentParser:
