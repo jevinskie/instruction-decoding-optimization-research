@@ -137,7 +137,7 @@ class Trits:
         return len(self.trits)
 
     def __repr__(self) -> str:
-        return f"Trits('{self.trits}')"
+        return f"Trits({len(self.trits)}:'{self.trits}')"
 
 
 @defauto

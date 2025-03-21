@@ -36,13 +36,19 @@ def dump_instructions(raw_json: dict | list) -> None:
     if instructions is None:
         raise ValueError("got None instructions")
 
-    def inst_group_finder(o: Any, path: str) -> None:
-        if not hasattr(o, "_type") or o._type != "Instruction.InstructionGroup":
+    def finder(o: Any, path: str) -> None:
+        if (
+            not hasattr(o, "_type")
+            or o._type != "Instruction.InstructionGroup"
+            or o.name != "branch_imm"
+        ):
             return None
-        print(f"@ {path} o.name: {o.name}")
+        print(
+            f"@ {path} o.name: {o.name} len(children): {len(o.children)} encodings: {o.encoding} o:\n{o}"
+        )
         return None
 
-    traverse_nested(instructions, inst_group_finder)
+    traverse_nested(instructions, finder)
     # print(list(instructions.operations.keys()))
     # json.dump(instructions, open("inst-enc.json", "w"))
 

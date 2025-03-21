@@ -59,8 +59,8 @@ def str_none_nil_xfrm(v: str | None) -> str:
 @tag("Value.Value")
 @defauto
 class Value:
-    meaning: str = attrs.field(converter=str_none_nil_xfrm)
     value: Trits
+    meaning: str | None
 
     def __attrs_post_init__(self):
         seen_value_meanings.add(self.meaning)
