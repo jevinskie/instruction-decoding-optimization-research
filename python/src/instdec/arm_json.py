@@ -108,8 +108,8 @@ class Function:
 
 
 # Define Expression as a union of all possible AST node types
-Expression = typing.Union[Bool, BinaryOp, Function, Identifier, Set, UnaryOp, Value]
-Valueish = typing.Union[Value, Set]
+Expression = Bool | BinaryOp | Function | Identifier | Set | UnaryOp | Value
+Valueish = Value | Set
 
 
 @tag("Range")
@@ -147,7 +147,7 @@ class EncodsetShouldBeBits:
     range: Range
 
 
-EncodesetValues = typing.Union[EncodesetBits, EncodesetField, EncodsetShouldBeBits]
+EncodesetValues = EncodesetBits | EncodesetField | EncodsetShouldBeBits
 
 
 @tag("Instruction.Encodeset.Encodeset")
@@ -173,7 +173,9 @@ class InstructionAlias:
     condition: Expression
 
 
-Instructionish = typing.Union["Instruction", InstructionInstance, InstructionAlias]
+Instructionish = (
+    typing.ForwardRef("Instruction", is_argument=False) | InstructionInstance | InstructionAlias
+)
 
 InstructionChildren = list[Instructionish]
 
@@ -190,9 +192,8 @@ class Instruction:
     preferred: Expression | None = attrs.field(default=None)
 
 
-InstructionGroupish = typing.Union[
-    Instruction, typing.ForwardRef("InstructionGroup", is_argument=False)
-]
+InstructionGroupish = Instruction | typing.ForwardRef("InstructionGroup", is_argument=False)
+
 InstructionGroupSetChildren = list[InstructionGroupish]
 
 
