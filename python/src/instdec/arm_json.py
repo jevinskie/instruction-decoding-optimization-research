@@ -248,7 +248,7 @@ class Operations(dict[str, Operationish]):
 @tag("Instruction.Instructions")
 @defauto
 class Instructions:
-    instructions: InstructionSet
+    instructions: list[InstructionSet]
     operations: Operations
 
 
