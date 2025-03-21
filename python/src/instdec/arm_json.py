@@ -238,7 +238,10 @@ class OperationAlias:
 
 
 Operationish = typing.Union[Operation, OperationAlias]
-Operations = dict[str, Operationish]
+
+
+class Operations(dict[str, Operationish]):
+    pass
 
 
 @tag("Instruction.Instructions")
@@ -335,6 +338,23 @@ for cls in JSONSchemaObjectClasses:
 # Set up cattrs converter with a custom structure hook
 converter = Converter()
 converter.detailed_validation = True
+
+
+def structure_operations(obj: dict[str, Operation], _: type) -> Operations:
+    result = {}
+    for key, value in obj.items():
+        # Determine the type based on the _type field and structure accordingly
+        if value.get("_type") == "Instruction.Operation":
+            result[key] = converter.structure(value, Operation)
+        elif value.get("_type") == "Instruction.OperationAlias":
+            result[key] = converter.structure(value, OperationAlias)
+        else:
+            raise ValueError(f"Unknown operation type: {value.get('_type')}")
+    return result
+
+
+# Register a custom structure hook for Operations
+converter.register_structure_hook(Operations, structure_operations)
 
 
 def my_tag_generator(cl: type) -> str:
