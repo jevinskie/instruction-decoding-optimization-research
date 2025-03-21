@@ -33,17 +33,19 @@ class JSONObject:
 
 
 @defauto
-class Operation(JSONObject):
+class Operation:
     operation: str
     title: str
-    _type: typing.Final[typing.Literal["Instruction.Operation"]] = "Instruction.Operation"
+    _type: typing.ClassVar[typing.Literal["Instruction.Operation"]] = "Instruction.Operation"
 
 
 @defauto
-class OperationAlias(JSONObject):
+class OperationAlias:
     operation_id: str
     description: str
-    _type: typing.Final[typing.Literal["Instruction.OperationAlias"]] = "Instruction.OperationAlias"
+    _type: typing.ClassVar[typing.Literal["Instruction.OperationAlias"]] = (
+        "Instruction.OperationAlias"
+    )
 
 
 Operationish = Operation | OperationAlias
@@ -55,21 +57,20 @@ class Operations(dict[str, Operationish]):
 
 
 @defauto
-class Instruction(JSONObject):
+class Instruction:
     name: str
     opc: int
-    _type: typing.Final[typing.Literal["Instruction.Instruction"]] = "Instruction.Instruction"
+    _type: typing.ClassVar[typing.Literal["Instruction.Instruction"]] = "Instruction.Instruction"
 
 
 @defauto
-class Instructions(JSONObject):
+class Instructions:
     instructions: list[Instruction]
     operations: Operations
-    _type: typing.Final[typing.Literal["Instruction.Instructions"]] = "Instruction.Instructions"
+    _type: typing.ClassVar[typing.Literal["Instruction.Instructions"]] = "Instruction.Instructions"
 
 
-DaTypes = Operation | OperationAlias | Instruction | Instructions | Operations
-
+DaTypes = Operation | OperationAlias | Instruction | Instructions
 
 attrs.resolve_types(Operation, globals(), locals())
 attrs.resolve_types(OperationAlias, globals(), locals())
