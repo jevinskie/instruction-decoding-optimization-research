@@ -306,8 +306,9 @@ for i in range(7):
     for t in TheTypes:
         try:
             typing.get_type_hints(t, globalns=globals(), localns=locals())
-        except Exception as e:
-            print(f"did {t} got {e}")
+        except Exception:
+            # print(f"did {t} got {e}")
+            pass
 
 JSONSchemaObjectClasses = (
     BinaryOp,

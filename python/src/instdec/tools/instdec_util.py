@@ -3,8 +3,9 @@
 import argparse
 
 import simplejson as json
-from rich import print
 
+# from rich import print
+# import rich
 from instdec import arm_json
 
 
@@ -32,6 +33,7 @@ def dump_instructions(raw_json: dict | list) -> None:
     instructions = arm_json.converter.structure(raw_json, arm_json.JSONSchemaObject)
     if instructions is None:
         raise ValueError("got None instructions")
+    # print(list(instructions.operations.keys()))
     # json.dump(instructions, open("inst-enc.json", "w"))
 
 
