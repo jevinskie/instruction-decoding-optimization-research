@@ -712,13 +712,17 @@ def recurse_instr_or_instr_group(
     return
 
 
-def instr_cb(i: Instruction, c: ParseContext) -> None:
-    # print(f"i name stack: {'.'.join(c.group_name_stack)} c: {c}")
-    s = f"os[-2].type: {c.obj_stack[-2]._type}"
-    print(f"i name stack: {'.'.join(c.group_name_stack)} s: {s}")
+def instr_cb(i: Instruction, ctx: ParseContext) -> None:
+    # print(f"i name stack: {'.'.join(ctx.group_name_stack)} ctx: {ctx}")
+    s = f"os[-2].type: {ctx.obj_stack[-2]._type}"
+    print(f"i name stack: {'.'.join(ctx.group_name_stack)} s: {s}")
 
 
-def parse_instructions(instrs: Instructions, cb: InstrCB = instr_cb) -> None:
+def dump_idents_instr_cb(i: Instruction, ctx: ParseContext) -> None:
+    return
+
+
+def parse_instructions(instrs: Instructions, cb: InstrCB = dump_idents_instr_cb) -> None:
     ctx = ParseContext()
     ctx.obj_stack.append(instrs)
 
