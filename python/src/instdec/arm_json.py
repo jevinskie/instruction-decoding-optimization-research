@@ -350,12 +350,13 @@ def structure_operations(obj: dict[str, dict], _: type) -> Operations:
     result: Operations = Operations()
     for key, value in obj.items():
         # Determine the type based on the _type field and structure accordingly
-        if value.get("_type") == "Instruction.Operation":
+        ty = value.get("_type")
+        if ty == "Instruction.Operation":
             result[key] = converter.structure(value, Operation)
-        elif value.get("_type") == "Instruction.OperationAlias":
+        elif ty == "Instruction.OperationAlias":
             result[key] = converter.structure(value, OperationAlias)
         else:
-            raise ValueError(f"Unknown operation type: {value.get('_type')}")
+            raise ValueError(f"Unknown operation type: {ty}")
     return result
 
 
