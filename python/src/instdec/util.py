@@ -45,7 +45,7 @@ def tag(tag_val: str) -> Callable[[CTB], CTB]:
             raise ValueError(f"cls should be a type not '{type(cls)}' cls: {cls}")
         if not issubclass(cls, TagBase):
             raise TypeError(f"cls not subclass of TagBase cls: {cls}")
-        setattr(cls, "_type", tag_val)
+        cls._type = tag_val
         return cls
 
     return wrap
