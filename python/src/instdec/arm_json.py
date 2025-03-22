@@ -619,6 +619,15 @@ def has_instructions_w_children(instrs: Instructions) -> bool:
     for iset in instrs.instructions:
 
         def check(o: Any, path: str) -> Any | None:
+            if isinstance(o, Instruction):
+                if (
+                    hasattr(o, "children")
+                    and o.children is not None
+                    and len(o.children) != 0
+                    and not all([isinstance(c, InstructionAlias) for c in o.children])
+                ):
+                    raise ValueError(f"found instr w/ children: {o}")
+                    return o
             return None
 
         res = traverse_nested(iset.children, check)
