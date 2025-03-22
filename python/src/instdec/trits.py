@@ -49,7 +49,7 @@ class Trits:
                 nvs[i] = "1"
             else:
                 nvs[i] = "X"
-        return Trits("".join(nvs))
+        return type(self)("".join(nvs))
 
     def or_(self, other: Self) -> Self:
         nbit = len(self)
@@ -75,7 +75,7 @@ class Trits:
                 nvs[i] = "X"
             else:
                 raise ValueError(f"Trit.or_ unhandled case: self: {self} other: {other}")
-        return Trits("".join(nvs))
+        return type(self)("".join(nvs))
 
     def not_(self) -> Self:
         nbit = len(self)
@@ -90,7 +90,7 @@ class Trits:
                 nvs[i] = "X"
             else:
                 raise ValueError(f"Trit.not_ unhandled case: self: {self}")
-        return Trits("".join(nvs))
+        return type(self)("".join(nvs))
 
     def eq_(self, other: Self, dont_care_ok: bool = False) -> Self:
         nbit = len(self)
@@ -128,7 +128,7 @@ class Trits:
                     break
             else:
                 raise ValueError(f"Trit.or_ unhandled case: self: {self} other: {other}")
-        return Trits("1" if are_equal else "0")
+        return type(self)("1" if are_equal else "0")
 
     def ne_(self, other: Self) -> Self:
         return self.eq_(other).not_()
