@@ -693,7 +693,7 @@ def recurse_instr_or_instr_group(
 
 def instr_cb(i: Instruction, c: ParseContext) -> None:
     # print(f"i name stack: {'.'.join(c.group_name_stack)} c: {c}")
-    s = "///".join(map(lambda x: x._type, c.obj_stack))
+    s = f"os[-2].type: {c.obj_stack[-2]._type}"
     print(f"i name stack: {'.'.join(c.group_name_stack)} s: {s}")
 
 
