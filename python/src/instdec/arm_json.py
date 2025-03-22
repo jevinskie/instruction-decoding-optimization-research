@@ -397,7 +397,7 @@ def structure_identifier(obj: str, cls: type[Identifier]) -> Identifier:
     return cls(obj)
 
 
-# converter.register_structure_hook(Identifier, structure_identifier)
+converter.register_structure_hook(Identifier, structure_identifier)
 
 
 def my_tag_generator(cls: type[TagBase]) -> str:
@@ -412,12 +412,12 @@ def my_tag_generator(cls: type[TagBase]) -> str:
 
 
 cattrs.strategies.configure_tagged_union(
-    typing.Union[Identifier, Identifier], converter, tag_generator=my_tag_generator
+    Identifier | Value, converter, tag_generator=my_tag_generator
 )
 
-# cattrs.strategies.configure_tagged_union(
-#     Instruction | InstructionInstance | InstructionAlias, converter, tag_generator=my_tag_generator
-# )
+cattrs.strategies.configure_tagged_union(
+    Instruction | InstructionInstance | InstructionAlias, converter, tag_generator=my_tag_generator
+)
 
 # cattrs.strategies.configure_tagged_union(
 #     Instruction | InstructionGroup, converter, tag_generator=my_tag_generator
