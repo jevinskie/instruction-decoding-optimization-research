@@ -718,11 +718,7 @@ def instr_cb(i: Instruction, ctx: ParseContext) -> None:
     print(f"i name stack: {'.'.join(ctx.group_name_stack)} s: {s}")
 
 
-def dump_idents_instr_cb(i: Instruction, ctx: ParseContext) -> None:
-    return
-
-
-def parse_instructions(instrs: Instructions, cb: InstrCB = dump_idents_instr_cb) -> None:
+def parse_instructions(instrs: Instructions, cb: InstrCB = instr_cb) -> None:
     ctx = ParseContext()
     ctx.obj_stack.append(instrs)
 
@@ -743,3 +739,10 @@ def parse_instructions(instrs: Instructions, cb: InstrCB = dump_idents_instr_cb)
     ctx.obj_stack.pop()
 
     return
+
+
+def dump_idents(instrs: Instructions) -> None:
+    def dump_idents_instr_cb(i: Instruction, ctx: ParseContext) -> None:
+        return
+
+    parse_instructions(instrs, dump_idents_instr_cb)
