@@ -1,6 +1,5 @@
 import inspect
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from types import NoneType
 from typing import Any, Final, ParamSpec, TypeVar, overload
 
 import attrs
@@ -12,17 +11,17 @@ P = ParamSpec("P")
 
 
 @overload
-def defauto(maybe_cls: C, *args, **kwargs) -> C: ...
+def defauto(maybe_cls: C) -> C: ...
 
 
 @overload
-def defauto(maybe_cls: NoneType, *args, **kwargs) -> Callable[[C], C]: ...
+def defauto(maybe_cls: None, *args: P.args, **kwargs: P.kwargs) -> Callable[P, C]: ...
 
 
 # from attrs:
 # maybe_cls's type depends on the usage of the decorator.  It's a class
 # if it's used as `@attrs` but `None` if used as `@attrs()`.
-def defauto(maybe_cls: C | None, *args, **kwargs) -> Callable[[C], C]:
+def defauto(maybe_cls: C | None, *args, **kwargs) -> C | Callable[[P], C]:
     kwargs["auto_attribs"] = True
     kwargs["on_setattr"] = None
     kwargs["frozen"] = True
