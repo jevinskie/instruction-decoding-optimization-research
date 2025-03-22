@@ -38,16 +38,10 @@ seen_identifiers: set[str] = set()
 @tag("AST.Identifier")
 @defauto
 class Identifier(TagBase):
-    # valuex: str = attrs.field(alias="value")
     value: str
-    _sentinel: str  # FIXME: this has to go, right? or a converter?
 
     def __attrs_post_init__(self):
         seen_identifiers.add(self.value)
-
-    # @property
-    # def value(self) -> str:
-    #     return self.valuex
 
 
 seen_value_meanings: set[str] = set()
@@ -114,6 +108,19 @@ Expression = Bool | BinaryOp | Function | Identifier | Set | UnaryOp | Value
 Valueish = Value | Set
 
 
+def expr_has_ident(expr: Expression | None, ident: str) -> bool:
+    if expr is None:
+        return False
+    if isinstance(expr, BinaryOp):
+        return expr_has_ident(expr.left, ident) or expr_has_ident(expr.right, ident)
+    elif isinstance(expr, UnaryOp):
+        return expr_has_ident(expr.expr, ident)
+    elif isinstance(expr, Identifier):
+        return expr.value == ident
+    else:
+        return False
+
+
 @tag("Range")
 @defauto
 class Range(TagBase):
@@ -162,12 +169,22 @@ class Encodeset(TagBase):
     values: list[EncodesetValues]
     width: int
 
-    def has_field(name: str) -> bool:
-        return False
+    def get_field(self, name: str) -> EncodesetField | None:
+        matches: list[EncodesetField] = []
+        for v in self.values:
+            if isinstance(v, EncodesetField):
+                if v.name == name:
+                    matches.append(v)
+        if len(matches) > 1:
+            raise ValueError(
+                f"have multiple results for Encodeset.Field '{name}' results: {matches}"
+            )
+        if len(matches) == 0:
+            return None
+        return matches[0]
 
-    def get_field(name: str) -> EncodesetField:
-        # FIXME: check for duplicates before returning
-        return None
+    def has_field(self, name: str) -> bool:
+        return self.get_field(name) is not None
 
 
 @tag("Instruction.InstructionInstance")
@@ -369,6 +386,14 @@ def structure_operations(obj: dict[str, dict], _: type) -> Operations:
 
 # Register a custom structure hook for Operations
 converter.register_structure_hook(Operations, structure_operations)
+
+
+def structure_identifier(obj: str, cls: type[Identifier]):
+    print(f"structure_identifier obj: '{obj}' cls: {cls}")
+    return cls(obj)
+
+
+converter.register_structure_hook(Identifier, structure_identifier)
 
 
 def my_tag_generator(cl: type[TagBase]) -> str:
@@ -743,6 +768,9 @@ def parse_instructions(instrs: Instructions, cb: InstrCB = instr_cb) -> None:
 
 def dump_idents(instrs: Instructions) -> None:
     def dump_idents_instr_cb(i: Instruction, ctx: ParseContext) -> None:
+        if expr_has_ident(i.condition, "Rm"):
+            smth = i.encoding.get_field("Rm")
+            print(f"smth: {smth}")
         return
 
     parse_instructions(instrs, dump_idents_instr_cb)
