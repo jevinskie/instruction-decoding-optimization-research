@@ -35,7 +35,7 @@ def traverse_nested(
     include_private: bool = False,
     skip_callables: bool = True,
     visited: set[int] | None = None,
-) -> None:
+) -> Any | None:
     """
     Traverse deeply nested data structures and call a callback for each object found.
 
@@ -55,7 +55,7 @@ def traverse_nested(
 
     # Skip None values and already visited objects
     if data is None or id(data) in visited:
-        return
+        return None
 
     # Call the callback on the current object
     result = callback(data, path)
@@ -63,7 +63,7 @@ def traverse_nested(
 
     # Stop recursion if max_depth is reached or callback returns non-None
     if max_depth == 0 or result is not None:
-        return
+        return result
 
     next_depth = max_depth - 1 if max_depth > 0 else -1
 
@@ -127,7 +127,7 @@ def traverse_nested(
             if skip_callables and callable(attr_value):
                 continue
 
-            traverse_nested(
+            return traverse_nested(
                 attr_value,
                 callback,
                 f"{path}.{attr_name}",

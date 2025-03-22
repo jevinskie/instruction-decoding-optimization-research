@@ -2,15 +2,15 @@ from __future__ import annotations
 
 import enum
 import typing
+from typing import Any
 
 import attrs
 import cattrs
-import cattrs.dispatch
 import cattrs.strategies
 from cattrs import Converter
 
 from .trits import TritRange, TritRanges, Trits
-from .util import defauto, tag
+from .util import defauto, tag, traverse_nested
 
 
 class BinOp(enum.StrEnum):
@@ -613,6 +613,19 @@ def parse_instruction_encoding(inst: dict) -> tuple[str, Trits, int, int, int]:
     mtrits = trit_ranges.merge()
     mts = str(mtrits)
     return (inst["name"], mtrits, mts.count("0"), mts.count("1"), mts.count("X"))
+
+
+def has_instructions_w_children(instrs: Instructions) -> bool:
+    for iset in instrs.instructions:
+
+        def check(o: Any, path: str) -> Any | None:
+            return None
+
+        res = traverse_nested(iset.children, check)
+        if res is not None:
+            # raise ValueError(f"found instr w/ children:\n{res}")
+            return True
+    return False
 
 
 def parse_instructions(instrs: Instructions) -> None:
