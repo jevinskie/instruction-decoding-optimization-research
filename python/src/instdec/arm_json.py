@@ -162,6 +162,13 @@ class Encodeset(TagBase):
     values: list[EncodesetValues]
     width: int
 
+    def has_field(name: str) -> bool:
+        return False
+
+    def get_field(name: str) -> EncodesetField:
+        # FIXME: check for duplicates before returning
+        return None
+
 
 @tag("Instruction.InstructionInstance")
 @defauto
