@@ -681,7 +681,13 @@ def recurse_instr_or_instr_group(
     for ioig in il:
         ctx.obj_stack.append(ioig)
         if id(ioig) in seen:
-            continue
+            if isinstance(ioig, list):
+                raise TypeError("skipping from seen id list")
+            elif isinstance(ioig, TagBase):
+                raise TypeError(f"skipping from seen id type: {ioig._type}")
+            else:
+                raise TypeError("skipping from seen id OTHER")
+            continue  # TODO: see if assertions are ever raisec
         if isinstance(ioig, Instruction):
             cb(ioig, ctx)
         else:
