@@ -89,7 +89,7 @@ def traverse_nested(
     include_private: bool = False,
     skip_callables: bool = True,
     visited: set[int] | None = None,
-) -> None:
+) -> T | None:
     """
     Traverse deeply nested data structures and call a callback for each object found.
 
@@ -112,14 +112,18 @@ def traverse_nested(
         return None
 
     # Call the callback on the current object
-    result = callback(data, path)
+    result: T | None = callback(data, path)
     visited.add(id(data))
 
     # Stop recursion if max_depth is reached or callback returns non-None
     if max_depth == 0 or result is not None:
-        return result
+        if result is not None:
+            return result
+        return None
 
     next_depth = max_depth - 1 if max_depth > 0 else -1
+
+    downcall_res: T | None = None
 
     # Handle mapping types (dict-like)
     if isinstance(data, Mapping):
@@ -136,23 +140,29 @@ def traverse_nested(
                 else f"{path}[{key}]"
             )
 
-            traverse_nested(
+            downcall_res = traverse_nested(
                 value, callback, key_path, next_depth, include_private, skip_callables, visited
             )
+            if downcall_res is not None:
+                return downcall_res
 
     # Handle sequence types (list-like, but not strings)
     elif isinstance(data, Sequence) and not isinstance(data, (str, bytes, bytearray)):
         for i, item in enumerate(data):
-            traverse_nested(
+            downcall_res = traverse_nested(
                 item, callback, f"{path}[{i}]", next_depth, include_private, skip_callables, visited
             )
+            if downcall_res is not None:
+                return downcall_res
 
     # Handle other iterables
     elif isinstance(data, Iterable) and not isinstance(data, (str, bytes, bytearray)):
         for i, item in enumerate(data):
-            traverse_nested(
+            downcall_res = traverse_nested(
                 item, callback, f"{path}[{i}]", next_depth, include_private, skip_callables, visited
             )
+            if downcall_res is not None:
+                return downcall_res
 
     # Handle objects with attributes
     elif (
@@ -181,7 +191,7 @@ def traverse_nested(
             if skip_callables and callable(attr_value):
                 continue
 
-            return traverse_nested(
+            downcall_res = traverse_nested(
                 attr_value,
                 callback,
                 f"{path}.{attr_name}",
@@ -190,3 +200,8 @@ def traverse_nested(
                 skip_callables,
                 visited,
             )
+            if downcall_res is not None:
+                return downcall_res
+    else:
+        raise NotImplementedError("how did you get here")
+    return None

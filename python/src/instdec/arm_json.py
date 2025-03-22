@@ -345,8 +345,8 @@ converter = Converter()
 converter.detailed_validation = True
 
 
-def structure_operations(obj: dict[str, Operation], _: type) -> Operations:
-    result = {}
+def structure_operations(obj: dict[str, dict], _: type) -> Operations:
+    result: Operations = Operations()
     for key, value in obj.items():
         # Determine the type based on the _type field and structure accordingly
         if value.get("_type") == "Instruction.Operation":
@@ -363,6 +363,8 @@ converter.register_structure_hook(Operations, structure_operations)
 
 
 def my_tag_generator(cl: type) -> str:
+    if not hasattr(cl, "_type"):
+        raise ValueError(f"cl has no _type attribute. cl: {cl}")
     return cl._type
 
 
