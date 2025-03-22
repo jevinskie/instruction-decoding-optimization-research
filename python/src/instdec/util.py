@@ -1,6 +1,6 @@
 import inspect
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import Any, TypeVar
+from typing import Any, Final, TypeVar
 
 import attrs
 
@@ -27,6 +27,38 @@ def tag(value: str):
     return decorator
 
 
+@defauto
+class Span:
+    start: Final[int] = attrs.field()
+    width: Final[int] = attrs.field()
+    name: Final[str | None] = attrs.field(default=None)
+
+    @property
+    def end(self) -> int:
+        """End bit index (one past last real index)"""
+        return self.start + self.end
+
+    def __eq__(self, value) -> bool:
+        if not isinstance(value, Span):
+            return False
+        return self.start == value.start and self.width == value.width
+
+
+@defauto
+class Pigeonholes:
+    width: Final[int] = attrs.field()
+    _spans: set[Span] = attrs.Factory(set)
+
+    @property
+    def spans(self) -> set[Span]:
+        return self._spans
+
+    def add_span(self, span: Span) -> None:
+        if span in self._spans:
+            raise ValueError(f"Adding span {span} thats already in Pigeonholes: {self}")
+        self._spans.add(span)
+
+
 def traverse_nested(
     data: Any,
     callback: Callable[[Any, str], T | None],
@@ -35,7 +67,7 @@ def traverse_nested(
     include_private: bool = False,
     skip_callables: bool = True,
     visited: set[int] | None = None,
-) -> Any | None:
+) -> None:
     """
     Traverse deeply nested data structures and call a callback for each object found.
 
