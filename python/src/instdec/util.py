@@ -1,4 +1,3 @@
-import functools
 import inspect
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any, Final, TypeVar
@@ -9,7 +8,12 @@ from intervaltree import Interval, IntervalTree
 T = TypeVar("T")
 C = TypeVar("C", bound=type)
 
-defauto = functools.partial(attrs.define, auto_attribs=True, on_setattr=None, frozen=True)
+
+def defauto(*args: Any, **kwargs: Any) -> Callable[[C], C]:
+    kwargs["auto_attribs"] = True
+    kwargs["on_setattr"] = None
+    kwargs["frozen"] = True
+    return attrs.define(*args, **kwargs)
 
 
 def tag(tag_val: str) -> Callable[[C], C]:

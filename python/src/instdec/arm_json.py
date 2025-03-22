@@ -12,7 +12,7 @@ from cattrs import Converter
 
 # from rich import print
 from .trits import TritRange, TritRanges, Trits
-from .util import defauto, tag, traverse_nested
+from .util import Span, defauto, tag, traverse_nested
 
 
 class BinOp(enum.StrEnum):
@@ -123,6 +123,10 @@ class Range:
     @property
     def end(self) -> int:
         return self.start + self.width
+
+    @property
+    def span(self) -> Span:
+        return Span(self.start, self.width)
 
 
 @tag("Instruction.Encodeset.Bits")
