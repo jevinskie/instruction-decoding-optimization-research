@@ -1,32 +1,34 @@
 import inspect
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import Any, Final, ParamSpec, TypeVar, overload
+from typing import Any, Final, TypeVar, dataclass_transform, overload
 
+import attr
 import attrs
 from intervaltree import Interval, IntervalTree
 
 T = TypeVar("T")
 C = TypeVar("C", bound=type)
-P = ParamSpec("P")
 
 
 @overload
-def defauto(maybe_cls: C) -> C: ...
+@dataclass_transform(field_specifiers=(attr.attrib, attrs.field))
+def defauto(maybe_cls: C, *args, **kwargs) -> C: ...
 
 
 @overload
-def defauto(maybe_cls: None, *args: P.args, **kwargs: P.kwargs) -> Callable[P, C]: ...
+@dataclass_transform(field_specifiers=(attr.attrib, attrs.field))
+def defauto(maybe_cls: None, *args, **kwargs) -> Callable[[C], C]: ...
 
 
 # from attrs:
 # maybe_cls's type depends on the usage of the decorator.  It's a class
 # if it's used as `@attrs` but `None` if used as `@attrs()`.
-def defauto(maybe_cls: C | None, *args, **kwargs) -> C | Callable[[P], C]:
+def defauto(maybe_cls: C | None, *args, **kwargs) -> C | Callable[[C], C]:
     kwargs["auto_attribs"] = True
     kwargs["on_setattr"] = None
     kwargs["frozen"] = True
     if maybe_cls is None:
-        return attrs.define(*args, **kwargs)
+        return attrs.define(maybe_cls, *args, **kwargs)
     else:
         return attrs.define(maybe_cls, *args, **kwargs)
 
