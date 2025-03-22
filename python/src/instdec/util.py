@@ -202,6 +202,4 @@ def traverse_nested(
             )
             if downcall_res is not None:
                 return downcall_res
-    else:
-        raise NotImplementedError("how did you get here")
     return None

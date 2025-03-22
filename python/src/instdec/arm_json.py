@@ -338,7 +338,8 @@ JSONSchemaObjectClasses = (
 )
 
 for cls in JSONSchemaObjectClasses:
-    attrs.resolve_types(cls, globals(), locals())
+    ct = typing.cast(type, cls)
+    attrs.resolve_types(ct, globals(), locals())
 
 # Set up cattrs converter with a custom structure hook
 converter = Converter()
@@ -411,9 +412,15 @@ class Interpteter:
             elif isinstance(cur_node, BinaryOp):
                 lv = Interpteter(cur_node.left).evaluate()
                 rv = Interpteter(cur_node.right).evaluate()
+                if isinstance(lv, Set):
+                    raise ValueError("eval BinaryOp lv is Set")
+                if isinstance(rv, Set):
+                    raise ValueError("eval BinaryOp rv is Set")
                 return self.eval_binop(cur_node, lv, rv)
             elif isinstance(cur_node, UnaryOp):
                 ov = Interpteter(cur_node.expr).evaluate()
+                if isinstance(ov, Set):
+                    raise ValueError("eval UnaryOp ov is Set")
                 return self.eval_unop(cur_node, ov)
             elif isinstance(cur_node, Bool):
                 return self.eval_bool(cur_node)
