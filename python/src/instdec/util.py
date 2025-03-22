@@ -1,19 +1,34 @@
 import inspect
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import Any, Final, TypeVar
+from typing import Any, Final, ParamSpec, TypeVar, overload
 
 import attrs
 from intervaltree import Interval, IntervalTree
 
 T = TypeVar("T")
 C = TypeVar("C", bound=type)
+P = ParamSpec("P")
 
 
-def defauto(*args: Any, **kwargs: Any) -> Callable[[C], C]:
+@overload
+def defauto(maybe_cls: C, *args: P.args, **kwargs: P.kwargs) -> C: ...
+
+
+@overload
+def defauto(maybe_cls: Any, *args: P.args, **kwargs: P.kwargs) -> Callable[[C], C]: ...
+
+
+# from attrs:
+# maybe_cls's type depends on the usage of the decorator.  It's a class
+# if it's used as `@attrs` but `None` if used as `@attrs()`.
+def defauto(maybe_cls: C | None, *args: P.args, **kwargs: P.kwargs) -> Callable[[C], C]:
     kwargs["auto_attribs"] = True
     kwargs["on_setattr"] = None
     kwargs["frozen"] = True
-    return attrs.define(*args, **kwargs)
+    if maybe_cls is None:
+        return attrs.define(*args, **kwargs)
+    else:
+        return attrs.define(maybe_cls, *args, **kwargs)
 
 
 def tag(tag_val: str) -> Callable[[C], C]:
