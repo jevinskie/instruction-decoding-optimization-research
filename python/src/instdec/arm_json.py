@@ -10,6 +10,7 @@ import cattrs
 import cattrs.strategies
 from cattrs import Converter
 
+# from rich import print
 from .trits import TritRange, TritRanges, Trits
 from .util import defauto, tag, traverse_nested
 
@@ -644,6 +645,7 @@ class ParseContext:
     set_condition_stack: list[Expression | None] = attrs.Factory(list)
     group_encoding_stack: list[Encodeset] = attrs.Factory(list)
     group_condition_stack: list[Expression | None] = attrs.Factory(list)
+    group_name_stack: list[str] = attrs.Factory(list)
 
 
 def recurse_instr_or_instr_group(
@@ -664,7 +666,9 @@ def recurse_instr_or_instr_group(
                 raise ValueError(f"ioig: {ioig}")
             ctx.group_encoding_stack.append(ioig.encoding)
             ctx.group_condition_stack.append(ioig.condition)
+            ctx.group_name_stack.append(ioig.name)
             recurse_instr_or_instr_group(ioig.children, ctx, cb)
+            ctx.group_name_stack.pop()
             ctx.group_condition_stack.pop()
             ctx.group_encoding_stack.pop()
         seen.add(id(ioig))
@@ -677,13 +681,15 @@ def parse_instructions(instrs: Instructions) -> None:
     for iset in instrs.instructions:
         ctx.set_encoding_stack.append(iset.encoding)
         ctx.set_condition_stack.append(iset.condition)
+
         if iset.children is None:
             raise ValueError(f"iset name: {iset.name} children is None")
 
         def dump(i: Instruction, c: ParseContext):
-            print(f"i name: {i.name} c: {c}")
+            print(f"i name stack: {'.'.join(ctx.group_name_stack)} c: {c}")
 
         recurse_instr_or_instr_group(iset.children, ctx, dump)
+
         ctx.set_condition_stack.pop()
         ctx.set_encoding_stack.pop()
 
