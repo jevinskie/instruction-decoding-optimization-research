@@ -161,8 +161,8 @@ class Encodeset:
 @defauto
 class InstructionInstance:
     name: str
-    condition: Expression
-    children: list[InstructionInstance]
+    condition: Expression | None = attrs.field(default=None)
+    children: list[InstructionInstance] | None = attrs.field(default=None)
 
 
 @tag("Instruction.InstructionAlias")
@@ -170,7 +170,8 @@ class InstructionInstance:
 class InstructionAlias:
     name: str
     operation_id: str
-    condition: Expression
+    condition: Expression | None = attrs.field(default=None)
+    # assembly: ?
 
 
 Instructionish = (
@@ -616,3 +617,22 @@ def parse_instruction_encoding(inst: dict) -> tuple[str, Trits, int, int, int]:
     mtrits = trit_ranges.merge()
     mts = str(mtrits)
     return (inst["name"], mtrits, mts.count("0"), mts.count("1"), mts.count("X"))
+
+
+def parse_instructions(instrs: Instructions) -> None:
+    set_encoding_stack: list[Encodeset] = []
+    set_condition_stack: list[Expression | None] = []
+    group_encoding_stack: list[Encodeset] = []
+    group_condition_stack: list[Expression | None] = []
+    inst_encoding_stack: list[Encodeset] = []
+    inst_condition_stack: list[Expression | None] = []
+
+    group_encoding_stack, group_condition_stack, inst_encoding_stack, inst_condition_stack
+
+    for iset in instrs.instructions:
+        set_encoding_stack.append(iset.encoding)
+        set_condition_stack.append(iset.condition)
+        set_encoding_stack.pop()
+        set_condition_stack.pop()
+
+    return
