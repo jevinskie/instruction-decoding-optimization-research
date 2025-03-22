@@ -9,46 +9,17 @@ from intervaltree import Interval, IntervalTree
 T = TypeVar("T")
 C = TypeVar("C", bound=type)
 
-# https://discuss.python.org/t/wrapping-a-decorator-and-preserving-typing/50623
-# https://github.com/jd/tenacity/blob/main/tenacity/__init__.py
-WrappedFnReturnT = TypeVar("WrappedFnReturnT")
-WrappedFn = TypeVar("WrappedFn", bound=Callable[..., Any])
-
-# def defauto(*args, **kwargs) -> Callable[[type[T]], type[T]]:
-#     kwargs["auto_attribs"] = True
-#     kwargs["on_setattr"] = None
-#     kwargs["frozen"] = True
-#     return attrs.define(*args, **kwargs)
-
 defauto = functools.partial(attrs.define, auto_attribs=True, on_setattr=None, frozen=True)
 
 
-def tag(value: str) -> Callable[[C], C]:
-    def decorator(cls: C) -> C:
-        class Wrapped(cls):
-            _type: str = value
+def tag(tag_val: str) -> Callable[[C], C]:
+    def wrap(cls: C) -> C:
+        if not isinstance(cls, type):
+            raise ValueError(f"cls should be a type not '{type(cls)}' cls: {cls}")
+        setattr(cls, "_type", tag_val)
+        return cls
 
-        # Preserve the original class name
-        Wrapped.__name__ = cls.__name__
-        Wrapped.__qualname__ = cls.__qualname__
-        return Wrapped
-
-    return decorator
-
-
-def tag2(tag_val: str):
-    def decorator_thunk(maybe_cls: C | None):
-        if maybe_cls is not None:
-
-            class Wrapped2(maybe_cls):
-                _type: str = tag_val
-
-            return functools.wraps(Wrapped2)
-        else:
-            raise NotImplementedError("i dunno..")
-            # return Wrapped2
-
-    return decorator_thunk
+    return wrap
 
 
 @defauto
