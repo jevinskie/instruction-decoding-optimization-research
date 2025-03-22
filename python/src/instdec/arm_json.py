@@ -639,7 +639,7 @@ def has_instructions_w_children(instrs: Instructions) -> bool:
     return False
 
 
-@attrs.define(auto_attribs=True, frozen=False)
+@defauto
 class ParseContext:
     set_encoding_stack: list[Encodeset] = attrs.Factory(list)
     set_condition_stack: list[Expression | None] = attrs.Factory(list)
@@ -675,6 +675,11 @@ def recurse_instr_or_instr_group(
     return
 
 
+def instr_cb(i: Instruction, c: ParseContext) -> None:
+    # print(f"i name stack: {'.'.join(c.group_name_stack)} c: {c}")
+    print(f"i name stack: {'.'.join(c.group_name_stack)}")
+
+
 def parse_instructions(instrs: Instructions) -> None:
     ctx = ParseContext()
 
@@ -685,10 +690,7 @@ def parse_instructions(instrs: Instructions) -> None:
         if iset.children is None:
             raise ValueError(f"iset name: {iset.name} children is None")
 
-        def dump(i: Instruction, c: ParseContext):
-            print(f"i name stack: {'.'.join(ctx.group_name_stack)} c: {c}")
-
-        recurse_instr_or_instr_group(iset.children, ctx, dump)
+        recurse_instr_or_instr_group(iset.children, ctx, instr_cb)
 
         ctx.set_condition_stack.pop()
         ctx.set_encoding_stack.pop()

@@ -1,21 +1,30 @@
+import functools
 import inspect
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any, Final, TypeVar
 
 import attrs
+from intervaltree import Interval, IntervalTree
 
 T = TypeVar("T")
+C = TypeVar("C", bound=type)
+
+# https://discuss.python.org/t/wrapping-a-decorator-and-preserving-typing/50623
+# https://github.com/jd/tenacity/blob/main/tenacity/__init__.py
+WrappedFnReturnT = TypeVar("WrappedFnReturnT")
+WrappedFn = TypeVar("WrappedFn", bound=Callable[..., Any])
+
+# def defauto(*args, **kwargs) -> Callable[[type[T]], type[T]]:
+#     kwargs["auto_attribs"] = True
+#     kwargs["on_setattr"] = None
+#     kwargs["frozen"] = True
+#     return attrs.define(*args, **kwargs)
+
+defauto = functools.partial(attrs.define, auto_attribs=True, on_setattr=None, frozen=True)
 
 
-def defauto(*args, **kwargs) -> Callable[[type[T]], type[T]]:
-    kwargs["auto_attribs"] = True
-    kwargs["on_setattr"] = None
-    kwargs["frozen"] = True
-    return attrs.define(*args, **kwargs)
-
-
-def tag(value: str):
-    def decorator(cls: type[T]) -> type[T]:
+def tag(value: str) -> Callable[[C], C]:
+    def decorator(cls: C) -> C:
         class Wrapped(cls):
             _type: str = value
 
@@ -25,6 +34,21 @@ def tag(value: str):
         return Wrapped
 
     return decorator
+
+
+def tag2(tag_val: str):
+    def decorator_thunk(maybe_cls: C | None):
+        if maybe_cls is not None:
+
+            class Wrapped2(maybe_cls):
+                _type: str = tag_val
+
+            return functools.wraps(Wrapped2)
+        else:
+            raise NotImplementedError("i dunno..")
+            # return Wrapped2
+
+    return decorator_thunk
 
 
 @defauto
@@ -48,15 +72,24 @@ class Span:
 class Pigeonholes:
     width: Final[int] = attrs.field()
     _spans: set[Span] = attrs.Factory(set)
+    _intervals: IntervalTree = attrs.Factory(IntervalTree)
 
     @property
     def spans(self) -> set[Span]:
         return self._spans
 
+    @property
+    def intervals(self) -> IntervalTree:
+        return self._intervals
+
     def add_span(self, span: Span) -> None:
         if span in self._spans:
             raise ValueError(f"Adding span {span} thats already in Pigeonholes: {self}")
         self._spans.add(span)
+        self._intervals.add(Interval(span.start, span.end, span))
+
+    def get_overlaps(self) -> list[Span] | None:
+        return None
 
 
 def traverse_nested(
