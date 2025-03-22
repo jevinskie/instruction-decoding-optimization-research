@@ -667,10 +667,13 @@ class ParseContext:
     obj_stack: list[JSONSchemaObject] = attrs.Factory(list)
 
 
+InstrCB = Callable[[Instruction, ParseContext], None]
+
+
 def recurse_instr_or_instr_group(
     il: list[InstructionOrInstructionGroup],
     ctx: ParseContext,
-    cb: Callable[[Instruction, ParseContext], None],
+    cb: InstrCB,
     seen: set[int] | None = None,
 ) -> None:
     if seen is None:
@@ -702,7 +705,7 @@ def instr_cb(i: Instruction, c: ParseContext) -> None:
     print(f"i name stack: {'.'.join(c.group_name_stack)} s: {s}")
 
 
-def parse_instructions(instrs: Instructions) -> None:
+def parse_instructions(instrs: Instructions, cb: InstrCB = instr_cb) -> None:
     ctx = ParseContext()
     ctx.obj_stack.append(instrs)
 
@@ -714,7 +717,7 @@ def parse_instructions(instrs: Instructions) -> None:
         if iset.children is None:
             raise ValueError(f"iset name: {iset.name} children is None")
 
-        recurse_instr_or_instr_group(iset.children, ctx, instr_cb)
+        recurse_instr_or_instr_group(iset.children, ctx, cb)
 
         ctx.set_condition_stack.pop()
         ctx.set_encoding_stack.pop()
