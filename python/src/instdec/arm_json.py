@@ -287,7 +287,7 @@ JSONSchemaObject = typing.Union[
     EncodesetField,
     EncodsetShouldBeBits,
     Expression,
-    Identifier,
+    # Identifier,
     Instruction,
     InstructionInstance,
     InstructionAlias,
@@ -370,7 +370,9 @@ converter = Converter()
 converter.detailed_validation = True
 
 
-def structure_operations(obj: dict[str, dict], _: type) -> Operations:
+def structure_operations(obj: dict[str, dict], cls: type[Operations]) -> Operations:
+    if not issubclass(cls, Operations):
+        raise TypeError(f"got cls {cls} not Operations")
     result: Operations = Operations()
     for key, value in obj.items():
         # Determine the type based on the _type field and structure accordingly
@@ -388,31 +390,38 @@ def structure_operations(obj: dict[str, dict], _: type) -> Operations:
 converter.register_structure_hook(Operations, structure_operations)
 
 
-def structure_identifier(obj: str, cls: type[Identifier]):
+def structure_identifier(obj: str, cls: type[Identifier]) -> Identifier:
+    if not issubclass(cls, Identifier):
+        raise TypeError(f"got cls {cls} not Identifier")
     print(f"structure_identifier obj: '{obj}' cls: {cls}")
     return cls(obj)
 
 
-converter.register_structure_hook(Identifier, structure_identifier)
+# converter.register_structure_hook(Identifier, structure_identifier)
 
 
-def my_tag_generator(cl: type[TagBase]) -> str:
-    if not hasattr(cl, "_type"):
-        raise ValueError(f"cl has no _type attribute. cl: {cl}")
-    if not isinstance(cl, type):
-        raise TypeError(f"not type got {type(cl)} instead")
-    if not issubclass(cl, TagBase):
-        raise TypeError(f"cl not TagBase type(cl): {type(cl)} cl: {cl}")
-    return cl._type
+def my_tag_generator(cls: type[TagBase]) -> str:
+    print(f"my_tag_generator cls: {cls}")
+    if not hasattr(cls, "_type"):
+        raise ValueError(f"cls has no _type attribute. cls: {cls}")
+    if not isinstance(cls, type):
+        raise TypeError(f"not type got {type(cls)} instead")
+    if not issubclass(cls, TagBase):
+        raise TypeError(f"cls not TagBase type(cls): {type(cls)} cls: {cls}")
+    return cls._type
 
 
 cattrs.strategies.configure_tagged_union(
-    Instruction | InstructionInstance | InstructionAlias, converter, tag_generator=my_tag_generator
+    typing.Union[Identifier, Identifier], converter, tag_generator=my_tag_generator
 )
 
-cattrs.strategies.configure_tagged_union(
-    Instruction | InstructionGroup, converter, tag_generator=my_tag_generator
-)
+# cattrs.strategies.configure_tagged_union(
+#     Instruction | InstructionInstance | InstructionAlias, converter, tag_generator=my_tag_generator
+# )
+
+# cattrs.strategies.configure_tagged_union(
+#     Instruction | InstructionGroup, converter, tag_generator=my_tag_generator
+# )
 
 # converter.register_structure_hook(JSONSchemaObject, structure_json_schema)
 cattrs.strategies.configure_tagged_union(
@@ -420,7 +429,9 @@ cattrs.strategies.configure_tagged_union(
 )
 
 
-def structure_trit(obj: str, cls: type[Trits]):
+def structure_trit(obj: str, cls: type[Trits]) -> Trits:
+    if not issubclass(cls, Trits):
+        raise TypeError(f"got cls {cls} not Trits")
     # print(f"structure_trit obj: '{obj}' cls: {cls}")
     return cls(obj)
 
