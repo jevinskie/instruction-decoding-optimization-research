@@ -1,6 +1,6 @@
 import inspect
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import Any, Final, TypeVar, dataclass_transform, overload
+from typing import Any, ClassVar, Final, TypeVar, dataclass_transform, overload
 
 import attr
 import attrs
@@ -30,8 +30,17 @@ def defauto(maybe_cls: C | None, *args, **kwargs) -> C | Callable[[C], C]:
     return attrs.define(maybe_cls, *args, **kwargs)
 
 
-def tag(tag_val: str) -> Callable[[C], C]:
-    def wrap(cls: C) -> C:
+@defauto
+class TagBase:
+    _type: ClassVar[str]
+
+
+TB = TypeVar("TB", bound=TagBase)
+CTB = type[TB]
+
+
+def tag(tag_val: str) -> Callable[[CTB], CTB]:
+    def wrap(cls: CTB) -> CTB:
         if not isinstance(cls, type):
             raise ValueError(f"cls should be a type not '{type(cls)}' cls: {cls}")
         setattr(cls, "_type", tag_val)

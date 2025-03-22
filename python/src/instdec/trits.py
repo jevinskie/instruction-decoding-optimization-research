@@ -2,12 +2,12 @@ from typing import Self
 
 import attrs
 
-from .util import defauto, tag
+from .util import TagBase, defauto, tag
 
 
 @tag("Trits")
 @defauto
-class Trits:
+class Trits(TagBase):
     """
     A class to represent and manipulate trit strings (0, 1, X).
     """

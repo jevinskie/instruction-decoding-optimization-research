@@ -12,7 +12,7 @@ from cattrs import Converter
 
 # from rich import print
 from .trits import TritRange, TritRanges, Trits
-from .util import Span, defauto, tag, traverse_nested
+from .util import Span, TagBase, defauto, tag, traverse_nested
 
 
 class BinOp(enum.StrEnum):
@@ -37,7 +37,7 @@ seen_identifiers: set[str] = set()
 
 @tag("AST.Identifier")
 @defauto
-class Identifier:
+class Identifier(TagBase):
     # valuex: str = attrs.field(alias="value")
     value: str
     _sentinel: str  # FIXME: this has to go, right? or a converter?
@@ -60,7 +60,7 @@ def str_none_nil_xfrm(v: str | None) -> str:
 
 @tag("Value.Value")
 @defauto
-class Value:
+class Value(TagBase):
     value: Trits
     meaning: str | None
 
@@ -71,19 +71,19 @@ class Value:
 
 @tag("AST.Bool")
 @defauto
-class Bool:
+class Bool(TagBase):
     value: bool
 
 
 @tag("AST.Set")
 @defauto
-class Set:
+class Set(TagBase):
     values: set[Value]
 
 
 @tag("AST.BinaryOp")
 @defauto
-class BinaryOp:
+class BinaryOp(TagBase):
     left: Expression
     op: BinOp
     right: Expression
@@ -91,7 +91,7 @@ class BinaryOp:
 
 @tag("AST.UnaryOp")
 @defauto
-class UnaryOp:
+class UnaryOp(TagBase):
     expr: Expression
     op: UnOp
 
@@ -101,7 +101,7 @@ seen_function_names: set[str] = set()
 
 @tag("AST.Function")
 @defauto
-class Function:
+class Function(TagBase):
     name: str
     arguments: list[Expression]
 
@@ -116,7 +116,7 @@ Valueish = Value | Set
 
 @tag("Range")
 @defauto
-class Range:
+class Range(TagBase):
     start: int
     width: int
 
@@ -131,7 +131,7 @@ class Range:
 
 @tag("Instruction.Encodeset.Bits")
 @defauto
-class EncodesetBits:
+class EncodesetBits(TagBase):
     value: Value
     range: Range
     should_be_mask: Value
@@ -139,7 +139,7 @@ class EncodesetBits:
 
 @tag("Instruction.Encodeset.Field")
 @defauto
-class EncodesetField:
+class EncodesetField(TagBase):
     name: str
     range: Range
     value: Value
@@ -148,7 +148,7 @@ class EncodesetField:
 
 @tag("Instruction.Encodeset.ShouldBeBits")
 @defauto
-class EncodsetShouldBeBits:
+class EncodsetShouldBeBits(TagBase):
     value: Value
     range: Range
 
@@ -158,14 +158,14 @@ EncodesetValues = EncodesetBits | EncodesetField | EncodsetShouldBeBits
 
 @tag("Instruction.Encodeset.Encodeset")
 @defauto
-class Encodeset:
+class Encodeset(TagBase):
     values: list[EncodesetValues]
     width: int
 
 
 @tag("Instruction.InstructionInstance")
 @defauto
-class InstructionInstance:
+class InstructionInstance(TagBase):
     name: str
     condition: Expression | None = attrs.field(default=None)
     children: list[InstructionInstance] | None = attrs.field(default=None)
@@ -173,7 +173,7 @@ class InstructionInstance:
 
 @tag("Instruction.InstructionAlias")
 @defauto
-class InstructionAlias:
+class InstructionAlias(TagBase):
     name: str
     operation_id: str
     condition: Expression | None = attrs.field(default=None)
@@ -187,7 +187,7 @@ Instructionish = (
 
 @tag("Instruction.Instruction")
 @defauto
-class Instruction:
+class Instruction(TagBase):
     name: str
     operation_id: str
     encoding: Encodeset
@@ -204,7 +204,7 @@ InstructionOrInstructionGroup = Instruction | typing.ForwardRef(
 
 @tag("Instruction.InstructionGroup")
 @defauto
-class InstructionGroup:
+class InstructionGroup(TagBase):
     name: str
     encoding: Encodeset
     title: str | None = attrs.field(default=None)
@@ -215,7 +215,7 @@ class InstructionGroup:
 
 @tag("Instruction.InstructionSet")
 @defauto
-class InstructionSet:
+class InstructionSet(TagBase):
     name: str
     encoding: Encodeset
     read_width: int
@@ -226,7 +226,7 @@ class InstructionSet:
 
 @tag("Instruction.Operation")
 @defauto
-class Operation:
+class Operation(TagBase):
     operation: str
     description: str
     brief: str
@@ -236,7 +236,7 @@ class Operation:
 
 @tag("Instruction.OperationAlias")
 @defauto
-class OperationAlias:
+class OperationAlias(TagBase):
     operation_id: str
     description: str
     brief: str
@@ -252,7 +252,7 @@ class Operations(dict[str, Operationish]):
 
 @tag("Instruction.Instructions")
 @defauto
-class Instructions:
+class Instructions(TagBase):
     instructions: list[InstructionSet]
     operations: Operations
 
@@ -363,9 +363,13 @@ def structure_operations(obj: dict[str, dict], _: type) -> Operations:
 converter.register_structure_hook(Operations, structure_operations)
 
 
-def my_tag_generator(cl: type) -> str:
+def my_tag_generator(cl: type[TagBase]) -> str:
     if not hasattr(cl, "_type"):
         raise ValueError(f"cl has no _type attribute. cl: {cl}")
+    if not isinstance(cl, type):
+        raise TypeError(f"not type got {type(cl)} instead")
+    if not issubclass(cl, TagBase):
+        raise TypeError(f"cl not TagBase type(cl): {type(cl)} cl: {cl}")
     return cl._type
 
 
@@ -383,7 +387,7 @@ cattrs.strategies.configure_tagged_union(
 )
 
 
-def structure_trit(obj: str, cls: type):
+def structure_trit(obj: str, cls: type[Trits]):
     # print(f"structure_trit obj: '{obj}' cls: {cls}")
     return cls(obj)
 
