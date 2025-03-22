@@ -659,6 +659,7 @@ class ParseContext:
     group_encoding_stack: list[Encodeset] = attrs.Factory(list)
     group_condition_stack: list[Expression | None] = attrs.Factory(list)
     group_name_stack: list[str] = attrs.Factory(list)
+    obj_stack: list[JSONSchemaObject] = attrs.Factory(list)
 
 
 def recurse_instr_or_instr_group(
@@ -670,6 +671,7 @@ def recurse_instr_or_instr_group(
     if seen is None:
         seen = set()
     for ioig in il:
+        ctx.obj_stack.append(ioig)
         if id(ioig) in seen:
             continue
         if isinstance(ioig, Instruction):
@@ -685,18 +687,22 @@ def recurse_instr_or_instr_group(
             ctx.group_condition_stack.pop()
             ctx.group_encoding_stack.pop()
         seen.add(id(ioig))
+        ctx.obj_stack.pop()
     return
 
 
 def instr_cb(i: Instruction, c: ParseContext) -> None:
     # print(f"i name stack: {'.'.join(c.group_name_stack)} c: {c}")
-    print(f"i name stack: {'.'.join(c.group_name_stack)}")
+    s = "///".join(map(lambda x: x._type, c.obj_stack))
+    print(f"i name stack: {'.'.join(c.group_name_stack)} s: {s}")
 
 
 def parse_instructions(instrs: Instructions) -> None:
     ctx = ParseContext()
+    ctx.obj_stack.append(instrs)
 
     for iset in instrs.instructions:
+        ctx.obj_stack.append(iset)
         ctx.set_encoding_stack.append(iset.encoding)
         ctx.set_condition_stack.append(iset.condition)
 
@@ -707,5 +713,8 @@ def parse_instructions(instrs: Instructions) -> None:
 
         ctx.set_condition_stack.pop()
         ctx.set_encoding_stack.pop()
+        ctx.obj_stack.pop()
+
+    ctx.obj_stack.pop()
 
     return
