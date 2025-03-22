@@ -178,8 +178,6 @@ Instructionish = (
     typing.ForwardRef("Instruction", is_argument=False) | InstructionInstance | InstructionAlias
 )
 
-InstructionChildren = list[Instructionish]
-
 
 @tag("Instruction.Instruction")
 @defauto
@@ -188,14 +186,14 @@ class Instruction:
     operation_id: str
     encoding: Encodeset
     condition: Expression | None = attrs.field(default=None)
-    children: InstructionChildren | None = attrs.field(default=None)
+    children: list[Instructionish] | None = attrs.field(default=None)
     title: str | None = attrs.field(default=None)
     preferred: Expression | None = attrs.field(default=None)
 
 
-InstructionGroupish = Instruction | typing.ForwardRef("InstructionGroup", is_argument=False)
-
-InstructionGroupSetChildren = list[InstructionGroupish]
+InstructionOrInstructionGroup = Instruction | typing.ForwardRef(
+    "InstructionGroup", is_argument=False
+)
 
 
 @tag("Instruction.InstructionGroup")
@@ -205,7 +203,7 @@ class InstructionGroup:
     encoding: Encodeset
     title: str | None = attrs.field(default=None)
     condition: Expression | None = attrs.field(default=None)
-    children: InstructionGroupSetChildren | None = attrs.field(default=None)
+    children: list[InstructionOrInstructionGroup] | None = attrs.field(default=None)
     operation_id: str | None = attrs.field(default=None)
 
 
@@ -216,7 +214,7 @@ class InstructionSet:
     encoding: Encodeset
     read_width: int
     condition: Expression | None = attrs.field(default=None)
-    children: InstructionGroupSetChildren | None = attrs.field(default=None)
+    children: list[InstructionOrInstructionGroup] | None = attrs.field(default=None)
     operation_id: str | None = attrs.field(default=None)
 
 
@@ -293,9 +291,7 @@ TheTypes = (
     UnaryOp,
     Value,
     Valueish,
-    InstructionChildren,
-    InstructionGroupish,
-    InstructionGroupSetChildren,
+    InstructionOrInstructionGroup,
     Instructionish,
     Operationish,
     Operations,
