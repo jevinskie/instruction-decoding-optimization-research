@@ -34,11 +34,12 @@ def dump_instructions(raw_json: dict | list) -> None:
     if instructions is None:
         raise ValueError("got None instructions")
 
-    arm_json.parse_instructions(instructions)
     if arm_json.has_instructions_w_children(instructions):
         raise ValueError("have instructions with children")
     else:
         print("good, no Instruction.Instruction w/ children")
+
+    arm_json.parse_instructions(instructions)
 
 
 def get_arg_parser() -> argparse.ArgumentParser:
