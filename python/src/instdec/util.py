@@ -27,10 +27,7 @@ def defauto(maybe_cls: C | None, *args, **kwargs) -> C | Callable[[C], C]:
     kwargs["auto_attribs"] = True
     kwargs["on_setattr"] = None
     kwargs["frozen"] = True
-    if maybe_cls is None:
-        return attrs.define(maybe_cls, *args, **kwargs)
-    else:
-        return attrs.define(maybe_cls, *args, **kwargs)
+    return attrs.define(maybe_cls, *args, **kwargs)
 
 
 def tag(tag_val: str) -> Callable[[C], C]:
