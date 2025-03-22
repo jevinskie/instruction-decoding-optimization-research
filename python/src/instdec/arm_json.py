@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import enum
 import typing
+from collections.abc import Callable
 from typing import Any
 
 import attrs
@@ -637,20 +638,53 @@ def has_instructions_w_children(instrs: Instructions) -> bool:
     return False
 
 
-def parse_instructions(instrs: Instructions) -> None:
-    set_encoding_stack: list[Encodeset] = []
-    set_condition_stack: list[Expression | None] = []
-    group_encoding_stack: list[Encodeset] = []
-    group_condition_stack: list[Expression | None] = []
-    inst_encoding_stack: list[Encodeset] = []
-    inst_condition_stack: list[Expression | None] = []
+@attrs.define(auto_attribs=True, frozen=False)
+class ParseContext:
+    set_encoding_stack: list[Encodeset] = attrs.Factory(list)
+    set_condition_stack: list[Expression | None] = attrs.Factory(list)
+    group_encoding_stack: list[Encodeset] = attrs.Factory(list)
+    group_condition_stack: list[Expression | None] = attrs.Factory(list)
 
-    group_encoding_stack, group_condition_stack, inst_encoding_stack, inst_condition_stack
+
+def recurse_instr_or_instr_group(
+    il: list[InstructionOrInstructionGroup],
+    ctx: ParseContext,
+    cb: Callable[[Instruction, ParseContext], None],
+    seen: set[int] | None = None,
+) -> None:
+    if seen is None:
+        seen = set()
+    for ioig in il:
+        if id(ioig) in seen:
+            continue
+        if isinstance(ioig, Instruction):
+            cb(ioig, ctx)
+        else:
+            if not isinstance(ioig, InstructionGroup):
+                raise ValueError(f"ioig: {ioig}")
+            ctx.group_encoding_stack.append(ioig.encoding)
+            ctx.group_condition_stack.append(ioig.condition)
+            recurse_instr_or_instr_group(ioig.children, ctx, cb)
+            ctx.group_condition_stack.pop()
+            ctx.group_encoding_stack.pop()
+        seen.add(id(ioig))
+    return
+
+
+def parse_instructions(instrs: Instructions) -> None:
+    ctx = ParseContext()
 
     for iset in instrs.instructions:
-        set_encoding_stack.append(iset.encoding)
-        set_condition_stack.append(iset.condition)
-        set_encoding_stack.pop()
-        set_condition_stack.pop()
+        ctx.set_encoding_stack.append(iset.encoding)
+        ctx.set_condition_stack.append(iset.condition)
+        if iset.children is None:
+            raise ValueError(f"iset name: {iset.name} children is None")
+
+        def dump(i: Instruction, c: ParseContext):
+            print(f"i name: {i.name} c: {c}")
+
+        recurse_instr_or_instr_group(iset.children, ctx, dump)
+        ctx.set_condition_stack.pop()
+        ctx.set_encoding_stack.pop()
 
     return
