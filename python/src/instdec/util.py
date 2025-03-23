@@ -32,7 +32,7 @@ def defauto(maybe_cls: C | None, *args, **kwargs) -> C | Callable[[C], C]:
 
 @defauto
 class TagBase:
-    _tiep: str
+    taglit: str
 
 
 TB = TypeVar("TB", bound=TagBase)
@@ -45,7 +45,7 @@ def tag(tag_val: str) -> Callable[[CTB], CTB]:
             raise ValueError(f"cls should be a type not '{type(cls)}' cls: {cls}")
         if not issubclass(cls, TagBase):
             raise TypeError(f"cls not subclass of TagBase cls: {cls}")
-        cls._tiep = tag_val
+        cls.taglit = tag_val
         return cls
 
     return wrap

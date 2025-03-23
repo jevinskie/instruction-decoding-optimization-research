@@ -40,7 +40,7 @@ seen_value_values: set[Trits] = set()
 @tag("Value.Value")
 @defauto
 class Value(TagBase):
-    _tiep: Literal["Value.Value"]
+    taglit: Literal["Value.Value"]
     value: Trits
     meaning: str | None
 
@@ -55,7 +55,7 @@ seen_identifiers: set[str] = set()
 @tag("AST.Identifier")
 @defauto
 class Identifier(TagBase):
-    _tiep: Literal["AST.Identifier"]
+    taglit: Literal["AST.Identifier"]
     value: str
 
     def __attrs_post_init__(self):
@@ -65,21 +65,21 @@ class Identifier(TagBase):
 @tag("AST.Bool")
 @defauto
 class Bool(TagBase):
-    _tiep: Literal["AST.Bool"]
+    taglit: Literal["AST.Bool"]
     value: bool
 
 
 @tag("AST.Set")
 @defauto
 class Set(TagBase):
-    _tiep: Literal["AST.Set"]
+    taglit: Literal["AST.Set"]
     values: set[Value]
 
 
 @tag("AST.BinaryOp")
 @defauto
 class BinaryOp(TagBase):
-    _tiep: Literal["AST.BinaryOp"]
+    taglit: Literal["AST.BinaryOp"]
     left: Expression
     op: BinOp
     right: Expression
@@ -88,7 +88,7 @@ class BinaryOp(TagBase):
 @tag("AST.UnaryOp")
 @defauto
 class UnaryOp(TagBase):
-    _tiep: Literal["AST.UnaryOp"]
+    taglit: Literal["AST.UnaryOp"]
     expr: Expression
     op: UnOp
 
@@ -99,7 +99,7 @@ seen_function_names: set[str] = set()
 @tag("AST.Function")
 @defauto
 class Function(TagBase):
-    _tiep: Literal["AST.Function"]
+    taglit: Literal["AST.Function"]
     name: str
     arguments: list[Expression]
 
@@ -128,7 +128,7 @@ def expr_has_ident(expr: Expression | None, ident: str) -> bool:
 @tag("Range")
 @defauto
 class Range(TagBase):
-    _tiep: Literal["Range"]
+    taglit: Literal["Range"]
     start: int
     width: int
 
@@ -144,7 +144,7 @@ class Range(TagBase):
 @tag("Instruction.Encodeset.Bits")
 @defauto
 class EncodesetBits(TagBase):
-    _tiep: Literal["Instruction.Encodeset.Bits"]
+    taglit: Literal["Instruction.Encodeset.Bits"]
     value: Value
     range: Range
     should_be_mask: Value
@@ -153,7 +153,7 @@ class EncodesetBits(TagBase):
 @tag("Instruction.Encodeset.Field")
 @defauto
 class EncodesetField(TagBase):
-    _tiep: Literal["Instruction.Encodeset.Field"]
+    taglit: Literal["Instruction.Encodeset.Field"]
     name: str
     range: Range
     value: Value
@@ -163,7 +163,7 @@ class EncodesetField(TagBase):
 @tag("Instruction.Encodeset.ShouldBeBits")
 @defauto
 class EncodsetShouldBeBits(TagBase):
-    _tiep: Literal["Instruction.Encodeset.ShouldBeBits"]
+    taglit: Literal["Instruction.Encodeset.ShouldBeBits"]
     value: Value
     range: Range
 
@@ -174,7 +174,7 @@ EncodesetValues = EncodesetBits | EncodesetField | EncodsetShouldBeBits
 @tag("Instruction.Encodeset.Encodeset")
 @defauto
 class Encodeset(TagBase):
-    _tiep: Literal["Instruction.Encodeset.Encodeset"]
+    taglit: Literal["Instruction.Encodeset.Encodeset"]
     values: list[EncodesetValues]
     width: int
 
@@ -199,7 +199,7 @@ class Encodeset(TagBase):
 @tag("Instruction.InstructionInstance")
 @defauto
 class InstructionInstance(TagBase):
-    _tiep: Literal["Instruction.InstructionInstance"]
+    taglit: Literal["Instruction.InstructionInstance"]
     name: str
     condition: Expression | None = attrs.field(default=None)
     children: list[InstructionInstance] | None = attrs.field(default=None)
@@ -208,7 +208,7 @@ class InstructionInstance(TagBase):
 @tag("Instruction.InstructionAlias")
 @defauto
 class InstructionAlias(TagBase):
-    _tiep: Literal["Instruction.InstructionAlias"]
+    taglit: Literal["Instruction.InstructionAlias"]
     name: str
     operation_id: str
     condition: Expression | None = attrs.field(default=None)
@@ -223,7 +223,7 @@ Instructionish = (
 @tag("Instruction.Instruction")
 @defauto
 class Instruction(TagBase):
-    _tiep: Literal["Instruction.Instruction"]
+    taglit: Literal["Instruction.Instruction"]
     name: str
     operation_id: str
     encoding: Encodeset
@@ -241,7 +241,7 @@ InstructionOrInstructionGroup = Instruction | typing.ForwardRef(
 @tag("Instruction.InstructionGroup")
 @defauto
 class InstructionGroup(TagBase):
-    _tiep: Literal["Instruction.InstructionGroup"]
+    taglit: Literal["Instruction.InstructionGroup"]
     name: str
     encoding: Encodeset
     title: str | None = attrs.field(default=None)
@@ -253,7 +253,7 @@ class InstructionGroup(TagBase):
 @tag("Instruction.InstructionSet")
 @defauto
 class InstructionSet(TagBase):
-    _tiep: Literal["Instruction.InstructionSet"]
+    taglit: Literal["Instruction.InstructionSet"]
     name: str
     encoding: Encodeset
     read_width: int
@@ -265,7 +265,7 @@ class InstructionSet(TagBase):
 @tag("Instruction.Operation")
 @defauto
 class Operation(TagBase):
-    _tiep: Literal["Instruction.Operation"]
+    taglit: Literal["Instruction.Operation"]
     operation: str
     description: str
     brief: str
@@ -276,7 +276,7 @@ class Operation(TagBase):
 @tag("Instruction.OperationAlias")
 @defauto
 class OperationAlias(TagBase):
-    _tiep: Literal["Instruction.OperationAlias"]
+    taglit: Literal["Instruction.OperationAlias"]
     operation_id: str
     description: str
     brief: str
@@ -289,14 +289,14 @@ Operationish = Operation | OperationAlias
 @tag("Operations")
 @defauto
 class Operations(TagBase):
-    _tiep: Literal["Operations"]
+    taglit: Literal["Operations"]
     ops: dict[str, Operationish]
 
 
 @tag("Instruction.Instructions")
 @defauto
 class Instructions(TagBase):
-    _tiep: Literal["Instruction.Instructions"]
+    taglit: Literal["Instruction.Instructions"]
     instructions: list[InstructionSet]
     operations: Operations
 
@@ -398,10 +398,10 @@ def structure_operations(obj: dict[str, dict], cls: type[Operations]) -> Operati
     for key, value in obj.items():
         # Determine the type based on the _type field and structure accordingly
         # ty = value.get("_type")
-        ty = value.get("_tiep")
+        ty = value.get("taglit")
         if ty is None:
             ty = value.get("_type")
-            print(f"structure_operations _tiep none ty: {ty}")
+            print(f"structure_operations taglit none ty: {ty}")
         if ty == "Instruction.Operation":
             result[key] = converter.structure(value, Operation)
         elif ty == "Instruction.OperationAlias":
@@ -409,7 +409,7 @@ def structure_operations(obj: dict[str, dict], cls: type[Operations]) -> Operati
         else:
             raise ValueError(f"Unknown operation type: {ty} val: {value}")
     print(f"structure_operations res: {result}")
-    return cls(result)
+    return cls(ops=result)
 
 
 # Register a custom structure hook for Operations
@@ -427,7 +427,7 @@ def structure_identifier(obj: str, cls: type[Identifier]) -> Identifier:
 
 
 def my_tag_generator(cls: type[TagBase]) -> str:
-    if not hasattr(cls, "_tiep"):
+    if not hasattr(cls, "taglit"):
         rich.inspect(cls, all=True)
         print(f"my_tag_generator cls: {cls} type: {type(cls)}")
         raise ValueError(f"cls has no _type attribute. cls: {cls}")
@@ -435,8 +435,8 @@ def my_tag_generator(cls: type[TagBase]) -> str:
         raise TypeError(f"not type got {type(cls)} instead")
     if not issubclass(cls, TagBase):
         raise TypeError(f"cls not TagBase type(cls): {type(cls)} cls: {cls}")
-    print(f"my_tag_generator cls: {cls} tag: {cls._tiep}")
-    return cls._tiep
+    print(f"my_tag_generator cls: {cls} tag: {cls.taglit}")
+    return cls.taglit
 
 
 # cattrs.strategies.configure_tagged_union(

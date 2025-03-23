@@ -12,7 +12,7 @@ class Trits(TagBase):
     A class to represent and manipulate trit strings (0, 1, X).
     """
 
-    _tiep: Literal["Trits"]
+    taglit: Literal["Trits"]
 
     @staticmethod
     def normalize_trit_str(sval: str) -> str:
