@@ -34,6 +34,9 @@ def defauto(maybe_cls: C | None, *args, **kwargs) -> C | Callable[[C], C]:
 class TagBase:
     # taglit: str
     pass
+    # @property
+    # def taglit(self) -> str:
+    #     return getattr(self, "taglit")
 
 
 TB = TypeVar("TB", bound=TagBase)

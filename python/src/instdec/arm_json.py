@@ -403,7 +403,7 @@ def structure_operations(obj: dict[str, dict], cls: type[Operations]) -> Operati
         ty = value.get("taglit")
         if ty is None:
             ty = value.get("_type")
-            print(f"structure_operations taglit none ty: {ty}")
+            # print(f"structure_operations taglit none ty: {ty}")
         if ty == "Instruction.Operation":
             result[key] = converter.structure(value, Operation)
         elif ty == "Instruction.OperationAlias":
@@ -438,16 +438,16 @@ def my_tag_generator(cls: type[TagBase]) -> str:
     if not issubclass(cls, TagBase):
         raise TypeError(f"cls not TagBase type(cls): {type(cls)} cls: {cls}")
     anno = cls.__annotations__["taglit"]
-    print(f"my_tag_generator cls: {cls} tag: {cls.taglit} anno: {anno}")
-    rich.inspect(cls, all=True)
-    rich.inspect(cls.taglit, all=True)
-    rich.inspect(cls.__annotations__["taglit"], all=True)
-    return (
-        cls.__annotations__["taglit"]
-        .removeprefix("typing.Literal['")
-        .removeprefix("Literal['")
-        .removesuffix("']")
+    anno_trimmed = (
+        anno.removeprefix("typing.Literal['").removeprefix("Literal['").removesuffix("']")
     )
+    print(
+        f"my_tag_generator cls: {cls} tag: {cls.taglit} anno: {anno} anno_trimmed: {anno_trimmed}"
+    )
+    # rich.inspect(cls, all=True)
+    # rich.inspect(cls.taglit, all=True)
+    # rich.inspect(cls.__annotations__["taglit"], all=True)
+    return anno_trimmed
 
 
 # cattrs.strategies.configure_tagged_union(

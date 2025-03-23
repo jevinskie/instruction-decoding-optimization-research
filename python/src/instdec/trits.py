@@ -10,10 +10,6 @@ from .util import TagBase, defauto
 # @tag("Trits")
 @defauto
 class Trits(TagBase):
-    """
-    A class to represent and manipulate trit strings (0, 1, X).
-    """
-
     taglit: Literal["Trits"]
 
     @staticmethod
@@ -23,6 +19,10 @@ class Trits(TagBase):
         return sval
 
     trits: str = attrs.field(converter=normalize_trit_str)
+
+    """
+    A class to represent and manipulate trit strings (0, 1, X).
+    """
 
     @trits.validator
     def _check_trits(self, _, value):
