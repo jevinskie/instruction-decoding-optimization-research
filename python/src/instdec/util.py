@@ -32,7 +32,8 @@ def defauto(maybe_cls: C | None, *args, **kwargs) -> C | Callable[[C], C]:
 
 @defauto
 class TagBase:
-    taglit: str
+    # taglit: str
+    pass
 
 
 TB = TypeVar("TB", bound=TagBase)
@@ -40,6 +41,8 @@ CTB = type[TB]
 
 
 def tag(tag_val: str) -> Callable[[CTB], CTB]:
+    raise NotImplementedError("no more")
+
     def wrap(cls: CTB) -> CTB:
         if not isinstance(cls, type):
             raise ValueError(f"cls should be a type not '{type(cls)}' cls: {cls}")

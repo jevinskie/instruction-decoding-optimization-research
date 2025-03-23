@@ -13,7 +13,7 @@ from cattrs import Converter
 
 # from rich import print
 from .trits import TritRange, TritRanges, Trits
-from .util import Span, TagBase, defauto, tag, traverse_nested
+from .util import Span, TagBase, defauto, traverse_nested
 
 
 class BinOp(enum.StrEnum):
@@ -37,7 +37,7 @@ seen_value_meanings: set[str] = set()
 seen_value_values: set[Trits] = set()
 
 
-@tag("Value.Value")
+# @tag("Value.Value")
 @defauto
 class Value(TagBase):
     taglit: Literal["Value.Value"]
@@ -52,7 +52,7 @@ class Value(TagBase):
 seen_identifiers: set[str] = set()
 
 
-@tag("AST.Identifier")
+# @tag("AST.Identifier")
 @defauto
 class Identifier(TagBase):
     taglit: Literal["AST.Identifier"]
@@ -62,21 +62,21 @@ class Identifier(TagBase):
         seen_identifiers.add(self.value)
 
 
-@tag("AST.Bool")
+# @tag("AST.Bool")
 @defauto
 class Bool(TagBase):
     taglit: Literal["AST.Bool"]
     value: bool
 
 
-@tag("AST.Set")
+# @tag("AST.Set")
 @defauto
 class Set(TagBase):
     taglit: Literal["AST.Set"]
     values: set[Value]
 
 
-@tag("AST.BinaryOp")
+# @tag("AST.BinaryOp")
 @defauto
 class BinaryOp(TagBase):
     taglit: Literal["AST.BinaryOp"]
@@ -85,7 +85,7 @@ class BinaryOp(TagBase):
     right: Expression
 
 
-@tag("AST.UnaryOp")
+# @tag("AST.UnaryOp")
 @defauto
 class UnaryOp(TagBase):
     taglit: Literal["AST.UnaryOp"]
@@ -96,7 +96,7 @@ class UnaryOp(TagBase):
 seen_function_names: set[str] = set()
 
 
-@tag("AST.Function")
+# @tag("AST.Function")
 @defauto
 class Function(TagBase):
     taglit: Literal["AST.Function"]
@@ -125,7 +125,7 @@ def expr_has_ident(expr: Expression | None, ident: str) -> bool:
         return False
 
 
-@tag("Range")
+# @tag("Range")
 @defauto
 class Range(TagBase):
     taglit: Literal["Range"]
@@ -141,7 +141,7 @@ class Range(TagBase):
         return Span(self.start, self.width)
 
 
-@tag("Instruction.Encodeset.Bits")
+# @tag("Instruction.Encodeset.Bits")
 @defauto
 class EncodesetBits(TagBase):
     taglit: Literal["Instruction.Encodeset.Bits"]
@@ -150,7 +150,7 @@ class EncodesetBits(TagBase):
     should_be_mask: Value
 
 
-@tag("Instruction.Encodeset.Field")
+# @tag("Instruction.Encodeset.Field")
 @defauto
 class EncodesetField(TagBase):
     taglit: Literal["Instruction.Encodeset.Field"]
@@ -160,7 +160,7 @@ class EncodesetField(TagBase):
     should_be_mask: Value
 
 
-@tag("Instruction.Encodeset.ShouldBeBits")
+# @tag("Instruction.Encodeset.ShouldBeBits")
 @defauto
 class EncodsetShouldBeBits(TagBase):
     taglit: Literal["Instruction.Encodeset.ShouldBeBits"]
@@ -171,7 +171,7 @@ class EncodsetShouldBeBits(TagBase):
 EncodesetValues = EncodesetBits | EncodesetField | EncodsetShouldBeBits
 
 
-@tag("Instruction.Encodeset.Encodeset")
+# @tag("Instruction.Encodeset.Encodeset")
 @defauto
 class Encodeset(TagBase):
     taglit: Literal["Instruction.Encodeset.Encodeset"]
@@ -196,7 +196,7 @@ class Encodeset(TagBase):
         return self.get_field(name) is not None
 
 
-@tag("Instruction.InstructionInstance")
+# @tag("Instruction.InstructionInstance")
 @defauto
 class InstructionInstance(TagBase):
     taglit: Literal["Instruction.InstructionInstance"]
@@ -205,7 +205,7 @@ class InstructionInstance(TagBase):
     children: list[InstructionInstance] | None = attrs.field(default=None)
 
 
-@tag("Instruction.InstructionAlias")
+# @tag("Instruction.InstructionAlias")
 @defauto
 class InstructionAlias(TagBase):
     taglit: Literal["Instruction.InstructionAlias"]
@@ -220,7 +220,7 @@ Instructionish = (
 )
 
 
-@tag("Instruction.Instruction")
+# @tag("Instruction.Instruction")
 @defauto
 class Instruction(TagBase):
     taglit: Literal["Instruction.Instruction"]
@@ -238,7 +238,7 @@ InstructionOrInstructionGroup = Instruction | typing.ForwardRef(
 )
 
 
-@tag("Instruction.InstructionGroup")
+# @tag("Instruction.InstructionGroup")
 @defauto
 class InstructionGroup(TagBase):
     taglit: Literal["Instruction.InstructionGroup"]
@@ -250,7 +250,7 @@ class InstructionGroup(TagBase):
     operation_id: str | None = attrs.field(default=None)
 
 
-@tag("Instruction.InstructionSet")
+# @tag("Instruction.InstructionSet")
 @defauto
 class InstructionSet(TagBase):
     taglit: Literal["Instruction.InstructionSet"]
@@ -262,7 +262,7 @@ class InstructionSet(TagBase):
     operation_id: str | None = attrs.field(default=None)
 
 
-@tag("Instruction.Operation")
+# @tag("Instruction.Operation")
 @defauto
 class Operation(TagBase):
     taglit: Literal["Instruction.Operation"]
@@ -273,7 +273,7 @@ class Operation(TagBase):
     decode: str | None = attrs.field(default=None)
 
 
-@tag("Instruction.OperationAlias")
+# @tag("Instruction.OperationAlias")
 @defauto
 class OperationAlias(TagBase):
     taglit: Literal["Instruction.OperationAlias"]
@@ -286,14 +286,18 @@ class OperationAlias(TagBase):
 Operationish = Operation | OperationAlias
 
 
-@tag("Operations")
-@defauto
-class Operations(TagBase):
-    taglit: Literal["Operations"]
-    ops: dict[str, Operationish]
+# @tag("Operations")
+# @defauto
+# class Operations(TagBase):
+#     taglit: Literal["Operations"]
+#     ops: dict[str, Operationish]
 
 
-@tag("Instruction.Instructions")
+class Operations(dict[str, Operationish]):
+    pass
+
+
+# @tag("Instruction.Instructions")
 @defauto
 class Instructions(TagBase):
     taglit: Literal["Instruction.Instructions"]
@@ -344,7 +348,6 @@ TheTypes = (
     InstructionOrInstructionGroup,
     Instructionish,
     Operationish,
-    Operations,
     Operation,
     OperationAlias,
 )
@@ -379,7 +382,6 @@ JSONSchemaObjectClasses = (
     Value,
     Operation,
     OperationAlias,
-    Operations,
 )
 
 for cls in JSONSchemaObjectClasses:
@@ -435,8 +437,17 @@ def my_tag_generator(cls: type[TagBase]) -> str:
         raise TypeError(f"not type got {type(cls)} instead")
     if not issubclass(cls, TagBase):
         raise TypeError(f"cls not TagBase type(cls): {type(cls)} cls: {cls}")
-    print(f"my_tag_generator cls: {cls} tag: {cls.taglit}")
-    return cls.taglit
+    anno = cls.__annotations__["taglit"]
+    print(f"my_tag_generator cls: {cls} tag: {cls.taglit} anno: {anno}")
+    rich.inspect(cls, all=True)
+    rich.inspect(cls.taglit, all=True)
+    rich.inspect(cls.__annotations__["taglit"], all=True)
+    return (
+        cls.__annotations__["taglit"]
+        .removeprefix("typing.Literal['")
+        .removeprefix("Literal['")
+        .removesuffix("']")
+    )
 
 
 # cattrs.strategies.configure_tagged_union(

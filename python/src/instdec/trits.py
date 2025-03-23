@@ -1,11 +1,13 @@
+from __future__ import annotations
+
 from typing import Literal, Self
 
 import attrs
 
-from .util import TagBase, defauto, tag
+from .util import TagBase, defauto
 
 
-@tag("Trits")
+# @tag("Trits")
 @defauto
 class Trits(TagBase):
     """
