@@ -165,6 +165,9 @@ class EncodsetShouldBeBits:
     range: Range
     _type: Literal["Instruction.Encodeset.ShouldBeBits"] = "Instruction.Encodeset.ShouldBeBits"
 
+    def __attrs_post_init__(self):
+        raise NotImplementedError("deprecated object")
+
 
 EncodesetValues = EncodesetBits | EncodesetField | EncodsetShouldBeBits
 
@@ -175,22 +178,38 @@ class Encodeset:
     width: int
     _type: Literal["Instruction.Encodeset.Encodeset"] = "Instruction.Encodeset.Encodeset"
 
-    def get_field(self, name: str) -> EncodesetField | None:
-        matches: list[EncodesetField] = []
+    def get_fields(self) -> list[EncodesetField]:
+        fields: list[EncodesetField] = []
         for v in self.values:
             if isinstance(v, EncodesetField):
-                if v.name == name:
-                    matches.append(v)
-        if len(matches) > 1:
-            raise ValueError(
-                f"have multiple results for Encodeset.Field '{name}' results: {matches}"
-            )
-        if len(matches) == 0:
-            return None
-        return matches[0]
+                fields.append(v)
+        names = [lambda f: f.value for f in fields]
+        if len(names) != len(set(names)):
+            raise ValueError("duplicates in Encodeset EncodesetField names")
+        ranges = [lambda f: f.range for f in fields]
+        if len(ranges) != len(set(ranges)):
+            raise ValueError("duplicates in Encodeset EncodesetField ranges")
+        return fields
+
+    def get_field(self, name: str) -> EncodesetField | None:
+        fields = self.get_fields()
+        for f in fields:
+            if f.name == name:
+                return f
+        return None
 
     def has_field(self, name: str) -> bool:
         return self.get_field(name) is not None
+
+    def get_bits(self) -> list[EncodesetBits]:
+        bits: list[EncodesetBits] = []
+        for v in self.values:
+            if isinstance(v, EncodesetBits):
+                bits.append(v)
+        ranges = [lambda b: b.range for b in bits]
+        if len(ranges) != len(set(ranges)):
+            raise ValueError("duplicates in Encodeset EncodesetBits ranges")
+        return bits
 
 
 @defauto
