@@ -710,6 +710,11 @@ def dump_idents(instrs: Instructions) -> None:
     def dump_idents_instr_cb(i: Instruction, ctx: ParseContext) -> None:
         if expr_has_ident(i.condition, "Rm"):
             smth = i.encoding.get_field("Rm")
+            if id(i.encoding) != id(ctx.group_encoding_stack[-1]):
+                print(
+                    f"id i.e: {i.encoding}\n\n id ges[-1]: {ctx.group_encoding_stack[-1]} ges[-2]: {id(ctx.group_encoding_stack[-2]):#x}"
+                )
+                raise ValueError("bad encoding top of stack")
             print(f"smth: {smth}")
         return
 
