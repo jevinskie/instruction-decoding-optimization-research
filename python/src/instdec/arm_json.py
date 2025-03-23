@@ -438,9 +438,10 @@ def my_tag_generator(cls: type[TagBase]) -> str:
     if not issubclass(cls, TagBase):
         raise TypeError(f"cls not TagBase type(cls): {type(cls)} cls: {cls}")
     anno = cls.__annotations__["_type"]
-    anno_trimmed = (
-        anno.removeprefix("typing.Literal['").removeprefix("Literal['").removesuffix("']")
-    )
+    # anno_trimmed = (
+    #     anno.removeprefix("typing.Literal['").removeprefix("Literal['").removesuffix("']")
+    # )
+    anno_trimmed = anno
     print(f"my_tag_generator cls: {cls} tag: {cls._type} anno: {anno} anno_trimmed: {anno_trimmed}")
     # rich.inspect(cls, all=True)
     # rich.inspect(cls._type, all=True)
@@ -448,17 +449,17 @@ def my_tag_generator(cls: type[TagBase]) -> str:
     return anno_trimmed
 
 
-# cattrs.strategies.configure_tagged_union(
-#     Identifier | Value, converter, tag_generator=my_tag_generator
-# )
+cattrs.strategies.configure_tagged_union(
+    Identifier | Value, converter, tag_generator=my_tag_generator
+)
 
-# cattrs.strategies.configure_tagged_union(
-#     Instruction | InstructionInstance | InstructionAlias, converter, tag_generator=my_tag_generator
-# )
+cattrs.strategies.configure_tagged_union(
+    Instruction | InstructionInstance | InstructionAlias, converter, tag_generator=my_tag_generator
+)
 
-# cattrs.strategies.configure_tagged_union(
-#     Instruction | InstructionGroup, converter, tag_generator=my_tag_generator
-# )
+cattrs.strategies.configure_tagged_union(
+    Instruction | InstructionGroup, converter, tag_generator=my_tag_generator
+)
 
 # converter.register_structure_hook(JSONSchemaObject, structure_json_schema)
 cattrs.strategies.configure_tagged_union(
