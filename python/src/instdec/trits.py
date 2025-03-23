@@ -4,12 +4,12 @@ from typing import Literal, Self
 
 import attrs
 
-from .util import TagBase, defauto
+from .util import defauto
 
 
 # @tag("Trits")
 @defauto
-class Trits(TagBase):
+class Trits:
     @staticmethod
     def normalize_trit_str(sval: str) -> str:
         sval = sval.strip("'")

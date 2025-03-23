@@ -6,8 +6,6 @@ from collections.abc import Callable
 from typing import Any, Literal
 
 import attrs
-import cattrs
-import cattrs.strategies
 import rich
 from cattrs import Converter
 
@@ -39,7 +37,7 @@ seen_value_values: set[Trits] = set()
 
 # @tag("Value.Value")
 @defauto
-class Value(TagBase):
+class Value:
     _type: Literal["Value.Value"]
     value: Trits
     meaning: str | None
@@ -54,7 +52,7 @@ seen_identifiers: set[str] = set()
 
 # @tag("AST.Identifier")
 @defauto
-class Identifier(TagBase):
+class Identifier:
     _type: Literal["AST.Identifier"]
     value: str
 
@@ -64,21 +62,21 @@ class Identifier(TagBase):
 
 # @tag("AST.Bool")
 @defauto
-class Bool(TagBase):
+class Bool:
     _type: Literal["AST.Bool"]
     value: bool
 
 
 # @tag("AST.Set")
 @defauto
-class Set(TagBase):
+class Set:
     _type: Literal["AST.Set"]
     values: set[Value]
 
 
 # @tag("AST.BinaryOp")
 @defauto
-class BinaryOp(TagBase):
+class BinaryOp:
     _type: Literal["AST.BinaryOp"]
     left: Expression
     op: BinOp
@@ -87,7 +85,7 @@ class BinaryOp(TagBase):
 
 # @tag("AST.UnaryOp")
 @defauto
-class UnaryOp(TagBase):
+class UnaryOp:
     _type: Literal["AST.UnaryOp"]
     expr: Expression
     op: UnOp
@@ -98,7 +96,7 @@ seen_function_names: set[str] = set()
 
 # @tag("AST.Function")
 @defauto
-class Function(TagBase):
+class Function:
     _type: Literal["AST.Function"]
     name: str
     arguments: list[Expression]
@@ -127,7 +125,7 @@ def expr_has_ident(expr: Expression | None, ident: str) -> bool:
 
 # @tag("Range")
 @defauto
-class Range(TagBase):
+class Range:
     _type: Literal["Range"]
     start: int
     width: int
@@ -143,7 +141,7 @@ class Range(TagBase):
 
 # @tag("Instruction.Encodeset.Bits")
 @defauto
-class EncodesetBits(TagBase):
+class EncodesetBits:
     _type: Literal["Instruction.Encodeset.Bits"]
     value: Value
     range: Range
@@ -152,7 +150,7 @@ class EncodesetBits(TagBase):
 
 # @tag("Instruction.Encodeset.Field")
 @defauto
-class EncodesetField(TagBase):
+class EncodesetField:
     _type: Literal["Instruction.Encodeset.Field"]
     name: str
     range: Range
@@ -162,7 +160,7 @@ class EncodesetField(TagBase):
 
 # @tag("Instruction.Encodeset.ShouldBeBits")
 @defauto
-class EncodsetShouldBeBits(TagBase):
+class EncodsetShouldBeBits:
     _type: Literal["Instruction.Encodeset.ShouldBeBits"]
     value: Value
     range: Range
@@ -173,7 +171,7 @@ EncodesetValues = EncodesetBits | EncodesetField | EncodsetShouldBeBits
 
 # @tag("Instruction.Encodeset.Encodeset")
 @defauto
-class Encodeset(TagBase):
+class Encodeset:
     _type: Literal["Instruction.Encodeset.Encodeset"]
     values: list[EncodesetValues]
     width: int
@@ -198,7 +196,7 @@ class Encodeset(TagBase):
 
 # @tag("Instruction.InstructionInstance")
 @defauto
-class InstructionInstance(TagBase):
+class InstructionInstance:
     _type: Literal["Instruction.InstructionInstance"]
     name: str
     condition: Expression | None = attrs.field(default=None)
@@ -207,7 +205,7 @@ class InstructionInstance(TagBase):
 
 # @tag("Instruction.InstructionAlias")
 @defauto
-class InstructionAlias(TagBase):
+class InstructionAlias:
     _type: Literal["Instruction.InstructionAlias"]
     name: str
     operation_id: str
@@ -222,7 +220,7 @@ Instructionish = (
 
 # @tag("Instruction.Instruction")
 @defauto
-class Instruction(TagBase):
+class Instruction:
     _type: Literal["Instruction.Instruction"]
     name: str
     operation_id: str
@@ -240,7 +238,7 @@ InstructionOrInstructionGroup = Instruction | typing.ForwardRef(
 
 # @tag("Instruction.InstructionGroup")
 @defauto
-class InstructionGroup(TagBase):
+class InstructionGroup:
     _type: Literal["Instruction.InstructionGroup"]
     name: str
     encoding: Encodeset
@@ -252,7 +250,7 @@ class InstructionGroup(TagBase):
 
 # @tag("Instruction.InstructionSet")
 @defauto
-class InstructionSet(TagBase):
+class InstructionSet:
     _type: Literal["Instruction.InstructionSet"]
     name: str
     encoding: Encodeset
@@ -264,7 +262,7 @@ class InstructionSet(TagBase):
 
 # @tag("Instruction.Operation")
 @defauto
-class Operation(TagBase):
+class Operation:
     _type: Literal["Instruction.Operation"]
     operation: str
     description: str
@@ -275,7 +273,7 @@ class Operation(TagBase):
 
 # @tag("Instruction.OperationAlias")
 @defauto
-class OperationAlias(TagBase):
+class OperationAlias:
     _type: Literal["Instruction.OperationAlias"]
     operation_id: str
     description: str
@@ -288,7 +286,7 @@ Operationish = Operation | OperationAlias
 
 # @tag("Operations")
 # @defauto
-# class Operations(TagBase):
+# class Operations:
 #     _type: Literal["Operations"]
 #     ops: dict[str, Operationish]
 
@@ -299,30 +297,36 @@ class Operations(dict[str, Operationish]):
 
 # @tag("Instruction.Instructions")
 @defauto
-class Instructions(TagBase):
+class Instructions:
     _type: Literal["Instruction.Instructions"]
     instructions: list[InstructionSet]
     operations: Operations
 
 
-JSONSchemaObject = typing.Union[
-    Encodeset,
-    EncodesetBits,
-    EncodesetField,
-    EncodsetShouldBeBits,
-    Expression,
-    Identifier,
-    Instruction,
-    InstructionInstance,
-    InstructionAlias,
-    InstructionGroup,
-    Instructions,
-    InstructionSet,
-    Range,
-    Trits,
-    Operation,
-    OperationAlias,
-]
+JSONSchemaObject = (
+    Encodeset
+    | EncodesetBits
+    | EncodesetField
+    | EncodsetShouldBeBits
+    | Identifier
+    | Instruction
+    | InstructionInstance
+    | InstructionAlias
+    | InstructionGroup
+    | Instructions
+    | InstructionSet
+    | Range
+    | Trits
+    | Operation
+    | OperationAlias
+    | Bool
+    | BinaryOp
+    | Function
+    | Identifier
+    | Set
+    | UnaryOp
+    | Value
+)
 
 TheTypes = (
     BinaryOp,
@@ -415,7 +419,7 @@ def structure_operations(obj: dict[str, dict], cls: type[Operations]) -> Operati
 
 
 # Register a custom structure hook for Operations
-converter.register_structure_hook(Operations, structure_operations)
+# converter.register_structure_hook(Operations, structure_operations)
 
 
 def structure_identifier(obj: str, cls: type[Identifier]) -> Identifier:
@@ -435,8 +439,8 @@ def my_tag_generator(cls: type[TagBase]) -> str:
         raise ValueError(f"cls has no _type attribute. cls: {cls}")
     if not isinstance(cls, type):
         raise TypeError(f"not type got {type(cls)} instead")
-    if not issubclass(cls, TagBase):
-        raise TypeError(f"cls not TagBase type(cls): {type(cls)} cls: {cls}")
+    # if not issubclass(cls, TagBase):
+    #     raise TypeError(f"cls not TagBase type(cls): {type(cls)} cls: {cls}")
     anno = cls.__annotations__["_type"]
     # anno_trimmed = (
     #     anno.removeprefix("typing.Literal['").removeprefix("Literal['").removesuffix("']")
@@ -449,22 +453,26 @@ def my_tag_generator(cls: type[TagBase]) -> str:
     return anno_trimmed
 
 
-cattrs.strategies.configure_tagged_union(
-    Identifier | Value, converter, tag_generator=my_tag_generator
-)
+# cattrs.strategies.configure_tagged_union(
+#     Identifier | Value, converter, tag_generator=my_tag_generator
+# )
 
-cattrs.strategies.configure_tagged_union(
-    Instruction | InstructionInstance | InstructionAlias, converter, tag_generator=my_tag_generator
-)
+# cattrs.strategies.configure_tagged_union(
+#     Instruction | InstructionInstance | InstructionAlias, converter, tag_generator=my_tag_generator
+# )
 
-cattrs.strategies.configure_tagged_union(
-    Instruction | InstructionGroup, converter, tag_generator=my_tag_generator
-)
+# cattrs.strategies.configure_tagged_union(
+#     Instruction | InstructionGroup, converter, tag_generator=my_tag_generator
+# )
+
+# for o in JSONSchemaObject:
+#     if not hasattr(o, "_type"):
+#         raise TypeError(f"don't have _type for o: {o}")
 
 # converter.register_structure_hook(JSONSchemaObject, structure_json_schema)
-cattrs.strategies.configure_tagged_union(
-    JSONSchemaObject, converter, tag_generator=my_tag_generator
-)
+# cattrs.strategies.configure_tagged_union(
+#     JSONSchemaObject, converter, tag_generator=my_tag_generator
+# )
 
 
 def structure_trit(obj: str, cls: type[Trits]) -> Trits:
@@ -474,7 +482,7 @@ def structure_trit(obj: str, cls: type[Trits]) -> Trits:
     return Trits(obj, "Trits")
 
 
-converter.register_structure_hook(Trits, structure_trit)
+# converter.register_structure_hook(Trits, structure_trit)
 
 
 class ExprRef:
