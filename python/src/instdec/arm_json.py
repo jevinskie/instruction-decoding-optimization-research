@@ -38,7 +38,7 @@ seen_value_values: set[Trits] = set()
 # @tag("Value.Value")
 @defauto
 class Value:
-    _type: Literal["Value.Value"]
+    _type: Literal["Values.Value"]
     value: Trits
     meaning: str | None
 
