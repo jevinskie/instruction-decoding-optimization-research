@@ -721,35 +721,6 @@ def recurse_instr_or_instr_group(
     return
 
 
-def instr_cb(i: Instruction, ctx: ParseContext) -> None:
-    # print(f"i name stack: {'.'.join(ctx.group_name_stack)} ctx: {ctx}")
-    s = f"os[-2].type: {ctx.obj_stack[-2]._type}"
-    print(f"i name stack: {'.'.join(ctx.group_name_stack)} s: {s}")
-
-
-def parse_instructions(instrs: Instructions, cb: InstrCB = instr_cb) -> None:
-    ctx = ParseContext()
-    ctx.obj_stack.append(instrs)
-
-    for iset in instrs.instructions:
-        ctx.obj_stack.append(iset)
-        ctx.set_encoding_stack.append(iset.encoding)
-        ctx.set_condition_stack.append(iset.condition)
-
-        if iset.children is None:
-            raise ValueError(f"iset name: {iset.name} children is None")
-
-        recurse_instr_or_instr_group(iset.children, ctx, cb)
-
-        ctx.set_condition_stack.pop()
-        ctx.set_encoding_stack.pop()
-        ctx.obj_stack.pop()
-
-    ctx.obj_stack.pop()
-
-    return
-
-
 def dump_idents_instr_cb(i: Instruction, ctx: ParseContext) -> None:
     if i.condition is not None and expr_has_ident(i.condition, "Rm"):
         rs: list[str] = []
@@ -770,6 +741,29 @@ def dump_idents_instr_cb(i: Instruction, ctx: ParseContext) -> None:
 
 def instr_cb(i: Instruction, ctx: ParseContext) -> None:
     dump_idents_instr_cb(i, ctx)
+
+
+def parse_instructions(instrs: Instructions, cb: InstrCB) -> None:
+    ctx = ParseContext()
+    ctx.obj_stack.append(instrs)
+
+    for iset in instrs.instructions:
+        ctx.obj_stack.append(iset)
+        ctx.set_encoding_stack.append(iset.encoding)
+        ctx.set_condition_stack.append(iset.condition)
+
+        if iset.children is None:
+            raise ValueError(f"iset name: {iset.name} children is None")
+
+        recurse_instr_or_instr_group(iset.children, ctx, cb)
+
+        ctx.set_condition_stack.pop()
+        ctx.set_encoding_stack.pop()
+        ctx.obj_stack.pop()
+
+    ctx.obj_stack.pop()
+
+    return
 
 
 def dump_idents(instrs: Instructions) -> None:
