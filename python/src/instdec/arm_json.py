@@ -641,6 +641,18 @@ class ParseContext:
     obj_stack: list[JSONSchemaObject] = attrs.Factory(list)
 
 
+def get_encoding_list(ctx: ParseContext, instr_enc: Encodeset) -> list[Encodeset]:
+    return [instr_enc] + ctx.group_encoding_stack[::-1] + ctx.set_encoding_stack[::-1]
+
+
+def get_condition_list(ctx: ParseContext, instr_cond: Expression | None) -> list[Expression | None]:
+    return [instr_cond] + ctx.group_condition_stack[::-1] + ctx.set_condition_stack[::-1]
+
+
+def get_conditon_list_defined(ctx: ParseContext, instr_cond: Expression | None) -> list[Expression]:
+    return list(filter(lambda x: x is not None, get_condition_list(ctx, instr_cond)))
+
+
 InstrCB = Callable[[Instruction, ParseContext], None]
 
 
