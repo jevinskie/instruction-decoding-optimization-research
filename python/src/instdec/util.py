@@ -1,6 +1,6 @@
 import inspect
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import Any, ClassVar, Final, TypeVar, dataclass_transform, overload
+from typing import Any, Final, TypeVar, dataclass_transform, overload
 
 import attr
 import attrs
@@ -32,7 +32,7 @@ def defauto(maybe_cls: C | None, *args, **kwargs) -> C | Callable[[C], C]:
 
 @defauto
 class TagBase:
-    _type: ClassVar[str]
+    _tiep: str
 
 
 TB = TypeVar("TB", bound=TagBase)
@@ -45,7 +45,7 @@ def tag(tag_val: str) -> Callable[[CTB], CTB]:
             raise ValueError(f"cls should be a type not '{type(cls)}' cls: {cls}")
         if not issubclass(cls, TagBase):
             raise TypeError(f"cls not subclass of TagBase cls: {cls}")
-        cls._type = tag_val
+        cls._tiep = tag_val
         return cls
 
     return wrap

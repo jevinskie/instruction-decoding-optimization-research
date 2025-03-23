@@ -1,4 +1,4 @@
-from typing import Self
+from typing import Literal, Self
 
 import attrs
 
@@ -11,6 +11,8 @@ class Trits(TagBase):
     """
     A class to represent and manipulate trit strings (0, 1, X).
     """
+
+    _tiep: Literal["Trits"]
 
     @staticmethod
     def normalize_trit_str(sval: str) -> str:
