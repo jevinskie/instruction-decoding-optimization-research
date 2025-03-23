@@ -709,12 +709,18 @@ def parse_instructions(instrs: Instructions, cb: InstrCB = instr_cb) -> None:
 def dump_idents(instrs: Instructions) -> None:
     def dump_idents_instr_cb(i: Instruction, ctx: ParseContext) -> None:
         if expr_has_ident(i.condition, "Rm"):
-            smth = i.encoding.get_field("Rm")
-            if id(i.encoding) != id(ctx.group_encoding_stack[-1]):
-                print(
-                    f"id i.e: {i.encoding}\n\n id ges[-1]: {ctx.group_encoding_stack[-1]} ges[-2]: {id(ctx.group_encoding_stack[-2]):#x}"
-                )
-                raise ValueError("bad encoding top of stack")
+            rs: list[str] = []
+            instr_field = i.encoding.get_field("Rm")
+            if instr_field:
+                rs.append("Rm in instr encoding")
+            for n, instr_group_enc in enumerate(ctx.group_encoding_stack[::-1]):
+                instr_group_field = instr_group_enc.get_field("Rm")
+                if instr_group_field is not None:
+                    rs.append(f"Rm in instr group stack[{n}]")
+            iset_field = ctx.set_encoding_stack[-1].get_field("Rm")
+            if iset_field is not None:
+                rs.append("Rm in instr set")
+            smth = ", ".join(rs)
             print(f"smth: {smth}")
         return
 
