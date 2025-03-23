@@ -101,17 +101,30 @@ Expression = Bool | BinaryOp | Function | Identifier | Set | UnaryOp | Value
 Valueish = Value | Set
 
 
+def expr_idents(expr: Expression | None) -> list[str]:
+    idents: list[str] = []
+
+    def helper(expr: Expression | None) -> None:
+        if expr is None:
+            return
+        if isinstance(expr, BinaryOp):
+            helper(expr.left)
+            helper(expr.right)
+        elif isinstance(expr, UnaryOp):
+            helper(expr.expr)
+        elif isinstance(expr, Identifier):
+            idents.append(expr.value)
+        else:
+            return
+
+    helper(expr)
+    if len(idents) != len(set(idents)):
+        raise ValueError("got duplicate AST.Identifiers")
+    return idents
+
+
 def expr_has_ident(expr: Expression | None, ident: str) -> bool:
-    if expr is None:
-        return False
-    if isinstance(expr, BinaryOp):
-        return expr_has_ident(expr.left, ident) or expr_has_ident(expr.right, ident)
-    elif isinstance(expr, UnaryOp):
-        return expr_has_ident(expr.expr, ident)
-    elif isinstance(expr, Identifier):
-        return expr.value == ident
-    else:
-        return False
+    return ident in expr_idents(expr)
 
 
 @defauto
