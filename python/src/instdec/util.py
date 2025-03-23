@@ -31,33 +31,6 @@ def defauto(maybe_cls: C | None, *args, **kwargs) -> C | Callable[[C], C]:
 
 
 @defauto
-class TagBase:
-    # _type: str
-    pass
-    # @property
-    # def _type(self) -> str:
-    #     return getattr(self, "_type")
-
-
-TB = TypeVar("TB", bound=TagBase)
-CTB = type[TB]
-
-
-def tag(tag_val: str) -> Callable[[CTB], CTB]:
-    raise NotImplementedError("no more")
-
-    def wrap(cls: CTB) -> CTB:
-        if not isinstance(cls, type):
-            raise ValueError(f"cls should be a type not '{type(cls)}' cls: {cls}")
-        if not issubclass(cls, TagBase):
-            raise TypeError(f"cls not subclass of TagBase cls: {cls}")
-        cls._type = tag_val
-        return cls
-
-    return wrap
-
-
-@defauto
 class Span:
     start: Final[int] = attrs.field()
     width: Final[int] = attrs.field()

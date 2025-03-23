@@ -6,12 +6,10 @@ from collections.abc import Callable
 from typing import Any, Literal
 
 import attrs
-import rich
 from cattrs import Converter
 
-# from rich import print
 from .trits import TritRange, TritRanges, Trits
-from .util import Span, TagBase, defauto, traverse_nested
+from .util import Span, defauto, traverse_nested
 
 
 class BinOp(enum.StrEnum):
@@ -35,12 +33,11 @@ seen_value_meanings: set[str] = set()
 seen_value_values: set[Trits] = set()
 
 
-# @tag("Value.Value")
 @defauto
 class Value:
-    _type: Literal["Values.Value"]
     value: Trits
     meaning: str | None
+    _type: Literal["Values.Value"] = "Values.Value"
 
     def __attrs_post_init__(self):
         seen_value_meanings.add(self.meaning)
@@ -50,56 +47,50 @@ class Value:
 seen_identifiers: set[str] = set()
 
 
-# @tag("AST.Identifier")
 @defauto
 class Identifier:
-    _type: Literal["AST.Identifier"]
     value: str
+    _type: Literal["AST.Identifier"] = "AST.Identifier"
 
     def __attrs_post_init__(self):
         seen_identifiers.add(self.value)
 
 
-# @tag("AST.Bool")
 @defauto
 class Bool:
-    _type: Literal["AST.Bool"]
     value: bool
+    _type: Literal["AST.Bool"] = "AST.Bool"
 
 
-# @tag("AST.Set")
 @defauto
 class Set:
-    _type: Literal["AST.Set"]
     values: set[Value]
+    _type: Literal["AST.Set"] = "AST.Set"
 
 
-# @tag("AST.BinaryOp")
 @defauto
 class BinaryOp:
-    _type: Literal["AST.BinaryOp"]
     left: Expression
     op: BinOp
     right: Expression
+    _type: Literal["AST.BinaryOp"] = "AST.BinaryOp"
 
 
-# @tag("AST.UnaryOp")
 @defauto
 class UnaryOp:
-    _type: Literal["AST.UnaryOp"]
     expr: Expression
     op: UnOp
+    _type: Literal["AST.UnaryOp"] = "AST.UnaryOp"
 
 
 seen_function_names: set[str] = set()
 
 
-# @tag("AST.Function")
 @defauto
 class Function:
-    _type: Literal["AST.Function"]
     name: str
     arguments: list[Expression]
+    _type: Literal["AST.Function"] = "AST.Function"
 
     def __attrs_post_init__(self):
         seen_function_names.add(self.name)
@@ -123,12 +114,11 @@ def expr_has_ident(expr: Expression | None, ident: str) -> bool:
         return False
 
 
-# @tag("Range")
 @defauto
 class Range:
-    _type: Literal["Range"]
     start: int
     width: int
+    _type: Literal["Range"] = "Range"
 
     @property
     def end(self) -> int:
@@ -139,42 +129,38 @@ class Range:
         return Span(self.start, self.width)
 
 
-# @tag("Instruction.Encodeset.Bits")
 @defauto
 class EncodesetBits:
-    _type: Literal["Instruction.Encodeset.Bits"]
     value: Value
     range: Range
     should_be_mask: Value
+    _type: Literal["Instruction.Encodeset.Bits"] = "Instruction.Encodeset.Bits"
 
 
-# @tag("Instruction.Encodeset.Field")
 @defauto
 class EncodesetField:
-    _type: Literal["Instruction.Encodeset.Field"]
     name: str
     range: Range
     value: Value
     should_be_mask: Value
+    _type: Literal["Instruction.Encodeset.Field"] = "Instruction.Encodeset.Field"
 
 
-# @tag("Instruction.Encodeset.ShouldBeBits")
 @defauto
 class EncodsetShouldBeBits:
-    _type: Literal["Instruction.Encodeset.ShouldBeBits"]
     value: Value
     range: Range
+    _type: Literal["Instruction.Encodeset.ShouldBeBits"] = "Instruction.Encodeset.ShouldBeBits"
 
 
 EncodesetValues = EncodesetBits | EncodesetField | EncodsetShouldBeBits
 
 
-# @tag("Instruction.Encodeset.Encodeset")
 @defauto
 class Encodeset:
-    _type: Literal["Instruction.Encodeset.Encodeset"]
     values: list[EncodesetValues]
     width: int
+    _type: Literal["Instruction.Encodeset.Encodeset"] = "Instruction.Encodeset.Encodeset"
 
     def get_field(self, name: str) -> EncodesetField | None:
         matches: list[EncodesetField] = []
@@ -194,23 +180,21 @@ class Encodeset:
         return self.get_field(name) is not None
 
 
-# @tag("Instruction.InstructionInstance")
 @defauto
 class InstructionInstance:
-    _type: Literal["Instruction.InstructionInstance"]
     name: str
     condition: Expression | None = attrs.field(default=None)
     children: list[InstructionInstance] | None = attrs.field(default=None)
+    _type: Literal["Instruction.InstructionInstance"] = "Instruction.InstructionInstance"
 
 
-# @tag("Instruction.InstructionAlias")
 @defauto
 class InstructionAlias:
-    _type: Literal["Instruction.InstructionAlias"]
     name: str
     operation_id: str
     condition: Expression | None = attrs.field(default=None)
     # assembly: ?
+    _type: Literal["Instruction.InstructionAlias"] = "Instruction.InstructionAlias"
 
 
 Instructionish = (
@@ -218,10 +202,8 @@ Instructionish = (
 )
 
 
-# @tag("Instruction.Instruction")
 @defauto
 class Instruction:
-    _type: Literal["Instruction.Instruction"]
     name: str
     operation_id: str
     encoding: Encodeset
@@ -229,6 +211,7 @@ class Instruction:
     children: list[Instructionish] | None = attrs.field(default=None)
     title: str | None = attrs.field(default=None)
     preferred: Expression | None = attrs.field(default=None)
+    _type: Literal["Instruction.Instruction"] = "Instruction.Instruction"
 
 
 InstructionOrInstructionGroup = Instruction | typing.ForwardRef(
@@ -236,71 +219,59 @@ InstructionOrInstructionGroup = Instruction | typing.ForwardRef(
 )
 
 
-# @tag("Instruction.InstructionGroup")
 @defauto
 class InstructionGroup:
-    _type: Literal["Instruction.InstructionGroup"]
     name: str
     encoding: Encodeset
     title: str | None = attrs.field(default=None)
     condition: Expression | None = attrs.field(default=None)
     children: list[InstructionOrInstructionGroup] | None = attrs.field(default=None)
     operation_id: str | None = attrs.field(default=None)
+    _type: Literal["Instruction.InstructionGroup"] = "Instruction.InstructionGroup"
 
 
-# @tag("Instruction.InstructionSet")
 @defauto
 class InstructionSet:
-    _type: Literal["Instruction.InstructionSet"]
     name: str
     encoding: Encodeset
     read_width: int
     condition: Expression | None = attrs.field(default=None)
     children: list[InstructionOrInstructionGroup] | None = attrs.field(default=None)
     operation_id: str | None = attrs.field(default=None)
+    _type: Literal["Instruction.InstructionSet"] = "Instruction.InstructionSet"
 
 
-# @tag("Instruction.Operation")
 @defauto
 class Operation:
-    _type: Literal["Instruction.Operation"]
     operation: str
     description: str
     brief: str
     title: str
     decode: str | None = attrs.field(default=None)
+    _type: Literal["Instruction.Operation"] = "Instruction.Operation"
 
 
-# @tag("Instruction.OperationAlias")
 @defauto
 class OperationAlias:
-    _type: Literal["Instruction.OperationAlias"]
     operation_id: str
     description: str
     brief: str
     title: str
+    _type: Literal["Instruction.OperationAlias"] = "Instruction.OperationAlias"
 
 
 Operationish = Operation | OperationAlias
-
-
-# @tag("Operations")
-# @defauto
-# class Operations:
-#     _type: Literal["Operations"]
-#     ops: dict[str, Operationish]
 
 
 class Operations(dict[str, Operationish]):
     pass
 
 
-# @tag("Instruction.Instructions")
 @defauto
 class Instructions:
-    _type: Literal["Instruction.Instructions"]
     instructions: list[InstructionSet]
     operations: Operations
+    _type: Literal["Instruction.Instructions"] = "Instruction.Instructions"
 
 
 JSONSchemaObject = (
@@ -356,14 +327,6 @@ TheTypes = (
     OperationAlias,
 )
 
-for i in range(7):
-    for t in TheTypes:
-        try:
-            typing.get_type_hints(t, globalns=globals(), localns=locals())
-        except Exception:
-            # print(f"did {t} got {e}")
-            pass
-
 JSONSchemaObjectClasses = (
     BinaryOp,
     Bool,
@@ -395,84 +358,6 @@ for cls in JSONSchemaObjectClasses:
 # Set up cattrs converter with a custom structure hook
 converter = Converter()
 converter.detailed_validation = True
-
-
-def structure_operations(obj: dict[str, dict], cls: type[Operations]) -> Operations:
-    if not issubclass(cls, Operations):
-        raise TypeError(f"got cls {cls} not Operations")
-    result: dict[str, Operationish] = dict()
-    for key, value in obj.items():
-        # Determine the type based on the _type field and structure accordingly
-        # ty = value.get("_type")
-        ty = value.get("_type")
-        if ty is None:
-            ty = value.get("_type")
-            # print(f"structure_operations _type none ty: {ty}")
-        if ty == "Instruction.Operation":
-            result[key] = converter.structure(value, Operation)
-        elif ty == "Instruction.OperationAlias":
-            result[key] = converter.structure(value, OperationAlias)
-        else:
-            raise ValueError(f"Unknown operation type: {ty} val: {value}")
-    print(f"structure_operations res: {result}")
-    return cls(ops=result)
-
-
-# Register a custom structure hook for Operations
-# converter.register_structure_hook(Operations, structure_operations)
-
-
-def structure_identifier(obj: str, cls: type[Identifier]) -> Identifier:
-    if not issubclass(cls, Identifier):
-        raise TypeError(f"got cls {cls} not Identifier")
-    print(f"structure_identifier obj: '{obj}' cls: {cls}")
-    return cls(obj)
-
-
-# converter.register_structure_hook(Identifier, structure_identifier)
-
-
-def my_tag_generator(cls: type[TagBase]) -> str:
-    if not hasattr(cls, "_type"):
-        rich.inspect(cls, all=True)
-        print(f"my_tag_generator cls: {cls} type: {type(cls)}")
-        raise ValueError(f"cls has no _type attribute. cls: {cls}")
-    if not isinstance(cls, type):
-        raise TypeError(f"not type got {type(cls)} instead")
-    # if not issubclass(cls, TagBase):
-    #     raise TypeError(f"cls not TagBase type(cls): {type(cls)} cls: {cls}")
-    anno = cls.__annotations__["_type"]
-    # anno_trimmed = (
-    #     anno.removeprefix("typing.Literal['").removeprefix("Literal['").removesuffix("']")
-    # )
-    anno_trimmed = anno
-    print(f"my_tag_generator cls: {cls} tag: {cls._type} anno: {anno} anno_trimmed: {anno_trimmed}")
-    # rich.inspect(cls, all=True)
-    # rich.inspect(cls._type, all=True)
-    # rich.inspect(cls.__annotations__["_type"], all=True)
-    return anno_trimmed
-
-
-# cattrs.strategies.configure_tagged_union(
-#     Identifier | Value, converter, tag_generator=my_tag_generator
-# )
-
-# cattrs.strategies.configure_tagged_union(
-#     Instruction | InstructionInstance | InstructionAlias, converter, tag_generator=my_tag_generator
-# )
-
-# cattrs.strategies.configure_tagged_union(
-#     Instruction | InstructionGroup, converter, tag_generator=my_tag_generator
-# )
-
-# for o in JSONSchemaObject:
-#     if not hasattr(o, "_type"):
-#         raise TypeError(f"don't have _type for o: {o}")
-
-# converter.register_structure_hook(JSONSchemaObject, structure_json_schema)
-# cattrs.strategies.configure_tagged_union(
-#     JSONSchemaObject, converter, tag_generator=my_tag_generator
-# )
 
 
 def structure_trit(obj: str, cls: type[Trits]) -> Trits:
@@ -772,8 +657,6 @@ def recurse_instr_or_instr_group(
         if id(ioig) in seen:
             if isinstance(ioig, list):
                 raise TypeError("skipping from seen id list")
-            elif isinstance(ioig, TagBase):
-                raise TypeError(f"skipping from seen id type: {ioig._type}")
             else:
                 raise TypeError("skipping from seen id OTHER")
             continue  # TODO: see if assertions are ever raisec

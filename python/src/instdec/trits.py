@@ -7,7 +7,6 @@ import attrs
 from .util import defauto
 
 
-# @tag("Trits")
 @defauto
 class Trits:
     @staticmethod
@@ -17,7 +16,7 @@ class Trits:
         return sval
 
     trits: str = attrs.field(converter=normalize_trit_str)
-    _type: Literal["Trits"]
+    _type: Literal["Trits"] = "Trits"
 
     """
     A class to represent and manipulate trit strings (0, 1, X).
