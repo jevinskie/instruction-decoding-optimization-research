@@ -101,10 +101,10 @@ Expression = Bool | BinaryOp | Function | Identifier | Set | UnaryOp | Value
 Valueish = Value | Set
 
 
-def expr_idents(expr: Expression | None) -> list[str]:
+def expr_idents(expr: Expression) -> list[str]:
     idents: list[str] = []
 
-    def helper(expr: Expression | None) -> None:
+    def helper(expr: Expression) -> None:
         if expr is None:
             return
         if isinstance(expr, BinaryOp):
@@ -123,7 +123,7 @@ def expr_idents(expr: Expression | None) -> list[str]:
     return idents
 
 
-def expr_has_ident(expr: Expression | None, ident: str) -> bool:
+def expr_has_ident(expr: Expression, ident: str) -> bool:
     return ident in expr_idents(expr)
 
 
@@ -733,7 +733,7 @@ def parse_instructions(instrs: Instructions, cb: InstrCB = instr_cb) -> None:
 
 def dump_idents(instrs: Instructions) -> None:
     def dump_idents_instr_cb(i: Instruction, ctx: ParseContext) -> None:
-        if expr_has_ident(i.condition, "Rm"):
+        if i.condition is not None and expr_has_ident(i.condition, "Rm"):
             rs: list[str] = []
             instr_field = i.encoding.get_field("Rm")
             if instr_field:
