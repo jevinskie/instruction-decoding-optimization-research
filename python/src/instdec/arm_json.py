@@ -482,7 +482,7 @@ def structure_trit(obj: str, cls: type[Trits]) -> Trits:
     return Trits(obj, "Trits")
 
 
-# converter.register_structure_hook(Trits, structure_trit)
+converter.register_structure_hook(Trits, structure_trit)
 
 
 class ExprRef:
