@@ -167,9 +167,16 @@ def are_encodesets_consistent(a: dict, b: dict) -> bool:
 
 
 def merge_constraints(constraints: list[Expression | None]) -> list[Expression]:
+    consdef: list[Expression] = [c for c in constraints if c is not None]
     res: list[Expression] = []
-    for cons in constraints:
-        pass
+    rset: set[Expression] = set()
+    for cons in consdef:
+        if cons in rset:
+            raise ValueError(
+                f"merge_constraints: got duplicate constraint. Is this bad? cons: {cons}"
+            )
+        rset.add(cons)
+        res.append(cons)
     return res
 
 
@@ -267,11 +274,15 @@ def dump_idents_instr_cb(i: Instruction, ctx: ParseContext) -> None:
             rs.append("Rm in instr set")
         smth = ", ".join(rs)
         print(f"smth: {smth}")
-    return
+
+
+def inspect_constraints_instr_cb(instr: Instruction, ctx: ParseContext) -> None:
+    merge_constraints(get_condition_list(ctx, instr.condition))
 
 
 def instr_cb(i: Instruction, ctx: ParseContext) -> None:
     dump_idents_instr_cb(i, ctx)
+    inspect_constraints_instr_cb(i, ctx)
 
 
 def parse_instructions(instrs: Instructions, cb: InstrCB) -> None:
