@@ -29,7 +29,7 @@ from .arm_json_schema import (
     Valueish,
 )
 from .trits import Trits
-from .util import defauto, traverse_nested
+from .util import Pigeonholes, defauto, traverse_nested
 
 
 def expr_get_objs(expr: Expression) -> list[JSONSchemaObject]:
@@ -310,9 +310,19 @@ def inspect_constraints_instr_cb(instr: Instruction, ctx: ParseContext) -> None:
         num_expr_objs[len(expr_get_objs(e))] += 1
 
 
+def encodeset_overlap_check_instr_cb(instr: Instruction, ctx: ParseContext) -> None:
+    for eset in get_encoding_list(ctx, instr.encoding):
+        pholes = Pigeonholes(32)
+        for eset_bit in eset.get_bits():
+            pholes.add_span(eset_bit.range.span)
+        for eset_field in eset.get_fields():
+            pholes.add_span(eset_field.range.span)
+
+
 def instr_cb(i: Instruction, ctx: ParseContext) -> None:
     dump_idents_instr_cb(i, ctx)
     inspect_constraints_instr_cb(i, ctx)
+    encodeset_overlap_check_instr_cb(i, ctx)
 
 
 def parse_instructions(instrs: Instructions, cb: InstrCB) -> None:

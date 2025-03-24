@@ -32,19 +32,22 @@ def defauto(maybe_cls: C | None, *args, **kwargs) -> C | Callable[[C], C]:
 
 @defauto
 class Span:
-    start: Final[int] = attrs.field()
-    width: Final[int] = attrs.field()
-    name: Final[str | None] = attrs.field(default=None)
+    start: int
+    width: int
+    name: str | None = attrs.field(default=None)
 
     @property
     def end(self) -> int:
         """End bit index (one past last real index)"""
-        return self.start + self.end
+        return self.start + self.width
 
     def __eq__(self, value) -> bool:
         if not isinstance(value, Span):
             return False
         return self.start == value.start and self.width == value.width
+
+    def __hash__(self) -> int:
+        return hash((self.start, self.width))
 
 
 @defauto
@@ -61,14 +64,14 @@ class Pigeonholes:
     def intervals(self) -> IntervalTree:
         return self._intervals
 
-    def add_span(self, span: Span) -> None:
-        if span in self._spans:
-            raise ValueError(f"Adding span {span} thats already in Pigeonholes: {self}")
-        self._spans.add(span)
-        self._intervals.add(Interval(span.start, span.end, span))
+    def add_span(self, spn: Span) -> None:
+        if spn in self._spans:
+            raise ValueError(f"Adding span {spn} thats already in Pigeonholes: {self}")
+        self._spans.add(spn)
+        self._intervals.add(Interval(spn.start, spn.end, spn))
 
-    def get_overlaps(self) -> list[Span] | None:
-        return None
+    def has_overlaps(self) -> bool:
+        return self._intervals.overlaps(0, self.width)
 
 
 def traverse_nested(
