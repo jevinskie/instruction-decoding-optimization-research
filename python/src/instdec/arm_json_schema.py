@@ -123,19 +123,26 @@ class Range:
 
 
 @defauto
-class EncodesetBits:
+class EncodesetBase:
     value: Value
     range: Range
     should_be_mask: Value
+
+
+@defauto
+class EncodesetBits(EncodesetBase):
+    # value: Value
+    # range: Range
+    # should_be_mask: Value
     _type: Literal["Instruction.Encodeset.Bits"] = "Instruction.Encodeset.Bits"
 
 
 @defauto
-class EncodesetField:
+class EncodesetField(EncodesetBase):
     name: str
-    range: Range
-    value: Value
-    should_be_mask: Value
+    # range: Range
+    # value: Value
+    # should_be_mask: Value
     _type: Literal["Instruction.Encodeset.Field"] = "Instruction.Encodeset.Field"
 
 
