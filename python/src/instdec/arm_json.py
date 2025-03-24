@@ -166,6 +166,13 @@ def are_encodesets_consistent(a: dict, b: dict) -> bool:
 # def constrain_instr(encset: En)
 
 
+def merge_constraints(constraints: list[Expression | None]) -> list[Expression]:
+    res: list[Expression] = []
+    for cons in constraints:
+        pass
+    return res
+
+
 def has_instructions_w_children(instrs: Instructions) -> bool:
     for iset in instrs.instructions:
 

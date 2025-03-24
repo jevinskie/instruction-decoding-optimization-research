@@ -88,7 +88,7 @@ seen_function_names: set[str] = set()
 @defauto
 class Function:
     name: str
-    arguments: list[Expression]
+    arguments: tuple[Expression, ...]
     _type: Literal["AST.Function"] = "AST.Function"
 
     def __attrs_post_init__(self):
@@ -147,7 +147,7 @@ EncodesetValues = EncodesetBits | EncodesetField | EncodsetShouldBeBits
 
 @defauto
 class Encodeset:
-    values: list[EncodesetValues]
+    values: tuple[EncodesetValues, ...]
     width: int
     _type: Literal["Instruction.Encodeset.Encodeset"] = "Instruction.Encodeset.Encodeset"
 
@@ -189,7 +189,7 @@ class Encodeset:
 class InstructionInstance:
     name: str
     condition: Expression | None = attrs.field(default=None)
-    children: list[InstructionInstance] | None = attrs.field(default=None)
+    children: tuple[InstructionInstance, ...] | None = attrs.field(default=None)
     _type: Literal["Instruction.InstructionInstance"] = "Instruction.InstructionInstance"
 
 
@@ -213,7 +213,7 @@ class Instruction:
     operation_id: str
     encoding: Encodeset
     condition: Expression | None = attrs.field(default=None)
-    children: list[Instructionish] | None = attrs.field(default=None)
+    children: tuple[Instructionish, ...] | None = attrs.field(default=None)
     title: str | None = attrs.field(default=None)
     preferred: Expression | None = attrs.field(default=None)
     _type: Literal["Instruction.Instruction"] = "Instruction.Instruction"
@@ -230,7 +230,7 @@ class InstructionGroup:
     encoding: Encodeset
     title: str | None = attrs.field(default=None)
     condition: Expression | None = attrs.field(default=None)
-    children: list[InstructionOrInstructionGroup] | None = attrs.field(default=None)
+    children: tuple[InstructionOrInstructionGroup, ...] | None = attrs.field(default=None)
     operation_id: str | None = attrs.field(default=None)
     _type: Literal["Instruction.InstructionGroup"] = "Instruction.InstructionGroup"
 
@@ -241,7 +241,7 @@ class InstructionSet:
     encoding: Encodeset
     read_width: int
     condition: Expression | None = attrs.field(default=None)
-    children: list[InstructionOrInstructionGroup] | None = attrs.field(default=None)
+    children: tuple[InstructionOrInstructionGroup, ...] | None = attrs.field(default=None)
     operation_id: str | None = attrs.field(default=None)
     _type: Literal["Instruction.InstructionSet"] = "Instruction.InstructionSet"
 
@@ -274,7 +274,7 @@ class Operations(dict[str, Operationish]):
 
 @defauto
 class Instructions:
-    instructions: list[InstructionSet]
+    instructions: tuple[InstructionSet, ...]
     operations: Operations
     _type: Literal["Instruction.Instructions"] = "Instruction.Instructions"
 
