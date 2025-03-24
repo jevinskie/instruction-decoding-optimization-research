@@ -315,23 +315,28 @@ JSONSchemaObjectClasses = (
     Function,
     Identifier,
     Instruction,
-    InstructionInstance,
     InstructionAlias,
     InstructionGroup,
+    InstructionInstance,
     Instructions,
     InstructionSet,
+    Operation,
+    OperationAlias,
     Range,
     Set,
     Trits,
     UnaryOp,
     Value,
-    Operation,
-    OperationAlias,
 )
 
-for cls in JSONSchemaObjectClasses:
-    ct = typing.cast(type, cls)
-    attrs.resolve_types(ct, globals(), locals())
+
+def _resolve_json_schema_obj_cls_types():
+    for cls in JSONSchemaObjectClasses:
+        ct = typing.cast(type, cls)
+        attrs.resolve_types(ct)
+
+
+_resolve_json_schema_obj_cls_types()
 
 converter = Converter()
 converter.detailed_validation = True

@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Callable
-from typing import Any
+from typing import Any, DefaultDict
 
 import attrs
+from rich import print
 
 from .arm_json_schema import (
     BinaryOp,
@@ -19,6 +21,7 @@ from .arm_json_schema import (
     InstructionOrInstructionGroup,
     Instructions,
     JSONSchemaObject,
+    JSONSchemaObjectClasses,
     Set,
     UnaryOp,
     UnOp,
@@ -29,21 +32,39 @@ from .trits import Trits
 from .util import defauto, traverse_nested
 
 
+def expr_get_objs(expr: Expression) -> list[JSONSchemaObject]:
+    res: list[JSONSchemaObject] = []
+    rset: set[JSONSchemaObject] = set()
+
+    def helper(e: Expression):
+        if e in rset:
+            raise ValueError(f"should e be in rset? e: {e} expr: {expr} rset: {rset}")
+        if isinstance(e, JSONSchemaObjectClasses):
+            res.append(e)
+        if isinstance(e, BinaryOp):
+            helper(e.left)
+            helper(e.right)
+        elif isinstance(e, UnaryOp):
+            helper(e.expr)
+        elif isinstance(e, Set):
+            for v in e.values:
+                helper(v)
+
+    helper(expr)
+    return res
+
+
 def expr_idents(expr: Expression) -> list[str]:
     idents: list[str] = []
 
-    def helper(expr: Expression) -> None:
-        if expr is None:
-            return
-        if isinstance(expr, BinaryOp):
-            helper(expr.left)
-            helper(expr.right)
-        elif isinstance(expr, UnaryOp):
-            helper(expr.expr)
-        elif isinstance(expr, Identifier):
-            idents.append(expr.value)
-        else:
-            return
+    def helper(e: Expression):
+        if isinstance(e, BinaryOp):
+            helper(e.left)
+            helper(e.right)
+        elif isinstance(e, UnaryOp):
+            helper(e.expr)
+        elif isinstance(e, Identifier):
+            idents.append(e.value)
 
     helper(expr)
     if len(idents) != len(set(idents)):
@@ -278,8 +299,15 @@ def dump_idents_instr_cb(i: Instruction, ctx: ParseContext) -> None:
         print(f"smth: {smth}")
 
 
+num_cons: DefaultDict[int, int] = defaultdict(int)
+num_expr_objs: DefaultDict[int, int] = defaultdict(int)
+
+
 def inspect_constraints_instr_cb(instr: Instruction, ctx: ParseContext) -> None:
-    merge_constraints(get_condition_list(ctx, instr.condition))
+    cons = merge_constraints(get_condition_list(ctx, instr.condition))
+    num_cons[len(cons)] += 1
+    for e in cons:
+        num_expr_objs[len(expr_get_objs(e))] += 1
 
 
 def instr_cb(i: Instruction, ctx: ParseContext) -> None:
@@ -299,7 +327,7 @@ def parse_instructions(instrs: Instructions, cb: InstrCB) -> None:
         if iset.children is None:
             raise ValueError(f"iset name: {iset.name} children is None")
 
-        recurse_instr_or_instr_group(iset.children, ctx, cb)
+        recurse_instr_or_instr_group(list(iset.children), ctx, cb)
 
         ctx.set_condition_stack.pop()
         ctx.set_encoding_stack.pop()
@@ -312,3 +340,7 @@ def parse_instructions(instrs: Instructions, cb: InstrCB) -> None:
 
 def dump_idents(instrs: Instructions) -> None:
     parse_instructions(instrs, instr_cb)
+    nc = dict(sorted(num_cons.items()))
+    print(f"num_cons: {nc}")
+    no = dict(sorted(num_expr_objs.items()))
+    print(f"num_expr_objs: {no}")
