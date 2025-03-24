@@ -6,34 +6,18 @@ import simplejson as json
 from rich import print
 
 # import rich
-from instdec import arm_json
+from instdec import arm_json, arm_json_schema
+from instdec.arm_json_schema import Instructions, JSONSchemaObject
 
 
-def dump_instructions_old(raw_json: dict | list) -> None:
-    instructions = arm_json.find_leafs(raw_json)
-    for inst in instructions:
-        name, mtrits, n0, n1, nX = arm_json.parse_instruction_encoding(inst)
-        print(f"inst: {name:32} mtrits: {mtrits} #0: {n0:2} #1: {n1:2} #X: {nX:2}")
-        inst_dec = arm_json.converter.structure(inst, arm_json.JSONSchemaObject)
-        print(f"inst_dec: {inst_dec}")
-        cond = inst_dec.condition
-        interp = arm_json.Interpteter(cond)
-        interp_res = interp.evaluate()
-        print(f"interp_res: {interp_res}")
-        # if name == "stnt1w_z_p_br_contiguous":
-        #     print(f"stnt1w_z_p_br_contiguous:\n{inst}")
-        #     condition = arm_json.converter.structure(inst, arm_json.Condition)
-        #     print("condition:")
-        #     print(condition)
-        #     sys.exit(0)
-    json.dump(instructions, open("inst-enc-old.json", "w"))
-
-
-def dump_instructions(raw_json: dict | list) -> None:
-    instructions = arm_json.converter.structure(raw_json, arm_json.JSONSchemaObject)
+def dump_instructions(raw_json_dict: dict) -> None:
+    instructions: JSONSchemaObject = arm_json_schema.converter.structure(
+        raw_json_dict, JSONSchemaObject
+    )
     if instructions is None:
         raise ValueError("got None instructions")
-
+    if not isinstance(instructions, Instructions):
+        raise TypeError("didn't deserialize an Instructions object")
     if arm_json.has_instructions_w_children(instructions):
         raise ValueError("have instructions with children")
     else:
@@ -52,15 +36,14 @@ def get_arg_parser() -> argparse.ArgumentParser:
 
 def real_main(args: argparse.Namespace):
     print(f"args: {args}")
-    raw_json = dict(json.load(open(args.instr_json)))
+    raw_json_dict = dict(json.load(open(args.instr_json)))
 
-    # dump_instructions_old(raw_json)
-    dump_instructions(raw_json)
+    dump_instructions(raw_json_dict)
 
-    print(f"seen_identifiers: {arm_json.seen_identifiers}")
-    print(f"seen_function_names: {arm_json.seen_function_names}")
-    print(f"seen_value_meanings: {arm_json.seen_value_meanings}")
-    print(f"seen_value_values: {arm_json.seen_value_values}")
+    print(f"seen_identifiers: {arm_json_schema.seen_identifiers}")
+    print(f"seen_function_names: {arm_json_schema.seen_function_names}")
+    print(f"seen_value_meanings: {arm_json_schema.seen_value_meanings}")
+    print(f"seen_value_values: {arm_json_schema.seen_value_values}")
 
 
 def main():

@@ -1,104 +1,32 @@
 from __future__ import annotations
 
-import enum
-import typing
 from collections.abc import Callable
-from typing import Any, Literal
+from typing import Any
 
 import attrs
-from cattrs import Converter
 
-from .trits import TritRange, TritRanges, Trits
-from .util import Span, defauto, traverse_nested
-
-
-class BinOp(enum.StrEnum):
-    AND = "&&"
-    NE = "!="
-    EQ = "=="
-    OR = "||"
-    IN = "IN"
-
-
-class UnOp(enum.StrEnum):
-    NOT = "!"
-
-
-class ConsOp(enum.StrEnum):
-    IMPLIES = "-->"
-    IFF = "<->"
-
-
-seen_value_meanings: set[str] = set()
-seen_value_values: set[Trits] = set()
-
-
-@defauto
-class Value:
-    value: Trits
-    meaning: str | None
-    _type: Literal["Values.Value"] = "Values.Value"
-
-    def __attrs_post_init__(self):
-        seen_value_meanings.add(self.meaning)
-        seen_value_values.add(self.value)
-
-
-seen_identifiers: set[str] = set()
-
-
-@defauto
-class Identifier:
-    value: str
-    _type: Literal["AST.Identifier"] = "AST.Identifier"
-
-    def __attrs_post_init__(self):
-        seen_identifiers.add(self.value)
-
-
-@defauto
-class Bool:
-    value: bool
-    _type: Literal["AST.Bool"] = "AST.Bool"
-
-
-@defauto
-class Set:
-    values: set[Value]
-    _type: Literal["AST.Set"] = "AST.Set"
-
-
-@defauto
-class BinaryOp:
-    left: Expression
-    op: BinOp
-    right: Expression
-    _type: Literal["AST.BinaryOp"] = "AST.BinaryOp"
-
-
-@defauto
-class UnaryOp:
-    expr: Expression
-    op: UnOp
-    _type: Literal["AST.UnaryOp"] = "AST.UnaryOp"
-
-
-seen_function_names: set[str] = set()
-
-
-@defauto
-class Function:
-    name: str
-    arguments: list[Expression]
-    _type: Literal["AST.Function"] = "AST.Function"
-
-    def __attrs_post_init__(self):
-        seen_function_names.add(self.name)
-
-
-# Define Expression as a union of all possible AST node types
-Expression = Bool | BinaryOp | Function | Identifier | Set | UnaryOp | Value
-Valueish = Value | Set
+from .arm_json_schema import (
+    BinaryOp,
+    BinOp,
+    Bool,
+    Encodeset,
+    Expression,
+    Function,
+    Identifier,
+    Instruction,
+    InstructionAlias,
+    InstructionGroup,
+    InstructionOrInstructionGroup,
+    Instructions,
+    JSONSchemaObject,
+    Set,
+    UnaryOp,
+    UnOp,
+    Value,
+    Valueish,
+)
+from .trits import Trits
+from .util import defauto, traverse_nested
 
 
 def expr_idents(expr: Expression) -> list[str]:
@@ -125,281 +53,6 @@ def expr_idents(expr: Expression) -> list[str]:
 
 def expr_has_ident(expr: Expression, ident: str) -> bool:
     return ident in expr_idents(expr)
-
-
-@defauto
-class Range:
-    start: int
-    width: int
-    _type: Literal["Range"] = "Range"
-
-    @property
-    def end(self) -> int:
-        return self.start + self.width
-
-    @property
-    def span(self) -> Span:
-        return Span(self.start, self.width)
-
-
-@defauto
-class EncodesetBits:
-    value: Value
-    range: Range
-    should_be_mask: Value
-    _type: Literal["Instruction.Encodeset.Bits"] = "Instruction.Encodeset.Bits"
-
-
-@defauto
-class EncodesetField:
-    name: str
-    range: Range
-    value: Value
-    should_be_mask: Value
-    _type: Literal["Instruction.Encodeset.Field"] = "Instruction.Encodeset.Field"
-
-
-@defauto
-class EncodsetShouldBeBits:
-    value: Value
-    range: Range
-    _type: Literal["Instruction.Encodeset.ShouldBeBits"] = "Instruction.Encodeset.ShouldBeBits"
-
-    def __attrs_post_init__(self):
-        raise NotImplementedError("deprecated object")
-
-
-EncodesetValues = EncodesetBits | EncodesetField | EncodsetShouldBeBits
-
-
-@defauto
-class Encodeset:
-    values: list[EncodesetValues]
-    width: int
-    _type: Literal["Instruction.Encodeset.Encodeset"] = "Instruction.Encodeset.Encodeset"
-
-    def get_fields(self) -> list[EncodesetField]:
-        fields: list[EncodesetField] = []
-        for v in self.values:
-            if isinstance(v, EncodesetField):
-                fields.append(v)
-        names = [lambda f: f.value for f in fields]
-        if len(names) != len(set(names)):
-            raise ValueError("duplicates in Encodeset EncodesetField names")
-        ranges = [lambda f: f.range for f in fields]
-        if len(ranges) != len(set(ranges)):
-            raise ValueError("duplicates in Encodeset EncodesetField ranges")
-        return fields
-
-    def get_field(self, name: str) -> EncodesetField | None:
-        fields = self.get_fields()
-        for f in fields:
-            if f.name == name:
-                return f
-        return None
-
-    def has_field(self, name: str) -> bool:
-        return self.get_field(name) is not None
-
-    def get_bits(self) -> list[EncodesetBits]:
-        bits: list[EncodesetBits] = []
-        for v in self.values:
-            if isinstance(v, EncodesetBits):
-                bits.append(v)
-        ranges = [lambda b: b.range for b in bits]
-        if len(ranges) != len(set(ranges)):
-            raise ValueError("duplicates in Encodeset EncodesetBits ranges")
-        return bits
-
-
-@defauto
-class InstructionInstance:
-    name: str
-    condition: Expression | None = attrs.field(default=None)
-    children: list[InstructionInstance] | None = attrs.field(default=None)
-    _type: Literal["Instruction.InstructionInstance"] = "Instruction.InstructionInstance"
-
-
-@defauto
-class InstructionAlias:
-    name: str
-    operation_id: str
-    condition: Expression | None = attrs.field(default=None)
-    # assembly: ?
-    _type: Literal["Instruction.InstructionAlias"] = "Instruction.InstructionAlias"
-
-
-Instructionish = (
-    typing.ForwardRef("Instruction", is_argument=False) | InstructionInstance | InstructionAlias
-)
-
-
-@defauto
-class Instruction:
-    name: str
-    operation_id: str
-    encoding: Encodeset
-    condition: Expression | None = attrs.field(default=None)
-    children: list[Instructionish] | None = attrs.field(default=None)
-    title: str | None = attrs.field(default=None)
-    preferred: Expression | None = attrs.field(default=None)
-    _type: Literal["Instruction.Instruction"] = "Instruction.Instruction"
-
-
-InstructionOrInstructionGroup = Instruction | typing.ForwardRef(
-    "InstructionGroup", is_argument=False
-)
-
-
-@defauto
-class InstructionGroup:
-    name: str
-    encoding: Encodeset
-    title: str | None = attrs.field(default=None)
-    condition: Expression | None = attrs.field(default=None)
-    children: list[InstructionOrInstructionGroup] | None = attrs.field(default=None)
-    operation_id: str | None = attrs.field(default=None)
-    _type: Literal["Instruction.InstructionGroup"] = "Instruction.InstructionGroup"
-
-
-@defauto
-class InstructionSet:
-    name: str
-    encoding: Encodeset
-    read_width: int
-    condition: Expression | None = attrs.field(default=None)
-    children: list[InstructionOrInstructionGroup] | None = attrs.field(default=None)
-    operation_id: str | None = attrs.field(default=None)
-    _type: Literal["Instruction.InstructionSet"] = "Instruction.InstructionSet"
-
-
-@defauto
-class Operation:
-    operation: str
-    description: str
-    brief: str
-    title: str
-    decode: str | None = attrs.field(default=None)
-    _type: Literal["Instruction.Operation"] = "Instruction.Operation"
-
-
-@defauto
-class OperationAlias:
-    operation_id: str
-    description: str
-    brief: str
-    title: str
-    _type: Literal["Instruction.OperationAlias"] = "Instruction.OperationAlias"
-
-
-Operationish = Operation | OperationAlias
-
-
-class Operations(dict[str, Operationish]):
-    pass
-
-
-@defauto
-class Instructions:
-    instructions: list[InstructionSet]
-    operations: Operations
-    _type: Literal["Instruction.Instructions"] = "Instruction.Instructions"
-
-
-JSONSchemaObject = (
-    Encodeset
-    | EncodesetBits
-    | EncodesetField
-    | EncodsetShouldBeBits
-    | Identifier
-    | Instruction
-    | InstructionInstance
-    | InstructionAlias
-    | InstructionGroup
-    | Instructions
-    | InstructionSet
-    | Range
-    | Trits
-    | Operation
-    | OperationAlias
-    | Bool
-    | BinaryOp
-    | Function
-    | Identifier
-    | Set
-    | UnaryOp
-    | Value
-)
-
-TheTypes = (
-    BinaryOp,
-    Bool,
-    Encodeset,
-    EncodesetBits,
-    EncodesetField,
-    EncodsetShouldBeBits,
-    Function,
-    Identifier,
-    Instruction,
-    InstructionInstance,
-    InstructionAlias,
-    InstructionGroup,
-    Instructions,
-    InstructionSet,
-    Range,
-    Set,
-    Trits,
-    UnaryOp,
-    Value,
-    Valueish,
-    InstructionOrInstructionGroup,
-    Instructionish,
-    Operationish,
-    Operation,
-    OperationAlias,
-)
-
-JSONSchemaObjectClasses = (
-    BinaryOp,
-    Bool,
-    Encodeset,
-    EncodesetBits,
-    EncodesetField,
-    EncodsetShouldBeBits,
-    Function,
-    Identifier,
-    Instruction,
-    InstructionInstance,
-    InstructionAlias,
-    InstructionGroup,
-    Instructions,
-    InstructionSet,
-    Range,
-    Set,
-    Trits,
-    UnaryOp,
-    Value,
-    Operation,
-    OperationAlias,
-)
-
-for cls in JSONSchemaObjectClasses:
-    ct = typing.cast(type, cls)
-    attrs.resolve_types(ct, globals(), locals())
-
-# Set up cattrs converter with a custom structure hook
-converter = Converter()
-converter.detailed_validation = True
-
-
-def structure_trit(obj: str, cls: type[Trits]) -> Trits:
-    if not issubclass(cls, Trits):
-        raise TypeError(f"got cls {cls} not Trits")
-    # print(f"structure_trit obj: '{obj}' cls: {cls}")
-    return Trits(obj, "Trits")
-
-
-converter.register_structure_hook(Trits, structure_trit)
 
 
 class ExprRef:
@@ -506,49 +159,6 @@ class Interpteter:
         return Value(meaning=f"ID.{cur_node.value}", value=Trits("X"))
 
 
-def find_encodings(node, context=None, path=""):
-    if context is None:
-        context = []
-
-    results = []
-
-    if isinstance(node, dict):
-        # Work on a copy of the current context for this branch
-        current_context = context.copy()
-
-        if "encoding" in node:
-            encoding_entry = {
-                "encoding": node["encoding"],
-                "context": current_context.copy(),  # Context as accumulated so far
-                "path": path + ".encoding",
-            }
-            results.append(encoding_entry)
-            # Append current node to the context, wrapping it with ExprRef to prevent recursive printing
-            # current_context.append({"encoding": node["encoding"], "object": ExprRef(node)})
-            current_context.append(
-                {"encoding": node["encoding"], "object": node.get("name", "no_name")}
-            )
-
-        # Process the 'children' field if present.
-        children = node.get("children", [])
-        if isinstance(children, dict):
-            children = [children]
-        if isinstance(children, list):
-            for idx, child in enumerate(children):
-                results.extend(find_encodings(child, current_context, f"{path}.children[{idx}]"))
-
-        # Optionally, process other keys containing dicts or lists.
-        for key, value in node.items():
-            if key != "children" and isinstance(value, (dict, list)):
-                results.extend(find_encodings(value, context, f"{path}.{key}"))
-
-    elif isinstance(node, list):
-        for idx, item in enumerate(node):
-            results.extend(find_encodings(item, context, f"{path}[{idx}]"))
-
-    return results
-
-
 def are_encodesets_consistent(a: dict, b: dict) -> bool:
     return False
 
@@ -556,95 +166,10 @@ def are_encodesets_consistent(a: dict, b: dict) -> bool:
 # def constrain_instr(encset: En)
 
 
-def find_leafs_helper(instrs: dict | list, encoding_stack: list | None = None) -> list:
-    results = []
-    if encoding_stack is None:
-        encoding_stack = []
-    if isinstance(instrs, dict):
-        instrs = [instrs]
-    assert isinstance(instrs, list)
-    for x in instrs:
-        if isinstance(x, dict):
-            if "encoding" in x and (
-                ("children" in x and len(x["children"]) == 0) or ("children" not in x)
-            ):
-                # we are leaf
-                xc = x.copy()
-                for band in ("assembly", "assemble"):
-                    if band in xc:
-                        del xc[band]
-                xc["parent_encodings"] = encoding_stack.copy()
-                results.append(xc)
-                continue
-            if "encoding" in x:
-                assert x["encoding"]["_type"] == "Instruction.Encodeset.Encodeset"
-                encoding_stack.append((x["name"], x["encoding"]))
-            for k in x:
-                if k == "children":
-                    # future extension point
-                    results += find_leafs_helper(x["children"], encoding_stack=encoding_stack)
-                else:
-                    v = x[k]
-                    if isinstance(v, (list, dict)):
-                        results += find_leafs_helper(v, encoding_stack=encoding_stack)
-            if "encoding" in x:
-                encoding_stack.pop()
-        elif isinstance(x, list):
-            results += find_leafs_helper(x, encoding_stack=encoding_stack)
-    return results
-
-
-def find_leafs(ijson: dict) -> list:
-    instrsl = ijson["instructions"]
-    if len(instrsl) != 1:
-        raise ValueError("instructions list isn't size 1")
-    instrs_root = instrsl[0]
-    leafs = find_leafs_helper(instrs_root)
-    return leafs
-
-
-def parse_instruction_encoding(inst: dict) -> tuple[str, Trits, int, int, int]:
-    """Parse instruction encoding into trits and counts.
-
-    Args:
-        inst: Instruction dictionary from JSON
-
-    Returns:
-        tuple of (name, Trits object, count_0, count_1, count_X)
-    """
-    enc = inst["encoding"]
-    if "width" in enc and enc["width"] != 32:
-        raise ValueError(f"inst enc width isn't 32 it is {enc['width']}")
-    assert enc["_type"] == "Instruction.Encodeset.Encodeset"
-
-    trit_ranges = TritRanges()
-    for v in enc["values"]:
-        assert v["_type"] in ("Instruction.Encodeset.Bits", "Instruction.Encodeset.Field")
-        rng = v["range"]
-        assert rng["_type"] == "Range"
-        val = v["value"]
-        assert val["_type"] == "Values.Value"
-
-        start = rng["start"]
-        width = rng["width"]
-        end = start + width
-        assert 0 <= start <= 31
-        assert 1 <= end <= 32
-        assert width > 0
-
-        valval = val["value"].replace("'", "")
-        sbmt = TritRange(start, width, Trits(valval))
-        trit_ranges.add_range(sbmt)
-
-    mtrits = trit_ranges.merge()
-    mts = str(mtrits)
-    return (inst["name"], mtrits, mts.count("0"), mts.count("1"), mts.count("X"))
-
-
 def has_instructions_w_children(instrs: Instructions) -> bool:
     for iset in instrs.instructions:
 
-        def check(o: Any, path: str) -> Any | None:
+        def check(o: Any, _: str) -> None:
             if isinstance(o, Instruction):
                 if (
                     hasattr(o, "children")
@@ -653,7 +178,6 @@ def has_instructions_w_children(instrs: Instructions) -> bool:
                     and not all([isinstance(c, InstructionAlias) for c in o.children])
                 ):
                     raise ValueError(f"found instr w/ children: {o}")
-                    return o
             return None
 
         res = traverse_nested(iset.children, check)
