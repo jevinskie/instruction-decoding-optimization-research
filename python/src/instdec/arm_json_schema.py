@@ -63,8 +63,15 @@ class Bool:
 
 @defauto
 class Set:
-    values: set[Value]
+    values: tuple[Value, ...]
     _type: Literal["AST.Set"] = "AST.Set"
+
+    @property
+    def values_set(self) -> set[Value]:
+        rs: set[Value] = set(self.values)
+        if len(self.values) != len(rs):
+            raise ValueError(f"duplicate detected in AST.Set: {self}")
+        return rs
 
 
 @defauto
