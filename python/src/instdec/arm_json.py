@@ -317,12 +317,43 @@ def encodeset_overlap_check_instr_cb(instr: Instruction, ctx: ParseContext) -> N
             pholes.add_span(eset_bit.range.span)
         for eset_field in eset.get_fields():
             pholes.add_span(eset_field.range.span)
+        if pholes.has_overlaps():
+            raise ValueError(
+                f"encodeset_overlap_check_instr_cb pholes has overlaps: {pholes.spans}"
+            )
+
+
+def encodeset_overlap_overall_check_instr_cb(instr: Instruction, ctx: ParseContext) -> None:
+    pholes = Pigeonholes(32)
+    esetlist = get_encoding_list(ctx, instr.encoding)
+    for eset in esetlist:
+        for eset_bit in eset.get_bits():
+            pholes.add_span(eset_bit.range.span)
+        for eset_field in eset.get_fields():
+            pholes.add_span(eset_field.range.span)
+    if pholes.has_overlaps():
+        print("\n\n\n")
+        spstrs: list[str] = []
+        for espn in pholes.spans:
+            spstrs.append(espn.ascii_art(32))
+        spstrs.sort(reverse=True)
+        for s in spstrs:
+            print(f"    {s}")
+        print("\n\n\n", flush=True)
+        print("instr:")
+        print(instr)
+        print("esetlist:")
+        print(esetlist)
+        raise ValueError(
+            f"encodeset_overlap_overall_check_instr_cb pholes has overlaps: {pholes.spans}"
+        )
 
 
 def instr_cb(i: Instruction, ctx: ParseContext) -> None:
     dump_idents_instr_cb(i, ctx)
     inspect_constraints_instr_cb(i, ctx)
     encodeset_overlap_check_instr_cb(i, ctx)
+    encodeset_overlap_overall_check_instr_cb(i, ctx)
 
 
 def parse_instructions(instrs: Instructions, cb: InstrCB) -> None:

@@ -1,10 +1,13 @@
 import inspect
+import itertools
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any, Final, TypeVar, dataclass_transform, overload
 
 import attr
 import attrs
-from intervaltree import Interval, IntervalTree
+
+# from intervaltree import Interval, IntervalTree
+import portion as P
 
 T = TypeVar("T")
 C = TypeVar("C", bound=type)
@@ -41,6 +44,25 @@ class Span:
         """End bit index (one past last real index)"""
         return self.start + self.width
 
+    def equal_w_name(self, value) -> bool:
+        if not isinstance(value, Span):
+            return False
+        return self.start == value.start and self.width == value.width and self.name == value.name
+
+    def ascii_art(self, max_width) -> str:
+        if self.end > max_width:
+            raise ValueError(f"Span: {self} ascii_art() max_width: {max_width} > end: {self.end}")
+        rl = [" "] * max_width
+        if self.width == 1:
+            rl[self.start] = "#"
+        else:
+            rl[self.start] = "<"
+            rl[self.end - 1] = ">"
+            for i in range(self.start + 1, self.end - 1):
+                rl[i] = "="
+        rs = "[" + "".join(rl) + "]"
+        return rs
+
     def __eq__(self, value) -> bool:
         if not isinstance(value, Span):
             return False
@@ -49,29 +71,48 @@ class Span:
     def __hash__(self) -> int:
         return hash((self.start, self.width))
 
+    def __repr__(self) -> str:
+        return f"Span({self.ascii_art(32)})"
+
 
 @defauto
 class Pigeonholes:
     width: Final[int] = attrs.field()
     _spans: set[Span] = attrs.Factory(set)
-    _intervals: IntervalTree = attrs.Factory(IntervalTree)
+    # _intervals: P.Interval = attrs.Factory(P.Interval)
 
     @property
     def spans(self) -> set[Span]:
         return self._spans
 
-    @property
-    def intervals(self) -> IntervalTree:
-        return self._intervals
+    # @property
+    # def intervals(self) -> P.Interval:
+    #     return self._intervals
 
     def add_span(self, spn: Span) -> None:
         if spn in self._spans:
-            raise ValueError(f"Adding span {spn} thats already in Pigeonholes: {self}")
+            for ispn in self._spans:
+                if spn == ispn:
+                    if not spn.equal_w_name(ispn):
+                        spstrs: list[str] = []
+                        for espn in self._spans:
+                            spstrs.append(espn.ascii_art(32))
+                        spstrs.sort()
+                        for s in spstrs:
+                            print(s)
+                        print("", flush=True)
+                        raise ValueError(f"Adding span {spn} thats already in Pigeonholes: {self}")
         self._spans.add(spn)
-        self._intervals.add(Interval(spn.start, spn.end, spn))
+        # self._intervals |= P.closedopen(spn.start, spn.end, spn)
 
     def has_overlaps(self) -> bool:
-        return self._intervals.overlaps(0, self.width)
+        for a, b in itertools.combinations(self._spans, 2):
+            ai = P.closedopen(a.start, a.end)
+            bi = P.closedopen(b.start, b.end)
+            if ai.overlaps(bi):
+                return True
+        return False
+        # return self._intervals.overlaps(0, self.width)
 
 
 def traverse_nested(
