@@ -16,7 +16,7 @@ class Trits:
         return sval
 
     trits: str = attrs.field(converter=normalize_trit_str)
-    _type: Literal["Trits"] = attrs.field(default="Trits", repr=False)
+    _type: Literal["Trits"] = attrs.field(default="Trits")
 
     """
     A class to represent and manipulate trit strings (0, 1, X).
@@ -139,7 +139,12 @@ class Trits:
         return len(self.trits)
 
     def __repr__(self) -> str:
+        raise NotImplementedError("trits __repr__")
         return f"Trits({len(self.trits)}:'{self.trits}')"
+
+    def __str__(self) -> str:
+        raise NotImplementedError("trits __repr__")
+        return self.__repr__()
 
 
 @defauto
