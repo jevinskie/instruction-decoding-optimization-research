@@ -32,8 +32,8 @@ seen_value_values: set[Trits] = set()
 @attrs.define(auto_attribs=True, on_setattr=None, frozen=True)
 class Value:
     value: Trits  # = attrs.field(repr=lambda v: v.trits)
-    meaning: str | None = attrs.field()  # always observed as null
-    _type: Literal["Values.Value"] = attrs.field(default="Values.Value")
+    meaning: str | None = attrs.field(repr=False)  # always observed as null
+    _type: Literal["Values.Value"] = attrs.field(default="Values.Value", repr=False)
 
     def __attrs_post_init__(self):
         seen_value_meanings.add(self.meaning)
@@ -42,12 +42,7 @@ class Value:
             raise NotImplementedError(f"finally a release with non-null `meaning`? Value: {self}")
 
     def __repr__(self) -> str:
-        raise NotImplementedError("Value.__repr__")
-        return f"Valuez('{self.value.trits}')"
-
-    def __str__(self) -> str:
-        raise NotImplementedError("Value.__repr__")
-        return self.__repr__()
+        return f"Value({len(self.value)}:'{self.value.trits}')"
 
 
 seen_identifiers: set[str] = set()
