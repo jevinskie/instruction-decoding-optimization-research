@@ -196,10 +196,13 @@ EncodesetValues = EncodesetBits | EncodesetField | EncodsetShouldBeBits
 @defauto
 class Encodeset:
     values: tuple[EncodesetValues, ...]
-    width: int
+    width: int = attrs.field(repr=False)
     _type: Literal["Instruction.Encodeset.Encodeset"] = attrs.field(
         default="Instruction.Encodeset.Encodeset", repr=False
     )
+
+    def __rich_repr__(self) -> rich.repr.Result:
+        yield from self.values
 
     def get_fields(self) -> list[EncodesetField]:
         fields: list[EncodesetField] = []
@@ -273,6 +276,19 @@ class Instruction:
     _type: Literal["Instruction.Instruction"] = attrs.field(
         default="Instruction.Instruction", repr=False
     )
+
+    def __rich_repr__(self) -> rich.repr.Result:
+        yield self.name
+        yield (
+            "op_id",
+            self.operation_id,
+        )
+        yield self.encoding
+        yield "cond", self.condition
+        if self.children and len(self.children):
+            yield "children", self.children
+        yield "title", self.title, None
+        yield "pref", self.preferred, None
 
 
 InstructionOrInstructionGroup = Instruction | typing.ForwardRef(
