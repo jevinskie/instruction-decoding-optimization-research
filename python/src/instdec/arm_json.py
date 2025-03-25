@@ -269,7 +269,7 @@ def recurse_instr_or_instr_group(
             cb(ioig, ctx)
         else:
             if not isinstance(ioig, InstructionGroup):
-                raise ValueError(f"ioig: {ioig}")
+                raise ValueError(f"ioig type: {type(ioig)}")
             ctx.group_encoding_stack.append(ioig.encoding)
             ctx.group_condition_stack.append(ioig.condition)
             ctx.group_name_stack.append(ioig.name)

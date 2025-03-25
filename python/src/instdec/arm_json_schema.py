@@ -197,11 +197,13 @@ EncodesetValues = EncodesetBits | EncodesetField | EncodsetShouldBeBits
 class Encodeset:
     values: tuple[EncodesetValues, ...]
     width: int = attrs.field(repr=False)
+    parent: str
     _type: Literal["Instruction.Encodeset.Encodeset"] = attrs.field(
         default="Instruction.Encodeset.Encodeset", repr=False
     )
 
     def __rich_repr__(self) -> rich.repr.Result:
+        yield "parent", self.parent
         yield from self.values
 
     def get_fields(self) -> list[EncodesetField]:
@@ -241,8 +243,8 @@ class Encodeset:
 @defauto
 class InstructionInstance:
     name: str
-    condition: Expression | None = attrs.field(default=None)
-    children: tuple[InstructionInstance, ...] | None = attrs.field(default=None)
+    condition: Expression | None = None
+    children: tuple[InstructionInstance, ...] | None = None
     _type: Literal["Instruction.InstructionInstance"] = attrs.field(
         default="Instruction.InstructionInstance", repr=False
     )
@@ -252,7 +254,7 @@ class InstructionInstance:
 class InstructionAlias:
     name: str
     operation_id: str
-    condition: Expression | None = attrs.field(default=None)
+    condition: Expression | None = None
     # assembly: ?
     _type: Literal["Instruction.InstructionAlias"] = attrs.field(
         default="Instruction.InstructionAlias", repr=False
@@ -267,15 +269,20 @@ Instructionish = (
 @defauto
 class Instruction:
     name: str
+    parent: str
     operation_id: str
     encoding: Encodeset
-    condition: Expression | None = attrs.field(default=None)
-    children: tuple[Instructionish, ...] | None = attrs.field(default=None)
-    title: str | None = attrs.field(default=None)
-    preferred: Expression | None = attrs.field(default=None)
+    condition: Expression | None = None
+    children: tuple[Instructionish, ...] | None = None
+    title: str | None = None
+    preferred: Expression | None = None
     _type: Literal["Instruction.Instruction"] = attrs.field(
         default="Instruction.Instruction", repr=False
     )
+
+    @property
+    def path(self) -> str:
+        return self.parent + "." + self.name
 
     def __rich_repr__(self) -> rich.repr.Result:
         yield self.name
@@ -283,6 +290,7 @@ class Instruction:
             "op_id",
             self.operation_id,
         )
+        yield "parent", self.parent
         yield self.encoding
         yield "cond", self.condition
         if self.children and len(self.children):
@@ -299,14 +307,19 @@ InstructionOrInstructionGroup = Instruction | typing.ForwardRef(
 @defauto
 class InstructionGroup:
     name: str
+    parent: str
     encoding: Encodeset
-    title: str | None = attrs.field(default=None)
-    condition: Expression | None = attrs.field(default=None)
-    children: tuple[InstructionOrInstructionGroup, ...] | None = attrs.field(default=None)
-    operation_id: str | None = attrs.field(default=None)
+    title: str | None = None
+    condition: Expression | None = None
+    children: tuple[InstructionOrInstructionGroup, ...] | None = None
+    operation_id: str | None = None
     _type: Literal["Instruction.InstructionGroup"] = attrs.field(
         default="Instruction.InstructionGroup", repr=False
     )
+
+    @property
+    def path(self) -> str:
+        return self.parent + "." + self.name
 
 
 @defauto
@@ -314,12 +327,16 @@ class InstructionSet:
     name: str
     encoding: Encodeset
     read_width: int
-    condition: Expression | None = attrs.field(default=None)
-    children: tuple[InstructionOrInstructionGroup, ...] | None = attrs.field(default=None)
-    operation_id: str | None = attrs.field(default=None)
+    condition: Expression | None = None
+    children: tuple[InstructionOrInstructionGroup, ...] | None = None
+    operation_id: str | None = None
     _type: Literal["Instruction.InstructionSet"] = attrs.field(
         default="Instruction.InstructionSet", repr=False
     )
+
+    @property
+    def path(self) -> str:
+        return self.name
 
 
 @defauto
@@ -328,7 +345,7 @@ class Operation:
     description: str
     brief: str
     title: str
-    decode: str | None = attrs.field(default=None)
+    decode: str | None = None
     _type: Literal["Instruction.Operation"] = attrs.field(
         default="Instruction.Operation", repr=False
     )
@@ -415,6 +432,22 @@ _resolve_json_schema_obj_cls_types()
 
 converter = Converter()
 converter.detailed_validation = True
+
+
+def structure_instructionset(iset_dict: dict, cls: type[InstructionSet]) -> InstructionSet:
+    if not issubclass(cls, InstructionSet):
+        raise TypeError(f"got cls {cls} not InstructionSet")
+    eset_kwargs = iset_dict["encoding"]
+    eset_kwargs["type"] = eset_kwargs["_type"]
+    del eset_kwargs["_type"]
+    eset_kwargs["parent"] = iset_dict["name"]
+    iset_dict["encoding"] = Encodeset(**iset_dict["encoding"])
+    iset_dict["type"] = iset_dict["_type"]
+    del iset_dict["_type"]
+    return InstructionSet(**iset_dict)
+
+
+converter.register_structure_hook(InstructionSet, structure_instructionset)
 
 
 def structure_trit(trit_str: str, cls: type[Trits]) -> Trits:
