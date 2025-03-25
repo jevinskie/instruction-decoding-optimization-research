@@ -5,6 +5,7 @@ import typing
 from typing import Literal
 
 import attrs
+import rich.repr
 from cattrs import Converter
 
 from .trits import Trits
@@ -20,9 +21,15 @@ class BinOp(enum.StrEnum):
     IMPLIES = "-->"
     IFF = "<->"
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}.{self._name_}>"
+
 
 class UnOp(enum.StrEnum):
     NOT = "!"
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}.{self._name_}>"
 
 
 seen_value_meanings: set[str] = set()
@@ -41,6 +48,10 @@ class Value:
         if self.meaning is not None:
             raise NotImplementedError(f"finally a release with non-null `meaning`? Value: {self}")
 
+    def __rich_repr__(self) -> rich.repr.Result:
+        yield self.value.trits
+        yield len(self.value)
+
     def __repr__(self) -> str:
         return f"Value({len(self.value)}:'{self.value.trits}')"
 
@@ -55,6 +66,9 @@ class Identifier:
 
     def __attrs_post_init__(self):
         seen_identifiers.add(self.value)
+
+    def __rich_repr__(self) -> rich.repr.Result:
+        yield self.value
 
 
 @defauto
@@ -103,6 +117,10 @@ class Function:
     def __attrs_post_init__(self):
         seen_function_names.add(self.name)
 
+    def __rich_repr__(self) -> rich.repr.Result:
+        yield self.name
+        yield None, self.arguments
+
 
 # Define Expression as a union of all possible AST node types
 Expression = Bool | BinaryOp | Function | Identifier | Set | UnaryOp | Value
@@ -123,12 +141,22 @@ class Range:
     def span(self) -> Span:
         return Span(self.start, self.width)
 
+    def __rich_repr__(self) -> rich.repr.Result:
+        yield "s", self.start
+        yield "w", self.width
+        yield "e", self.end
+
 
 @defauto
 class EncodesetBase:
     value: Value
     range: Range
     should_be_mask: Value
+
+    def __rich_repr__(self) -> rich.repr.Result:
+        yield self.value
+        yield self.range
+        yield "sbm", self.should_be_mask
 
 
 @defauto
@@ -144,6 +172,10 @@ class EncodesetField(EncodesetBase):
     _type: Literal["Instruction.Encodeset.Field"] = attrs.field(
         default="Instruction.Encodeset.Field", repr=False
     )
+
+    def __rich_repr__(self) -> rich.repr.Result:
+        yield self.name
+        yield from super().__rich_repr__()
 
 
 @defauto

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Literal, Self
 
 import attrs
+import rich.repr
 
 from .util import defauto
 
@@ -134,6 +135,10 @@ class Trits:
 
     def ne_(self, other: Self) -> Self:
         return self.eq_(other).not_()
+
+    def __rich_repr__(self) -> rich.repr.Result:
+        yield self.trits
+        yield len(self)
 
     def __len__(self) -> int:
         return len(self.trits)
