@@ -36,7 +36,7 @@ seen_value_values: set[Trits] = set()
 class Value:
     value: Trits
     meaning: str | None
-    _type: Literal["Values.Value"] = "Values.Value"
+    _type: Literal["Values.Value"] = attrs.field(default="Values.Value", repr=False)
 
     def __attrs_post_init__(self):
         seen_value_meanings.add(self.meaning)
@@ -49,7 +49,7 @@ seen_identifiers: set[str] = set()
 @defauto
 class Identifier:
     value: str
-    _type: Literal["AST.Identifier"] = "AST.Identifier"
+    _type: Literal["AST.Identifier"] = attrs.field(default="AST.Identifier", repr=False)
 
     def __attrs_post_init__(self):
         seen_identifiers.add(self.value)
@@ -58,13 +58,13 @@ class Identifier:
 @defauto
 class Bool:
     value: bool
-    _type: Literal["AST.Bool"] = "AST.Bool"
+    _type: Literal["AST.Bool"] = attrs.field(default="AST.Bool", repr=False)
 
 
 @defauto
 class Set:
     values: tuple[Value, ...]
-    _type: Literal["AST.Set"] = "AST.Set"
+    _type: Literal["AST.Set"] = attrs.field(default="AST.Set", repr=False)
 
     @property
     def values_set(self) -> set[Value]:
@@ -79,14 +79,14 @@ class BinaryOp:
     left: Expression
     op: BinOp
     right: Expression
-    _type: Literal["AST.BinaryOp"] = "AST.BinaryOp"
+    _type: Literal["AST.BinaryOp"] = attrs.field(default="AST.BinaryOp", repr=False)
 
 
 @defauto
 class UnaryOp:
     expr: Expression
     op: UnOp
-    _type: Literal["AST.UnaryOp"] = "AST.UnaryOp"
+    _type: Literal["AST.UnaryOp"] = attrs.field(default="AST.UnaryOp", repr=False)
 
 
 seen_function_names: set[str] = set()
@@ -96,7 +96,7 @@ seen_function_names: set[str] = set()
 class Function:
     name: str
     arguments: tuple[Expression, ...]
-    _type: Literal["AST.Function"] = "AST.Function"
+    _type: Literal["AST.Function"] = attrs.field(default="AST.Function", repr=False)
 
     def __attrs_post_init__(self):
         seen_function_names.add(self.name)
@@ -111,7 +111,7 @@ Valueish = Value | Set
 class Range:
     start: int
     width: int
-    _type: Literal["Range"] = "Range"
+    _type: Literal["Range"] = attrs.field(default="Range", repr=False)
 
     @property
     def end(self) -> int:
@@ -131,20 +131,26 @@ class EncodesetBase:
 
 @defauto
 class EncodesetBits(EncodesetBase):
-    _type: Literal["Instruction.Encodeset.Bits"] = "Instruction.Encodeset.Bits"
+    _type: Literal["Instruction.Encodeset.Bits"] = attrs.field(
+        default="Instruction.Encodeset.Bits", repr=False
+    )
 
 
 @defauto
 class EncodesetField(EncodesetBase):
     name: str
-    _type: Literal["Instruction.Encodeset.Field"] = "Instruction.Encodeset.Field"
+    _type: Literal["Instruction.Encodeset.Field"] = attrs.field(
+        default="Instruction.Encodeset.Field", repr=False
+    )
 
 
 @defauto
 class EncodsetShouldBeBits:
     value: Value
     range: Range
-    _type: Literal["Instruction.Encodeset.ShouldBeBits"] = "Instruction.Encodeset.ShouldBeBits"
+    _type: Literal["Instruction.Encodeset.ShouldBeBits"] = attrs.field(
+        default="Instruction.Encodeset.ShouldBeBits", repr=False
+    )
 
     def __attrs_post_init__(self):
         raise NotImplementedError("deprecated object")
@@ -157,7 +163,9 @@ EncodesetValues = EncodesetBits | EncodesetField | EncodsetShouldBeBits
 class Encodeset:
     values: tuple[EncodesetValues, ...]
     width: int
-    _type: Literal["Instruction.Encodeset.Encodeset"] = "Instruction.Encodeset.Encodeset"
+    _type: Literal["Instruction.Encodeset.Encodeset"] = attrs.field(
+        default="Instruction.Encodeset.Encodeset", repr=False
+    )
 
     def get_fields(self) -> list[EncodesetField]:
         fields: list[EncodesetField] = []
@@ -198,7 +206,9 @@ class InstructionInstance:
     name: str
     condition: Expression | None = attrs.field(default=None)
     children: tuple[InstructionInstance, ...] | None = attrs.field(default=None)
-    _type: Literal["Instruction.InstructionInstance"] = "Instruction.InstructionInstance"
+    _type: Literal["Instruction.InstructionInstance"] = attrs.field(
+        default="Instruction.InstructionInstance", repr=False
+    )
 
 
 @defauto
@@ -207,7 +217,9 @@ class InstructionAlias:
     operation_id: str
     condition: Expression | None = attrs.field(default=None)
     # assembly: ?
-    _type: Literal["Instruction.InstructionAlias"] = "Instruction.InstructionAlias"
+    _type: Literal["Instruction.InstructionAlias"] = attrs.field(
+        default="Instruction.InstructionAlias", repr=False
+    )
 
 
 Instructionish = (
@@ -224,7 +236,9 @@ class Instruction:
     children: tuple[Instructionish, ...] | None = attrs.field(default=None)
     title: str | None = attrs.field(default=None)
     preferred: Expression | None = attrs.field(default=None)
-    _type: Literal["Instruction.Instruction"] = "Instruction.Instruction"
+    _type: Literal["Instruction.Instruction"] = attrs.field(
+        default="Instruction.Instruction", repr=False
+    )
 
 
 InstructionOrInstructionGroup = Instruction | typing.ForwardRef(
@@ -240,7 +254,9 @@ class InstructionGroup:
     condition: Expression | None = attrs.field(default=None)
     children: tuple[InstructionOrInstructionGroup, ...] | None = attrs.field(default=None)
     operation_id: str | None = attrs.field(default=None)
-    _type: Literal["Instruction.InstructionGroup"] = "Instruction.InstructionGroup"
+    _type: Literal["Instruction.InstructionGroup"] = attrs.field(
+        default="Instruction.InstructionGroup", repr=False
+    )
 
 
 @defauto
@@ -251,7 +267,9 @@ class InstructionSet:
     condition: Expression | None = attrs.field(default=None)
     children: tuple[InstructionOrInstructionGroup, ...] | None = attrs.field(default=None)
     operation_id: str | None = attrs.field(default=None)
-    _type: Literal["Instruction.InstructionSet"] = "Instruction.InstructionSet"
+    _type: Literal["Instruction.InstructionSet"] = attrs.field(
+        default="Instruction.InstructionSet", repr=False
+    )
 
 
 @defauto
@@ -261,7 +279,9 @@ class Operation:
     brief: str
     title: str
     decode: str | None = attrs.field(default=None)
-    _type: Literal["Instruction.Operation"] = "Instruction.Operation"
+    _type: Literal["Instruction.Operation"] = attrs.field(
+        default="Instruction.Operation", repr=False
+    )
 
 
 @defauto
@@ -270,7 +290,9 @@ class OperationAlias:
     description: str
     brief: str
     title: str
-    _type: Literal["Instruction.OperationAlias"] = "Instruction.OperationAlias"
+    _type: Literal["Instruction.OperationAlias"] = attrs.field(
+        default="Instruction.OperationAlias", repr=False
+    )
 
 
 Operationish = Operation | OperationAlias
@@ -284,7 +306,9 @@ class Operations(dict[str, Operationish]):
 class Instructions:
     instructions: tuple[InstructionSet, ...]
     operations: Operations
-    _type: Literal["Instruction.Instructions"] = "Instruction.Instructions"
+    _type: Literal["Instruction.Instructions"] = attrs.field(
+        default="Instruction.Instructions", repr=False
+    )
 
 
 JSONSchemaObject = (
