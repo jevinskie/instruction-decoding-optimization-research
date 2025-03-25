@@ -37,7 +37,7 @@ def defauto(maybe_cls: C | None, *args, **kwargs) -> C | Callable[[C], C]:
 class Span:
     start: int
     width: int
-    name: str | None = attrs.field(default=None)
+    name: str | None = attrs.field(default=None, eq=False, hash=False)
 
     @property
     def end(self) -> int:
@@ -63,14 +63,6 @@ class Span:
                 rl[i] = "="
         rs = "[" + "".join(rl) + "]"
         return rs
-
-    def __eq__(self, value) -> bool:
-        if not isinstance(value, Span):
-            return False
-        return self.start == value.start and self.width == value.width
-
-    def __hash__(self) -> int:
-        return hash((self.start, self.width))
 
     def __repr__(self) -> str:
         return f"Span({self.ascii_art(32)})"

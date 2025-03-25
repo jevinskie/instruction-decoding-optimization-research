@@ -17,24 +17,21 @@ class BinOp(enum.StrEnum):
     EQ = "=="
     OR = "||"
     IN = "IN"
+    IMPLIES = "-->"
+    IFF = "<->"
 
 
 class UnOp(enum.StrEnum):
     NOT = "!"
 
 
-class ConsOp(enum.StrEnum):
-    IMPLIES = "-->"
-    IFF = "<->"
-
-
 seen_value_meanings: set[str] = set()
 seen_value_values: set[Trits] = set()
 
 
-@defauto
+@attrs.define(auto_attribs=True, on_setattr=None, frozen=True, repr=False, str=False)
 class Value:
-    value: Trits
+    value: Trits = attrs.field(repr=lambda v: v.trits)
     meaning: str | None = attrs.field(repr=False)  # always observed as null
     _type: Literal["Values.Value"] = attrs.field(default="Values.Value", repr=False)
 
@@ -43,6 +40,14 @@ class Value:
         seen_value_values.add(self.value)
         if self.meaning is not None:
             raise NotImplementedError(f"finally a release with non-null `meaning`? Value: {self}")
+
+    def __repr__(self) -> str:
+        raise NotImplementedError("Value.__repr__")
+        return f"Valuez('{self.value.trits}')"
+
+    def __str__(self) -> str:
+        raise NotImplementedError("Value.__repr__")
+        return self.__repr__()
 
 
 seen_identifiers: set[str] = set()
