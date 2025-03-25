@@ -35,12 +35,14 @@ seen_value_values: set[Trits] = set()
 @defauto
 class Value:
     value: Trits
-    meaning: str | None
+    meaning: str | None = attrs.field(repr=False)  # always observed as null
     _type: Literal["Values.Value"] = attrs.field(default="Values.Value", repr=False)
 
     def __attrs_post_init__(self):
         seen_value_meanings.add(self.meaning)
         seen_value_values.add(self.value)
+        if self.meaning is not None:
+            raise NotImplementedError(f"finally a release with non-null `meaning`? Value: {self}")
 
 
 seen_identifiers: set[str] = set()
