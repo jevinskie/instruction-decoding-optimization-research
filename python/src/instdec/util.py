@@ -1,7 +1,7 @@
 import inspect
 import itertools
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import Any, Final, TypeVar, dataclass_transform, overload
+from typing import Any, Final, Self, TypeVar, dataclass_transform, overload
 
 import attr
 import attrs
@@ -44,10 +44,11 @@ class Span:
         """End bit index (one past last real index)"""
         return self.start + self.width
 
-    def equal_w_name(self, value) -> bool:
-        if not isinstance(value, Span):
-            return False
-        return self.start == value.start and self.width == value.width and self.name == value.name
+    def encompases(self, other: Self) -> bool:
+        return self.start <= other.start and self.end >= other.end
+
+    def equal_w_name(self, other: Self) -> bool:
+        return self.start == other.start and self.width == other.width and self.name == other.name
 
     def ascii_art(self, max_width) -> str:
         if self.end > max_width:
