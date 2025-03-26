@@ -379,7 +379,7 @@ def parse_instructions(instrs: Instructions, cb: InstrCB) -> None:
     return
 
 
-def dump_idents(instrs: Instructions) -> None:
+def dump_info(instrs: Instructions) -> None:
     parse_instructions(instrs, instr_cb)
     nc = dict(sorted(num_cons.items()))
     print(f"num_cons: {nc}")

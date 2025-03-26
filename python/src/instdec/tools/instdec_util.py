@@ -13,12 +13,12 @@ from instdec.arm_json_schema import deserialize_instructions_json
 def dump_instructions(raw_json_dict: dict) -> None:
     instructions = deserialize_instructions_json(raw_json_dict)
     if arm_json.has_instructions_w_children(instructions):
-        raise ValueError("have instructions with children")
+        raise ValueError("have instructions w/ children")
     else:
         print("good, no Instruction.Instruction w/ children")
 
-    print(instructions)
-    # arm_json.dump_idents(instructions)
+    # print(instructions)
+    arm_json.dump_info(instructions)
 
 
 def get_arg_parser() -> argparse.ArgumentParser:
