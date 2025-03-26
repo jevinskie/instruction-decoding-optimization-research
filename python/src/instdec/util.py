@@ -8,6 +8,7 @@ import attrs
 
 # from intervaltree import Interval, IntervalTree
 import portion as P
+from rich import print
 
 T = TypeVar("T")
 C = TypeVar("C", bound=type)
@@ -33,7 +34,7 @@ def defauto(maybe_cls: C | None, *args, **kwargs) -> C | Callable[[C], C]:
     return attrs.define(maybe_cls, *args, **kwargs)
 
 
-@defauto
+@attrs.define(auto_attribs=True, on_setattr=None, frozen=True, order=True)
 class Span:
     start: int
     width: int
@@ -64,8 +65,8 @@ class Span:
         rs = "[" + "".join(rl) + "]"
         return rs
 
-    def __repr__(self) -> str:
-        return f"Span({self.ascii_art(32)})"
+    # def __repr__(self) -> str:
+    #     return f"Span({self.ascii_art(32)})"
 
 
 @defauto

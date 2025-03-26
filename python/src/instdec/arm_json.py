@@ -335,7 +335,7 @@ def encodeset_overlap_overall_check_instr_cb(instr: Instruction, ctx: ParseConte
     condlist = get_condition_list(ctx, instr.condition)
 
     if pholes.has_overlaps():
-        return
+        # return
         print("\n\n\n")
         spstrs: list[str] = []
         for espn in pholes.spans:
@@ -344,15 +344,25 @@ def encodeset_overlap_overall_check_instr_cb(instr: Instruction, ctx: ParseConte
         for s in spstrs:
             print(f"    {s}")
         print("\n\n\n", flush=True)
+
+        for eset in esetlist:
+            spstrs = []
+            for spn in eset.spans:
+                spstrs.append(spn.ascii_art(32))
+            spstrs.sort(reverse=True)
+            for s in spstrs:
+                print(f"        {s}")
+            print("\n\n\n", flush=True)
+
         print("instr:")
         print(instr)
         print("esetlist:")
         print(esetlist)
         print("condlist:")
         print(condlist)
-        # raise ValueError(
-        #     f"encodeset_overlap_overall_check_instr_cb pholes has overlaps: {pholes.spans}"
-        # )
+        raise ValueError(
+            f"encodeset_overlap_overall_check_instr_cb pholes has overlaps: {pholes.spans}"
+        )
 
 
 def instr_cb(i: Instruction, ctx: ParseContext) -> None:

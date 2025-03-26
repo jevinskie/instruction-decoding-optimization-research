@@ -7,6 +7,7 @@ from typing import Literal
 import attrs
 import rich.repr
 from cattrs import Converter
+from rich import print
 
 from .trits import Trits
 from .util import Span, defauto
@@ -255,10 +256,15 @@ class Encodeset:
             raise ValueError("duplicates in Encodeset EncodesetBits ranges")
         return bits
 
-    def get_spans(self) -> list[Span]:
+    @property
+    def spans(self) -> list[Span]:
         spans = [v.span for v in self.values]
-        sorted_spans = sorted(spans)
+        sorted_spans = sorted(spans, reverse=True)
         if tuple(spans) != tuple(sorted_spans):
+            print("spans:")
+            print(spans)
+            print("sorted_spans:")
+            print(sorted_spans)
             raise ValueError(f"got unsorted spans in Encodeset. Is this unexpected? self: {self}")
         return spans
 
