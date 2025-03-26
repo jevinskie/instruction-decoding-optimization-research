@@ -440,11 +440,10 @@ def _add_cattrs_hooks():
     def structure_instructionset(iset_dict: dict, cls: type[InstructionSet]) -> InstructionSet:
         if not issubclass(cls, InstructionSet):
             raise TypeError(f"got cls {cls} not InstructionSet")
-        # eset_json = dict(iset_dict["encoding"])
-        iset_dict["encoding"]["parent"] = iset_dict["name"]
-        # iset_dict["encoding"] = Encodeset(**iset_dict["encoding"])
-        # iset_dict["encoding"] = converter.structure(iset_dict["encoding"], Encodeset)
-        # iset_dict["encoding"] = converter.structure(eset_json, Encodeset)
+        my_name = iset_dict["name"]
+        iset_dict["encoding"]["parent"] = my_name
+        for child_json in iset_dict["children"]:
+            child_json["parent"] = my_name
         fd = attrs.fields_dict(InstructionSet)
         for k, v in fd.items():
             if v.type is None:
@@ -465,9 +464,23 @@ def _add_cattrs_hooks():
     ) -> InstructionGroup:
         if not issubclass(cls, InstructionGroup):
             raise TypeError(f"got cls {cls} not InstructionGroup")
-        eset_json = dict(igrp_dict["encoding"])
-        eset_json["parent"] = igrp_dict["name"]
-        igrp_dict["encoding"] = converter.structure(eset_json, Encodeset)
+        my_name = igrp_dict["name"]
+        igrp_dict["encoding"]["parent"] = my_name
+        for child_json in igrp_dict["children"]:
+            child_json["parent"] = my_name
+        fd = attrs.fields_dict(InstructionGroup)
+        for k, v in fd.items():
+            if v.type is None:
+                raise TypeError(
+                    f"got attr none type in structure_instructiongroup k: {k} v: {fd[k]}"
+                )
+            if not isinstance(v.type, types.UnionType):
+                if not attrs.has(v.type):
+                    continue
+            else:
+                if not any(map(attrs.has, v.type.__args__)):
+                    continue
+            igrp_dict[k] = converter.structure(igrp_dict[k], v.type)
         return InstructionGroup(**igrp_dict)
 
     converter.register_structure_hook(InstructionGroup, structure_instructiongroup)
@@ -475,9 +488,21 @@ def _add_cattrs_hooks():
     def structure_instruction(instr_dict: dict, cls: type[Instruction]) -> Instruction:
         if not issubclass(cls, Instruction):
             raise TypeError(f"got cls {cls} not Instruction")
-        eset_json = dict(instr_dict["encoding"])
-        eset_json["parent"] = instr_dict["name"]
-        instr_dict["encoding"] = converter.structure(eset_json, Encodeset)
+        my_name = instr_dict["name"]
+        instr_dict["encoding"]["parent"] = my_name
+        for child_json in instr_dict["children"]:
+            child_json["parent"] = my_name
+        fd = attrs.fields_dict(Instruction)
+        for k, v in fd.items():
+            if v.type is None:
+                raise TypeError(f"got attr none type in structure_instruction k: {k} v: {fd[k]}")
+            if not isinstance(v.type, types.UnionType):
+                if not attrs.has(v.type):
+                    continue
+            else:
+                if not any(map(attrs.has, v.type.__args__)):
+                    continue
+            instr_dict[k] = converter.structure(instr_dict[k], v.type)
         return Instruction(**instr_dict)
 
     converter.register_structure_hook(Instruction, structure_instruction)
