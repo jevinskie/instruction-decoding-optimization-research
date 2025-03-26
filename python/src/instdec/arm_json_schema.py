@@ -78,6 +78,9 @@ class Bool:
     value: bool
     _type: Literal["AST.Bool"] = attrs.field(default="AST.Bool", repr=False, alias="_type")
 
+    def __rich_repr__(self) -> rich.repr.Result:
+        yield self.value
+
 
 @defauto
 class Set:
@@ -323,6 +326,16 @@ class InstructionGroup:
     def path(self) -> str:
         return self.parent + "." + self.name
 
+    def __rich_repr__(self) -> rich.repr.Result:
+        yield self.name
+        yield "parent", self.parent
+        yield "operation_id", self.operation_id, None
+        yield self.encoding
+        yield "cond", self.condition
+        if self.children and len(self.children):
+            yield "children", self.children
+        yield "title", self.title, None
+
 
 @defauto
 class InstructionSet:
@@ -340,28 +353,50 @@ class InstructionSet:
     def path(self) -> str:
         return self.name
 
+    def __rich_repr__(self) -> rich.repr.Result:
+        yield self.name
+        yield "read_width", self.read_width
+        yield "operation_id", self.operation_id, None
+        yield self.encoding
+        yield "cond", self.condition
+        if self.children and len(self.children):
+            yield "children", self.children
+
 
 @defauto
 class Operation:
     operation: str
-    description: str
     brief: str
     title: str
     decode: str | None = None
+    description: str | None = None
     _type: Literal["Instruction.Operation"] = attrs.field(
         default="Instruction.Operation", repr=False, alias="_type"
     )
+
+    def __rich_repr__(self) -> rich.repr.Result:
+        yield "op", self.operation, "// Not specified"
+        yield "title", self.title, ""
+        yield "brief", self.brief, "."
+        yield "desc", self.description, None
+        yield "decode", self.decode, None
 
 
 @defauto
 class OperationAlias:
     operation_id: str
-    description: str
     brief: str
     title: str
+    description: str | None = None
     _type: Literal["Instruction.OperationAlias"] = attrs.field(
         default="Instruction.OperationAlias", repr=False, alias="_type"
     )
+
+    def __rich_repr__(self) -> rich.repr.Result:
+        yield "op_id", self.operation_id
+        yield "title", self.title, ""
+        yield "brief", self.brief, "."
+        yield "desc", self.description, None
 
 
 Operationish = Operation | OperationAlias
@@ -436,6 +471,15 @@ converter = Converter()
 
 
 def _add_cattrs_hooks():
+    def structure_operations(ops_dict: dict, cls: type[Operations]) -> Trits:
+        if not issubclass(cls, Operations):
+            raise TypeError(f"got cls {cls} not Operations")
+        for k in ops_dict.keys():
+            ops_dict[k] = converter.structure(ops_dict[k], Operationish)
+        return Operations(**ops_dict)
+
+    converter.register_structure_hook(Operations, structure_operations)
+
     def structure_instructionset(iset_dict: dict, cls: type[InstructionSet]) -> InstructionSet:
         if not issubclass(cls, InstructionSet):
             raise TypeError(f"got cls {cls} not InstructionSet")
@@ -453,7 +497,7 @@ def _add_cattrs_hooks():
                 attrs_dict[field.name] = converter.structure(iset_dict[field.name], field.type)
 
         # Create and return the InstructionSet instance
-        return cls(**attrs_dict)
+        return InstructionSet(**attrs_dict)
 
     converter.register_structure_hook(InstructionSet, structure_instructionset)
 
@@ -473,7 +517,7 @@ def _add_cattrs_hooks():
             if field.name in igrp_dict:
                 attrs_dict[field.name] = converter.structure(igrp_dict[field.name], field.type)
 
-        return cls(**attrs_dict)
+        return InstructionGroup(**attrs_dict)
 
     converter.register_structure_hook(InstructionGroup, structure_instructiongroup)
 
@@ -491,7 +535,7 @@ def _add_cattrs_hooks():
             if field.name in instr_dict:
                 attrs_dict[field.name] = converter.structure(instr_dict[field.name], field.type)
 
-        return cls(**attrs_dict)
+        return Instruction(**attrs_dict)
 
     converter.register_structure_hook(Instruction, structure_instruction)
 
