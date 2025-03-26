@@ -23,7 +23,8 @@ def dump_instructions(raw_json_dict: dict) -> None:
     else:
         print("good, no Instruction.Instruction w/ children")
 
-    arm_json.dump_idents(instructions)
+    print(instructions)
+    # arm_json.dump_idents(instructions)
 
 
 def get_arg_parser() -> argparse.ArgumentParser:

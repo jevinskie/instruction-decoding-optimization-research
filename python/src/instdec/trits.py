@@ -17,7 +17,7 @@ class Trits:
         return sval
 
     trits: str = attrs.field(converter=normalize_trit_str)
-    _type: Literal["Trits"] = attrs.field(default="Trits", repr=False)
+    _type: Literal["Trits"] = attrs.field(default="Trits", repr=False, alias="_type")
 
     """
     A class to represent and manipulate trit strings (0, 1, X).
