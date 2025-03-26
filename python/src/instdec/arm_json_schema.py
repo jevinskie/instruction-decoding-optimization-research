@@ -210,6 +210,14 @@ class EncodsetShouldBeBits:
 EncodesetValues = EncodesetBits | EncodesetField | EncodsetShouldBeBits
 
 
+# If part of an Encodeset is unspecified in both the current instruction node and all of
+# its parent nodes, that part is considered to be an
+# "any-bit" ('1' or '0', usually denoted as 'x').
+
+# If part of the local Encodeset is unspecified but that same part has a value specified
+# in a parent node, the value of that part is inherited in the local Encodeset.
+
+
 @defauto
 class Encodeset:
     values: tuple[EncodesetValues, ...]
