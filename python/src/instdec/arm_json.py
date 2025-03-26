@@ -30,7 +30,7 @@ from .arm_json_schema import (
     Valueish,
 )
 from .trits import Trits
-from .util import Pigeonholes, defauto, traverse_nested
+from .util import Pigeonholes, bitfield_indices, defauto, traverse_nested
 
 
 def expr_get_objs(expr: Expression) -> list[JSONSchemaObject]:
@@ -358,6 +358,8 @@ def encodeset_overlap_overall_check_instr_cb(instr: Instruction, ctx: ParseConte
             # print(f"len(spstrs): {spstrs}")
             for s in spstrs:
                 s = rich.markup.escape(markup=s)
+                for bfir in bitfield_indices(32):
+                    print(f"         {bfir}")
                 print(f"        {s}")
             print("\n\n\n", flush=True)
 

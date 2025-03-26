@@ -1,5 +1,6 @@
 import inspect
 import itertools
+import math
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any, Final, Self, TypeVar, dataclass_transform, overload
 
@@ -34,6 +35,47 @@ def defauto(maybe_cls: C | None, *args, **kwargs) -> C | Callable[[C], C]:
     kwargs["on_setattr"] = None
     kwargs["frozen"] = True
     return attrs.define(maybe_cls, *args, **kwargs)
+
+
+def num_b10_digits(n: int) -> int:
+    return int(math.ceil(math.log10(n + 1)))
+
+
+def bitfield_indices(width: int) -> list[str]:
+    if width <= 0:
+        raise ValueError(f"width must be > 0 not {width}")
+    ndigits = num_b10_digits(width)
+    chars = [["x"] * width] * ndigits
+    for i in range(width):
+        itmp = i
+        inumdig = max(1, num_b10_digits(i))
+        for j in range(inumdig):
+            dval = itmp % 10
+            itmp -= dval
+            itmp //= 10
+            old_dval = chars[j][width - 1 - i]
+            print(
+                rich.markup.escape(
+                    f'old_dval chars(j)(width - 1 - i): r0: {j} r1: {width - 1 - i} val: "{old_dval}"'
+                )
+            )
+            chars[j][width - 1 - i] = str(dval)
+            # potential_digit = i % 10 ** (j + 1)
+            # tst = dval >= 10**j
+            print(
+                rich.markup.escape(
+                    f"width - 1 - i: {width - 1 - i} j: {j} dval: {dval} itmp: {itmp} i: {i} inumdig: {inumdig}"
+                )
+            )
+            # if i >= limit:
+            #     if tst:
+            #         chars[j][width - 1 - i] = " "
+            #     else:
+            #         chars[j][width - 1 - i] = str(potential_digit)
+    print(chars)
+    for line_chars in chars:
+        print(f"line_chars: {line_chars!r}")
+    return ["".join(line_chars) for line_chars in chars]
 
 
 @attrs.define(auto_attribs=True, on_setattr=None, frozen=True, order=True)
