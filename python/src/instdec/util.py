@@ -8,6 +8,8 @@ import attrs
 
 # from intervaltree import Interval, IntervalTree
 import portion as P
+import rich.markup
+import rich.repr
 from rich import print
 
 T = TypeVar("T")
@@ -55,18 +57,27 @@ class Span:
         if self.end > max_width:
             raise ValueError(f"Span: {self} ascii_art() max_width: {max_width} > end: {self.end}")
         rl = [" "] * max_width
+        idx_end = max_width - self.start
+        idx_start = max_width - self.end
         if self.width == 1:
-            rl[self.start] = "#"
+            rl[idx_start] = "#"
         else:
-            rl[self.start] = "<"
-            rl[self.end - 1] = ">"
-            for i in range(self.start + 1, self.end - 1):
+            rl[idx_start] = "<"
+            rl[idx_end - 1] = ">"
+            for i in range(idx_start + 1, idx_end - 1):
                 rl[i] = "="
         rs = "[" + "".join(rl) + "]"
-        return rs
+        rs = rich.markup.escape(rs)
+        return "[" + "".join(rl) + "]"
 
     # def __repr__(self) -> str:
     #     return f"Span({self.ascii_art(32)})"
+
+    def __rich_repr__(self) -> rich.repr.Result:
+        yield "name", self.name, None
+        yield "s", self.start
+        yield "w", self.width
+        yield "e", self.end
 
 
 @defauto

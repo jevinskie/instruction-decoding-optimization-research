@@ -5,6 +5,7 @@ from collections.abc import Callable
 from typing import Any, DefaultDict
 
 import attrs
+import rich.markup
 from rich import print
 
 from .arm_json_schema import (
@@ -337,20 +338,26 @@ def encodeset_overlap_overall_check_instr_cb(instr: Instruction, ctx: ParseConte
     if pholes.has_overlaps():
         # return
         print("\n\n\n")
-        spstrs: list[str] = []
+        spstrs: list[str] = list()
         for espn in pholes.spans:
             spstrs.append(espn.ascii_art(32))
-        spstrs.sort(reverse=True)
+        # spstrs.sort(reverse=True)
         for s in spstrs:
+            s = rich.markup.escape(markup=s)
             print(f"    {s}")
         print("\n\n\n", flush=True)
 
         for eset in esetlist:
-            spstrs = []
+            # print("eset.spans:")
+            # print(eset.spans)
+            # print("\n\n\n")
+            spstrs = list()
             for spn in eset.spans:
                 spstrs.append(spn.ascii_art(32))
-            spstrs.sort(reverse=True)
+            # spstrs.sort(reverse=True)
+            # print(f"len(spstrs): {spstrs}")
             for s in spstrs:
+                s = rich.markup.escape(markup=s)
                 print(f"        {s}")
             print("\n\n\n", flush=True)
 
