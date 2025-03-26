@@ -334,11 +334,13 @@ def encodeset_overlap_overall_check_instr_cb(instr: Instruction, ctx: ParseConte
             if pholes.holes.empty:
                 msg = f"pholes empty while still adding EncodesetBits level {i} eset: {eset} eset_bit: {eset_bit}"
                 print(msg)
+                raise ValueError(msg)
             pholes.add_span(eset_bit.range.span)
         for eset_field in eset.get_fields():
             if pholes.holes.empty:
                 msg = f"pholes empty while still adding EncodesetField level {i} eset: {eset} eset_field: {eset_field}"
                 print(msg)
+                raise ValueError(msg)
             pholes.add_span(eset_field.range.span)
 
     if not pholes.holes.empty:
@@ -347,6 +349,7 @@ def encodeset_overlap_overall_check_instr_cb(instr: Instruction, ctx: ParseConte
     condlist = get_condition_list(ctx, instr.condition)
 
     if pholes.has_overlaps():
+        return
         print("\n\n\n")
         spstrs: list[str] = list()
         for espn in pholes.spans:
