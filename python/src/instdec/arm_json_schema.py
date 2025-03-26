@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import enum
+import types
 import typing
 from typing import Literal
 
@@ -433,29 +434,63 @@ def _resolve_json_schema_obj_cls_types():
 _resolve_json_schema_obj_cls_types()
 
 converter = Converter()
-converter.detailed_validation = True
 
 
-def structure_instructionset(iset_dict: dict, cls: type[InstructionSet]) -> InstructionSet:
-    if not issubclass(cls, InstructionSet):
-        raise TypeError(f"got cls {cls} not InstructionSet")
-    eset_kwargs = iset_dict["encoding"]
-    eset_kwargs["parent"] = iset_dict["name"]
-    # iset_dict["encoding"] = Encodeset(**iset_dict["encoding"])
-    iset_dict["encoding"] = converter.structure(iset_dict["encoding"], Encodeset)
-    return InstructionSet(**iset_dict)
+def _add_cattrs_hooks():
+    def structure_instructionset(iset_dict: dict, cls: type[InstructionSet]) -> InstructionSet:
+        if not issubclass(cls, InstructionSet):
+            raise TypeError(f"got cls {cls} not InstructionSet")
+        # eset_json = dict(iset_dict["encoding"])
+        iset_dict["encoding"]["parent"] = iset_dict["name"]
+        # iset_dict["encoding"] = Encodeset(**iset_dict["encoding"])
+        # iset_dict["encoding"] = converter.structure(iset_dict["encoding"], Encodeset)
+        # iset_dict["encoding"] = converter.structure(eset_json, Encodeset)
+        fd = attrs.fields_dict(InstructionSet)
+        for k, v in fd.items():
+            if v.type is None:
+                raise TypeError(f"got attr none type in structure_instructionset k: {k} v: {fd[k]}")
+            if not isinstance(v.type, types.UnionType):
+                if not attrs.has(v.type):
+                    continue
+            else:
+                if not any(map(attrs.has, v.type.__args__)):
+                    continue
+            iset_dict[k] = converter.structure(iset_dict[k], v.type)
+        return InstructionSet(**iset_dict)
+
+    converter.register_structure_hook(InstructionSet, structure_instructionset)
+
+    def structure_instructiongroup(
+        igrp_dict: dict, cls: type[InstructionGroup]
+    ) -> InstructionGroup:
+        if not issubclass(cls, InstructionGroup):
+            raise TypeError(f"got cls {cls} not InstructionGroup")
+        eset_json = dict(igrp_dict["encoding"])
+        eset_json["parent"] = igrp_dict["name"]
+        igrp_dict["encoding"] = converter.structure(eset_json, Encodeset)
+        return InstructionGroup(**igrp_dict)
+
+    converter.register_structure_hook(InstructionGroup, structure_instructiongroup)
+
+    def structure_instruction(instr_dict: dict, cls: type[Instruction]) -> Instruction:
+        if not issubclass(cls, Instruction):
+            raise TypeError(f"got cls {cls} not Instruction")
+        eset_json = dict(instr_dict["encoding"])
+        eset_json["parent"] = instr_dict["name"]
+        instr_dict["encoding"] = converter.structure(eset_json, Encodeset)
+        return Instruction(**instr_dict)
+
+    converter.register_structure_hook(Instruction, structure_instruction)
+
+    def structure_trit(trit_str: str, cls: type[Trits]) -> Trits:
+        if not issubclass(cls, Trits):
+            raise TypeError(f"got cls {cls} not Trits")
+        return Trits(trit_str)
+
+    converter.register_structure_hook(Trits, structure_trit)
 
 
-converter.register_structure_hook(InstructionSet, structure_instructionset)
-
-
-def structure_trit(trit_str: str, cls: type[Trits]) -> Trits:
-    if not issubclass(cls, Trits):
-        raise TypeError(f"got cls {cls} not Trits")
-    return Trits(trit_str)
-
-
-converter.register_structure_hook(Trits, structure_trit)
+_add_cattrs_hooks()
 
 
 def deserialize_instructions_json(instr_json: dict) -> Instructions:
