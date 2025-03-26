@@ -94,6 +94,9 @@ class Set:
             raise ValueError(f"duplicate detected in AST.Set: {self}")
         return rs
 
+    def __rich_repr__(self) -> rich.repr.Result:
+        yield from self.values
+
 
 @defauto
 class BinaryOp:
@@ -253,6 +256,9 @@ class InstructionInstance:
     _type: Literal["Instruction.InstructionInstance"] = attrs.field(
         default="Instruction.InstructionInstance", repr=False, alias="_type"
     )
+
+    def __attrs_post_init__(self):
+        raise NotImplementedError("They added InstructionInstance?")
 
 
 @defauto
