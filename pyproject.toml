@@ -13,14 +13,11 @@ classifiers = [
   "Programming Language :: Python :: 3.12"
 ]
 dependencies = [
-  "anytree>=2.12.1",
   "attrs>=25.3.0",
   "cattrs>=24.1.3",
-  "intervaltree>=3.1.0",
   "path>=17.1.0",
   "portion>=2.6.0",
-  "rich>=13.9.4",
-  "simplejson>=3.20.1"
+  "rich>=13.9.4"
 ]
 description = "Python bindings and utilities for instruction decoding research"
 dynamic = ["version"]

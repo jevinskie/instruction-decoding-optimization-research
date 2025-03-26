@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 import argparse
+import json
 
 import rich.traceback
-import simplejson as json
 from rich import print
 
 from instdec import arm_json, arm_json_schema

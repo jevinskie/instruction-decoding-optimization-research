@@ -5,7 +5,6 @@ from collections.abc import Callable
 from typing import Any, DefaultDict
 
 import attrs
-import rich.markup
 from rich import print
 
 from .arm_json_schema import (
@@ -31,7 +30,7 @@ from .arm_json_schema import (
     Valueish,
 )
 from .trits import Trits
-from .util import Pigeonholes, bitfield_indices, defauto, traverse_nested
+from .util import Pigeonholes, defauto, traverse_nested
 
 
 def expr_get_objs(expr: Expression) -> list[JSONSchemaObject]:
@@ -248,6 +247,11 @@ def get_conditon_list_defined(ctx: ParseContext, instr_cond: Expression | None) 
     return list(filter(lambda x: x is not None, get_condition_list(ctx, instr_cond)))
 
 
+def get_negative_constraints(exprs: list[Expression | None]) -> list[Expression]:
+    res: list[Expression] = []
+    return res
+
+
 InstrCB = Callable[[Instruction, ParseContext], None]
 
 
@@ -335,25 +339,11 @@ def encodeset_overlap_overall_check_instr_cb(instr: Instruction, ctx: ParseConte
         for eset_bit in eset.get_bits():
             if pholes.holes.empty:
                 break
-                if eset_bit in used_efields:
-                    continue
-                msg = f"pholes empty while still adding EncodesetBits level {i} eset: {eset} eset_bit: {eset_bit}"
-                print(msg)
-                raise ValueError(msg)
             pholes.add_span(eset_bit.range.span)
             used_efields.append(eset_bit)
         for eset_field in eset.get_fields():
             if pholes.holes.empty:
                 break
-                if eset_field in used_efields:
-                    continue
-                msg = f"pholes empty while still adding EncodesetField level {i} eset: {eset} eset_field: {eset_field}"
-                print(msg)
-                print("eset_field:")
-                print(eset_field)
-                print("used_efields:")
-                print(used_efields)
-                raise ValueError(msg)
             pholes.add_span(eset_field.range.span)
             used_efields.append(eset_field)
 
@@ -361,38 +351,10 @@ def encodeset_overlap_overall_check_instr_cb(instr: Instruction, ctx: ParseConte
         raise ValueError(f"holes not empty: esetlist: {esetlist}")
 
     condlist = get_condition_list(ctx, instr.condition)
-
-    if pholes.has_overlaps():
-        return
-        print("\n\n\n")
-        spstrs: list[str] = list()
-        for espn in pholes.spans:
-            spstrs.append(espn.ascii_art(32))
-        for s in spstrs:
-            s = rich.markup.escape(markup=s)
-            print(f"    {s}")
-        print("\n\n\n", flush=True)
-
-        for eset in esetlist:
-            spstrs = list()
-            for spn in eset.spans:
-                spstrs.append(spn.ascii_art(32))
-            for s in spstrs:
-                s = rich.markup.escape(markup=s)
-                for bfir in bitfield_indices(32):
-                    print(f"         {bfir}")
-                print(f"        {s}")
-            print("\n\n\n", flush=True)
-
-        print("instr:")
-        print(instr)
-        print("esetlist:")
-        print(esetlist)
-        print("condlist:")
-        print(condlist)
-        raise ValueError(
-            f"encodeset_overlap_overall_check_instr_cb pholes has overlaps: {pholes.spans}"
-        )
+    negative_constraints = get_negative_constraints(condlist)
+    if len(negative_constraints):
+        print("negative_constraints:")
+        print(negative_constraints)
 
 
 def instr_cb(i: Instruction, ctx: ParseContext) -> None:

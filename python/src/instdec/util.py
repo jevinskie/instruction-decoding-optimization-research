@@ -112,7 +112,6 @@ class Pigeonholes:
 
     @property
     def holes(self) -> P.Interval:
-        # return P.closedopen(0, self.width) - functools.reduce(operator.or_, self._spans)
         return P.closedopen(0, self.width) - self._intervals
 
     @property
@@ -142,7 +141,6 @@ class Pigeonholes:
             if ai.overlaps(bi):
                 return True
         return False
-        # return self._intervals.overlaps(0, self.width)
 
 
 def traverse_nested(
