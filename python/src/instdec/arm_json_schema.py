@@ -439,29 +439,7 @@ def _add_cattrs_hooks():
     def structure_instructionset(iset_dict: dict, cls: type[InstructionSet]) -> InstructionSet:
         if not issubclass(cls, InstructionSet):
             raise TypeError(f"got cls {cls} not InstructionSet")
-        # my_name = iset_dict["name"]
-        # iset_dict["encoding"]["parent"] = my_name
-        # for child_json in iset_dict["children"]:
-        #     child_json["parent"] = my_name
-        # fd = attrs.fields_dict(InstructionSet)
-        # for k, v in fd.items():
-        #     if v.type is None:
-        #         raise TypeError(f"got attr none type in structure_instructionset k: {k} v: {fd[k]}")
-        #     if not isinstance(v.type, types.UnionType):
-        #         if not attrs.has(v.type):
-        #             continue
-        #     else:
-        #         if not any(map(attrs.has, v.type.__args__)):
-        #             continue
-        #     iset_dict[k] = converter.structure(iset_dict[k], v.type)
-        # return InstructionSet(**iset_dict)
-        # my_name = iset_dict["name"]
-        # iset_dict["encoding"]["parent"] = my_name
-        # for child_json in iset_dict["children"]:
-        #     child_json["parent"] = my_name
-        # return converter.structure(iset_dict, cls)
 
-        # Prepare the dictionary by setting parent references
         my_name = iset_dict["name"]
         iset_dict["encoding"]["parent"] = my_name
         for child_json in iset_dict["children"]:
