@@ -484,29 +484,6 @@ def _add_cattrs_hooks():
     ) -> InstructionGroup:
         if not issubclass(cls, InstructionGroup):
             raise TypeError(f"got cls {cls} not InstructionGroup")
-        # my_name = igrp_dict["name"]
-        # igrp_dict["encoding"]["parent"] = my_name
-        # for child_json in igrp_dict["children"]:
-        #     child_json["parent"] = my_name
-        # fd = attrs.fields_dict(InstructionGroup)
-        # for k, v in fd.items():
-        #     if v.type is None:
-        #         raise TypeError(
-        #             f"got attr none type in structure_instructiongroup k: {k} v: {fd[k]}"
-        #         )
-        #     if not isinstance(v.type, types.UnionType):
-        #         if not attrs.has(v.type):
-        #             continue
-        #     else:
-        #         if not any(map(attrs.has, v.type.__args__)):
-        #             continue
-        #     igrp_dict[k] = converter.structure(igrp_dict[k], v.type)
-        # return InstructionGroup(**igrp_dict)
-        # my_name = igrp_dict["name"]
-        # igrp_dict["encoding"]["parent"] = my_name
-        # for child_json in igrp_dict["children"]:
-        #     child_json["parent"] = my_name
-        # return converter.structure(igrp_dict, cls)
 
         my_name = igrp_dict["name"]
         igrp_dict["encoding"]["parent"] = my_name
@@ -516,7 +493,6 @@ def _add_cattrs_hooks():
         attrs_dict = {}
         for field in attrs.fields(cls):
             if field.name in igrp_dict:
-                # Use converter.structure to handle nested types for this field's value
                 attrs_dict[field.name] = converter.structure(igrp_dict[field.name], field.type)
 
         return cls(**attrs_dict)
@@ -526,27 +502,6 @@ def _add_cattrs_hooks():
     def structure_instruction(instr_dict: dict, cls: type[Instruction]) -> Instruction:
         if not issubclass(cls, Instruction):
             raise TypeError(f"got cls {cls} not Instruction")
-        # my_name = instr_dict["name"]
-        # instr_dict["encoding"]["parent"] = my_name
-        # for child_json in instr_dict["children"]:
-        #     child_json["parent"] = my_name
-        # fd = attrs.fields_dict(Instruction)
-        # for k, v in fd.items():
-        #     if v.type is None:
-        #         raise TypeError(f"got attr none type in structure_instruction k: {k} v: {fd[k]}")
-        #     if not isinstance(v.type, types.UnionType):
-        #         if not attrs.has(v.type):
-        #             continue
-        #     else:
-        #         if not any(map(attrs.has, v.type.__args__)):
-        #             continue
-        #     instr_dict[k] = converter.structure(instr_dict[k], v.type)
-        # return Instruction(**instr_dict)
-        # my_name = instr_dict["name"]
-        # instr_dict["encoding"]["parent"] = my_name
-        # for child_json in instr_dict["children"]:
-        #     child_json["parent"] = my_name
-        # return converter.structure(instr_dict, cls)
 
         my_name = instr_dict["name"]
         instr_dict["encoding"]["parent"] = my_name
