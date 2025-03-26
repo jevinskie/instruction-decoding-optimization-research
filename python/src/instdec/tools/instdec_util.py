@@ -7,17 +7,11 @@ from rich import print
 
 # import rich
 from instdec import arm_json, arm_json_schema
-from instdec.arm_json_schema import Instructions, JSONSchemaObject
+from instdec.arm_json_schema import deserialize_instructions_json
 
 
 def dump_instructions(raw_json_dict: dict) -> None:
-    instructions: JSONSchemaObject = arm_json_schema.converter.structure(
-        raw_json_dict, JSONSchemaObject
-    )
-    if instructions is None:
-        raise ValueError("got None instructions")
-    if not isinstance(instructions, Instructions):
-        raise TypeError("didn't deserialize an Instructions object")
+    instructions = deserialize_instructions_json(raw_json_dict)
     if arm_json.has_instructions_w_children(instructions):
         raise ValueError("have instructions with children")
     else:

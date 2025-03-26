@@ -456,3 +456,10 @@ def structure_trit(trit_str: str, cls: type[Trits]) -> Trits:
 
 
 converter.register_structure_hook(Trits, structure_trit)
+
+
+def deserialize_instructions_json(instr_json: dict) -> Instructions:
+    deser: JSONSchemaObject = converter.structure(instr_json, JSONSchemaObject)
+    if not isinstance(deser, Instructions):
+        raise TypeError(f"Didn't get Instructions, got {type(deser)}")
+    return deser
