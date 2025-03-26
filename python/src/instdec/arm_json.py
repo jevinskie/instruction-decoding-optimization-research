@@ -327,11 +327,22 @@ def encodeset_overlap_check_instr_cb(instr: Instruction, ctx: ParseContext) -> N
 def encodeset_overlap_overall_check_instr_cb(instr: Instruction, ctx: ParseContext) -> None:
     pholes = Pigeonholes(32)
     esetlist = get_encoding_list(ctx, instr.encoding)
-    for eset in esetlist:
+    for i, eset in enumerate(esetlist):
+        if pholes.holes.empty:
+            break
         for eset_bit in eset.get_bits():
+            if pholes.holes.empty:
+                msg = f"pholes empty while still adding EncodesetBits level {i} eset: {eset} eset_bit: {eset_bit}"
+                print(msg)
             pholes.add_span(eset_bit.range.span)
         for eset_field in eset.get_fields():
+            if pholes.holes.empty:
+                msg = f"pholes empty while still adding EncodesetField level {i} eset: {eset} eset_field: {eset_field}"
+                print(msg)
             pholes.add_span(eset_field.range.span)
+
+    if not pholes.holes.empty:
+        raise ValueError(f"holes not empty: esetlist: {esetlist}")
 
     condlist = get_condition_list(ctx, instr.condition)
 

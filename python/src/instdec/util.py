@@ -6,8 +6,6 @@ from typing import Any, Final, Self, TypeVar, dataclass_transform, overload
 
 import attr
 import attrs
-
-# from intervaltree import Interval, IntervalTree
 import portion as P
 import rich.markup
 import rich.repr
@@ -102,19 +100,24 @@ class Span:
         yield "e", self.end
 
 
-@defauto
+@attrs.define(auto_attribs=True)
 class Pigeonholes:
     width: Final[int] = attrs.field()
     _spans: set[Span] = attrs.Factory(set)
-    # _intervals: P.Interval = attrs.Factory(P.Interval)
+    _intervals: P.Interval = attrs.Factory(P.Interval)
 
     @property
     def spans(self) -> set[Span]:
         return self._spans
 
-    # @property
-    # def intervals(self) -> P.Interval:
-    #     return self._intervals
+    @property
+    def holes(self) -> P.Interval:
+        # return P.closedopen(0, self.width) - functools.reduce(operator.or_, self._spans)
+        return P.closedopen(0, self.width) - self._intervals
+
+    @property
+    def intervals(self) -> P.Interval:
+        return self._intervals
 
     def add_span(self, spn: Span) -> None:
         if spn in self._spans:
@@ -130,7 +133,7 @@ class Pigeonholes:
                         print("", flush=True)
                         raise ValueError(f"Adding span {spn} thats already in Pigeonholes: {self}")
         self._spans.add(spn)
-        # self._intervals |= P.closedopen(spn.start, spn.end, spn)
+        self._intervals |= P.closedopen(spn.start, spn.end)
 
     def has_overlaps(self) -> bool:
         for a, b in itertools.combinations(self._spans, 2):
