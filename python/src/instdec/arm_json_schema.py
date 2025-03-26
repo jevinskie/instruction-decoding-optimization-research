@@ -161,6 +161,10 @@ class EncodesetBase:
     range: Range
     should_be_mask: Value
 
+    @property
+    def span(self) -> Span:
+        return self.range.span
+
     def __rich_repr__(self) -> rich.repr.Result:
         yield self.value
         yield self.range
@@ -193,6 +197,10 @@ class EncodsetShouldBeBits:
     _type: Literal["Instruction.Encodeset.ShouldBeBits"] = attrs.field(
         default="Instruction.Encodeset.ShouldBeBits", repr=False, alias="_type"
     )
+
+    @property
+    def span(self) -> Span:
+        raise NotImplementedError("deprecated object *and* not available")
 
     def __attrs_post_init__(self):
         raise NotImplementedError("deprecated object")
@@ -246,6 +254,13 @@ class Encodeset:
         if len(ranges) != len(set(ranges)):
             raise ValueError("duplicates in Encodeset EncodesetBits ranges")
         return bits
+
+    def get_spans(self) -> list[Span]:
+        spans = [v.span for v in self.values]
+        sorted_spans = sorted(spans)
+        if tuple(spans) != tuple(sorted_spans):
+            raise ValueError(f"got unsorted spans in Encodeset. Is this unexpected? self: {self}")
+        return spans
 
 
 @defauto
