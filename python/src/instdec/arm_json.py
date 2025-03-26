@@ -13,6 +13,7 @@ from .arm_json_schema import (
     BinOp,
     Bool,
     Encodeset,
+    EncodesetValues,
     Expression,
     Function,
     Identifier,
@@ -327,21 +328,34 @@ def encodeset_overlap_check_instr_cb(instr: Instruction, ctx: ParseContext) -> N
 def encodeset_overlap_overall_check_instr_cb(instr: Instruction, ctx: ParseContext) -> None:
     pholes = Pigeonholes(32)
     esetlist = get_encoding_list(ctx, instr.encoding)
+    used_efields: list[EncodesetValues] = []
     for i, eset in enumerate(esetlist):
         if pholes.holes.empty:
             break
         for eset_bit in eset.get_bits():
             if pholes.holes.empty:
+                break
+                if eset_bit in used_efields:
+                    continue
                 msg = f"pholes empty while still adding EncodesetBits level {i} eset: {eset} eset_bit: {eset_bit}"
                 print(msg)
                 raise ValueError(msg)
             pholes.add_span(eset_bit.range.span)
+            used_efields.append(eset_bit)
         for eset_field in eset.get_fields():
             if pholes.holes.empty:
+                break
+                if eset_field in used_efields:
+                    continue
                 msg = f"pholes empty while still adding EncodesetField level {i} eset: {eset} eset_field: {eset_field}"
                 print(msg)
+                print("eset_field:")
+                print(eset_field)
+                print("used_efields:")
+                print(used_efields)
                 raise ValueError(msg)
             pholes.add_span(eset_field.range.span)
+            used_efields.append(eset_field)
 
     if not pholes.holes.empty:
         raise ValueError(f"holes not empty: esetlist: {esetlist}")

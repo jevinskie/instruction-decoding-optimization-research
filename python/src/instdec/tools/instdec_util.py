@@ -4,9 +4,8 @@ import argparse
 
 import rich.traceback
 import simplejson as json
+from rich import print
 
-# from rich import print
-# import rich
 from instdec import arm_json, arm_json_schema
 from instdec.arm_json_schema import deserialize_instructions_json
 
