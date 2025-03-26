@@ -336,26 +336,19 @@ def encodeset_overlap_overall_check_instr_cb(instr: Instruction, ctx: ParseConte
     condlist = get_condition_list(ctx, instr.condition)
 
     if pholes.has_overlaps():
-        # return
         print("\n\n\n")
         spstrs: list[str] = list()
         for espn in pholes.spans:
             spstrs.append(espn.ascii_art(32))
-        # spstrs.sort(reverse=True)
         for s in spstrs:
             s = rich.markup.escape(markup=s)
             print(f"    {s}")
         print("\n\n\n", flush=True)
 
         for eset in esetlist:
-            # print("eset.spans:")
-            # print(eset.spans)
-            # print("\n\n\n")
             spstrs = list()
             for spn in eset.spans:
                 spstrs.append(spn.ascii_art(32))
-            # spstrs.sort(reverse=True)
-            # print(f"len(spstrs): {spstrs}")
             for s in spstrs:
                 s = rich.markup.escape(markup=s)
                 for bfir in bitfield_indices(32):
