@@ -497,7 +497,7 @@ def _add_cattrs_hooks():
 
         # Structure each attribute individually
         attrs_dict = {}
-        for field in attrs.fields(cls):
+        for field in attrs.fields(InstructionSet):
             if field.name in iset_dict:
                 # Use converter.structure to handle nested types for this field's value
                 attrs_dict[field.name] = converter.structure(iset_dict[field.name], field.type)
@@ -513,13 +513,13 @@ def _add_cattrs_hooks():
         if not issubclass(cls, InstructionGroup):
             raise TypeError(f"got cls {cls} not InstructionGroup")
 
-        my_name = igrp_dict["name"]
+        my_name = igrp_dict["parent"] + "." + igrp_dict["name"]
         igrp_dict["encoding"]["parent"] = my_name
         for child_json in igrp_dict["children"]:
             child_json["parent"] = my_name
 
         attrs_dict = {}
-        for field in attrs.fields(cls):
+        for field in attrs.fields(InstructionGroup):
             if field.name in igrp_dict:
                 attrs_dict[field.name] = converter.structure(igrp_dict[field.name], field.type)
 
@@ -531,13 +531,13 @@ def _add_cattrs_hooks():
         if not issubclass(cls, Instruction):
             raise TypeError(f"got cls {cls} not Instruction")
 
-        my_name = instr_dict["name"]
+        my_name = instr_dict["parent"] + "." + instr_dict["name"]
         instr_dict["encoding"]["parent"] = my_name
         for child_json in instr_dict["children"]:
             child_json["parent"] = my_name
 
         attrs_dict = {}
-        for field in attrs.fields(cls):
+        for field in attrs.fields(Instruction):
             if field.name in instr_dict:
                 attrs_dict[field.name] = converter.structure(instr_dict[field.name], field.type)
 
@@ -557,7 +557,7 @@ _add_cattrs_hooks()
 
 
 def deserialize_instructions_json(instr_json: dict) -> Instructions:
-    deser: JSONSchemaObject = converter.structure(instr_json, JSONSchemaObject)
+    deser = converter.structure(instr_json, Instructions)
     if not isinstance(deser, Instructions):
         raise TypeError(f"Didn't get Instructions, got {type(deser)}")
     return deser
