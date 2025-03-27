@@ -375,15 +375,25 @@ def encodeset_overlap_overall_check_instr_cb(instr: Instruction, ctx: ParseConte
     if not pholes.holes.empty:
         raise ValueError(f"holes not empty: esetlist: {esetlist}")
 
-    condlist = get_condition_list(ctx, instr.condition)
-    eq_exprs = get_exprs_of_op(BinOp.EQ, condlist)
-    if len(eq_exprs):
-        print("eq_exprs:")
-        print(eq_exprs)
-    ne_exprs = get_exprs_of_op(BinOp.NE, condlist)
-    if len(ne_exprs):
-        print("ne_exprs:")
-        print(ne_exprs)
+    if pholes.has_overlaps():
+        lv: list[list[str]] = sorted(
+            [s.repr_indicies() for s in pholes.spans], key=lambda x: x[-1], reverse=True
+        )
+        for i, lv in enumerate(lv):
+            sv = "\n".join(lv)
+            print(f"pholes[{i}]:\n{sv}")
+        raise ValueError(f"{instr.name} has overlaps in pholes")
+
+    if False:
+        condlist = get_condition_list(ctx, instr.condition)
+        eq_exprs = get_exprs_of_op(BinOp.EQ, condlist)
+        if len(eq_exprs):
+            print("eq_exprs:")
+            print(eq_exprs)
+        ne_exprs = get_exprs_of_op(BinOp.NE, condlist)
+        if len(ne_exprs):
+            print("ne_exprs:")
+            print(ne_exprs)
 
 
 def instr_cb(i: Instruction, ctx: ParseContext) -> None:

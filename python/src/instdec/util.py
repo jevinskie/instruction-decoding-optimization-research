@@ -73,7 +73,7 @@ class Span:
     def equal_w_name(self, other: Self) -> bool:
         return self.start == other.start and self.width == other.width and self.name == other.name
 
-    def ascii_art(self, max_width) -> str:
+    def ascii_art(self, max_width: int, indices: bool = False) -> str:
         if self.end > max_width:
             raise ValueError(f"Span: {self} ascii_art() max_width: {max_width} > end: {self.end}")
         rl = [" "] * max_width
@@ -88,10 +88,13 @@ class Span:
                 rl[i] = "="
         rs = "[" + "".join(rl) + "]"
         rs = rich.markup.escape(rs)
-        return "[" + "".join(rl) + "]"
+        return rs
 
-    # def __repr__(self) -> str:
-    #     return f"Span({self.ascii_art(32)})"
+    def __repr__(self) -> str:
+        return f"Span({self.ascii_art(32)})"
+
+    def repr_indicies(self) -> list[str]:
+        return [f"     {i}" for i in bitfield_indices(32)] + [self.__repr__()]
 
     def __rich_repr__(self) -> rich.repr.Result:
         yield "name", self.name, None
