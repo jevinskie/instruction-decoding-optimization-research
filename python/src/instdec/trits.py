@@ -8,7 +8,7 @@ import rich.repr
 from .util import defauto
 
 
-@defauto
+@attrs.define(auto_attribs=True, on_setattr=None, frozen=True, eq=True, hash=True, order=True)
 class Trits:
     @staticmethod
     def normalize_trit_str(sval: str) -> str:

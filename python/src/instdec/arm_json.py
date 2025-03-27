@@ -247,8 +247,33 @@ def get_conditon_list_defined(ctx: ParseContext, instr_cond: Expression | None) 
     return list(filter(lambda x: x is not None, get_condition_list(ctx, instr_cond)))
 
 
-def get_negative_constraints(exprs: list[Expression | None]) -> list[Expression]:
+def get_exprs_of_op(op: BinOp | UnOp, exprs: list[Expression | None]) -> list[Expression]:
     res: list[Expression] = []
+
+    is_binop = False
+    is_unop = False
+    if op in BinOp.__members__.values():
+        is_binop = True
+    elif op in UnOp.__members__.values():
+        is_unop = True
+    else:
+        raise ValueError(f"op: {op} isn't a BinOp or UnOp")
+
+    def helper(e: Expression):
+        if isinstance(e, BinaryOp):
+            if is_binop and e.op == op:
+                res.append(e)
+            helper(e.left)
+            helper(e.right)
+        elif isinstance(e, UnaryOp):
+            if is_unop and e.op == op:
+                res.append(e)
+            helper(e.expr)
+
+    for expr in exprs:
+        if expr is None:
+            continue
+        helper(expr)
     return res
 
 
@@ -351,10 +376,14 @@ def encodeset_overlap_overall_check_instr_cb(instr: Instruction, ctx: ParseConte
         raise ValueError(f"holes not empty: esetlist: {esetlist}")
 
     condlist = get_condition_list(ctx, instr.condition)
-    negative_constraints = get_negative_constraints(condlist)
-    if len(negative_constraints):
-        print("negative_constraints:")
-        print(negative_constraints)
+    eq_exprs = get_exprs_of_op(BinOp.EQ, condlist)
+    if len(eq_exprs):
+        print("eq_exprs:")
+        print(eq_exprs)
+    ne_exprs = get_exprs_of_op(BinOp.NE, condlist)
+    if len(ne_exprs):
+        print("ne_exprs:")
+        print(ne_exprs)
 
 
 def instr_cb(i: Instruction, ctx: ParseContext) -> None:

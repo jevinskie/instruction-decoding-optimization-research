@@ -37,10 +37,10 @@ def real_main(args: argparse.Namespace):
 
     dump_instructions(raw_json_dict)
 
-    print(f"seen_identifiers: {arm_json_schema.seen_identifiers}")
-    print(f"seen_function_names: {arm_json_schema.seen_function_names}")
-    print(f"seen_value_meanings: {arm_json_schema.seen_value_meanings}")
-    print(f"seen_value_values: {arm_json_schema.seen_value_values}")
+    print(f"seen_identifiers: {sorted(arm_json_schema.seen_identifiers)}")
+    print(f"seen_function_names: {sorted(arm_json_schema.seen_function_names)}")
+    print(f"seen_value_meanings: {sorted(arm_json_schema.seen_value_meanings)}")
+    print(f"seen_value_values: {sorted(arm_json_schema.seen_value_values)}")
 
 
 def main():
