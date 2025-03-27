@@ -278,18 +278,28 @@ class Encodeset:
 
     @property
     def bitmask(self) -> int:
-        return 0
+        bm = 0
+        for v in self.values:
+            vs = v.value.value.trits.replace("X", "0")
+            bm |= int(vs, 2) << v.range.start
+        return bm
 
     @property
     def bitpattern(self) -> int:
-        return 0
+        bp = 0
+        for v in self.values:
+            vs = v.value.value.trits.replace("0", "1").replace("X", "0")
+            bp |= int(vs, 2) << v.range.start
+        return bp
 
     @property
     def ne_bitmask(self) -> int:
+        # FIXME: IMPLEMENT
         return 0
 
     @property
     def ne_bitpattern(self) -> int:
+        # FIXME: IMPLEMENT
         return 0
 
 
