@@ -94,7 +94,7 @@ class Span:
         return f"Span({self.ascii_art(32)})"
 
     def repr_indicies(self) -> list[str]:
-        return [f"     {i}" for i in bitfield_indices(32)] + [self.__repr__()]
+        return [f"      {i}" for i in bitfield_indices(32)] + [self.__repr__()]
 
     def __rich_repr__(self) -> rich.repr.Result:
         yield "name", self.name, None
