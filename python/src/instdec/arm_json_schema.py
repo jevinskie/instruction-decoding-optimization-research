@@ -280,7 +280,7 @@ class Encodeset:
     def bitmask(self) -> int:
         bm = 0
         for v in self.values:
-            vs = v.value.value.trits.replace("X", "0")
+            vs = v.value.value.trits.replace("0", "1").replace("X", "0")
             bm |= int(vs, 2) << v.range.start
         return bm
 
@@ -288,7 +288,7 @@ class Encodeset:
     def bitpattern(self) -> int:
         bp = 0
         for v in self.values:
-            vs = v.value.value.trits.replace("0", "1").replace("X", "0")
+            vs = v.value.value.trits.replace("X", "0")
             bp |= int(vs, 2) << v.range.start
         return bp
 

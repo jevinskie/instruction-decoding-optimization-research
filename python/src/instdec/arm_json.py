@@ -375,13 +375,29 @@ def encodeset_overlap_overall_check_instr_cb(instr: Instruction, ctx: ParseConte
     if not pholes.holes.empty:
         raise ValueError(f"holes not empty: esetlist: {esetlist}")
 
-    if pholes.has_overlaps():
+    bm = 0
+    bp = 0
+    for i, eset in enumerate(esetlist):
+        bm |= eset.bitmask
+        bp |= eset.bitpattern
+    print(f"bm: {bm:#034b} bp: {bp:#034b} name: {instr.name}")
+
+    if False and pholes.has_overlaps():
         lv: list[list[str]] = sorted(
             [s.repr_indicies() for s in pholes.spans], key=lambda x: x[-1], reverse=True
         )
         for i, lv in enumerate(lv):
             sv = "\n".join(lv)
             print(f"pholes[{i}]:\n{sv}")
+        overall_bm = 0
+        overall_bp = 0
+        for i, eset in enumerate(esetlist):
+            bm = eset.bitmask
+            bp = eset.bitpattern
+            print(f"eset[{i}]: bitmask: {bm:#034b} bitpattern: {bp:#034b}")
+            overall_bm |= bm
+            overall_bp |= bp
+        print(f"overall_bm: {overall_bm:#034b} overall_bp: {overall_bp:#034b}")
         raise ValueError(f"{instr.name} has overlaps in pholes")
 
     if False:
