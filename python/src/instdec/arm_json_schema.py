@@ -276,6 +276,22 @@ class Encodeset:
             raise ValueError(f"got unsorted spans in Encodeset. Is this unexpected? self: {self}")
         return spans
 
+    @property
+    def bitmask(self) -> int:
+        return 0
+
+    @property
+    def bitpattern(self) -> int:
+        return 0
+
+    @property
+    def ne_bitmask(self) -> int:
+        return 0
+
+    @property
+    def ne_bitpattern(self) -> int:
+        return 0
+
 
 @defauto
 class InstructionInstance:
