@@ -70,14 +70,38 @@ def check_encoding(einf: dict[str, tuple[int, int]]) -> None:
     print(undef)
     ud2 = z3.simplify(undef)
     print(ud2)
-    ud3 = simplify(ud2)
+    ud3 = ud2
+    # ud3 = simplify(ud2)
     print(ud3)
     ud4 = z3.simplify(ud3)
     print(ud4)
 
 
+def generate_verilog(einf: dict[str, tuple[int, int]]) -> str:
+    # TODO: Generate "number of valid decodes"
+    nlen = max(map(len, einf.keys()))
+    vl = "module a64dec(input [31:0]i, output v);\n"
+    for iname in einf:
+        vl += f"    wire {iname}_v;\n"
+    vl += "\n\n\n"
+    for iname, binf in einf.items():
+        spaces = " " * (nlen - len(iname))
+        vl += f"    assign {iname}_v{spaces} = (i & 32'b{binf[0]:032b}) == 32'b{binf[1]:032b};\n"
+    vl += "\n"
+    vl += "    assign v = " + " | ".join([f"{i}_v" for i in einf]) + ";\n"
+    vl += "\n"
+    vl += "endmodule\n"
+    return vl
+
+
+def dump_verilog(einf: dict[str, tuple[int, int]], vpath: Path) -> None:
+    vl = generate_verilog(einf)
+    with open(vpath, "w") as f:
+        f.write(vl)
+
+
 def get_arg_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="instdec-py-util")
+    parser = argparse.ArgumentParser(prog="instdec-py-z3")
     parser.add_argument(
         "-e",
         "--enc-json",
@@ -85,6 +109,14 @@ def get_arg_parser() -> argparse.ArgumentParser:
         type=Path,
         required=True,
         help="Prebased encoding bitmask/bitpattern JSON path",
+    )
+    parser.add_argument(
+        "-v",
+        "--verilog",
+        dest="verilog",
+        type=Path,
+        required=False,
+        help="Output Verilog path",
     )
     return parser
 
@@ -97,7 +129,12 @@ def real_main(args: argparse.Namespace):
         enc_info[iname] = (int(einfo_str[0], 2), int(einfo_str[1], 2))
 
     # print(enc_info)
-    check_encoding(enc_info)
+    # check_encoding(enc_info)
+
+    if args.verilog is not None:
+        vl = generate_verilog(enc_info)
+        with open(args.verilog, "w") as f:
+            f.write(vl)
 
 
 def main():
