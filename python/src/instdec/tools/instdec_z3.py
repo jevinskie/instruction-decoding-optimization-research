@@ -79,25 +79,11 @@ def check_encoding(einf: dict[str, tuple[int, int]]) -> None:
 
 def generate_verilog(einf: dict[str, tuple[int, int]]) -> str:
     # TODO: Generate "number of valid decodes"
-    nlen = max(map(len, einf.keys()))
-    vl = "module a64dec(input [31:0]i, clk, output v);\n"
-    vl += "\n\n\n"
-    vl += "    wire clk_wire;"
-    vl += "    assign clk_wire = clk;"
-    for iname, binf in einf.items():
-        vl += f"    reg {iname}_v;\n"
-    vl += "    reg vtmp = 0;\n"
-    vl += "    always @(*) begin\n"
-    for iname, binf in einf.items():
-        spaces = " " * (nlen - len(iname))
-        vl += f"    {iname}_v{spaces} = (i & 32'b{binf[0]:032b}) == 32'b{binf[1]:032b};\n"
-    vl += "\n\n\n"
-    # vl += "    assign v = " + " | ".join([f"{i}_v" for i in einf]) + ";\n"
-    for iname, binf in einf.items():
-        vl += f"    vtmp = vtmp || {iname}_v;\n"
-    vl += "    end\n"
-    vl += "    assign v = vtmp;"
-    vl += "\n"
+    vl = "module a64dec(input [31:0]i, output v);\n"
+    vl += f"    wire [{len(einf)}:0]vtmp;\n"
+    for i, kv in enumerate(einf.items()):
+        vl += f"    assign vtmp[{i:4}] = (i & 32'b{kv[1][0]:032b}) == 32'b{kv[1][1]:032b}; // {kv[0]}\n"
+    vl += "    assign v = |vtmp;\n"
     vl += "endmodule\n"
     return vl
 
