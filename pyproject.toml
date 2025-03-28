@@ -39,6 +39,7 @@ dev = [
 
 [project.scripts]
 instdec-py-util = "instdec.tools.instdec_util:main"
+instdec-py-z3 = "instdec.tools.instdec_z3:main"
 
 [project.urls]
 repository = "https://github.com/jevinskie/instruction-decoding-optimization-research"
