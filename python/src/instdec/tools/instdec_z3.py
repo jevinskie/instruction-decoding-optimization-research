@@ -80,7 +80,7 @@ def check_encoding(einf: dict[str, tuple[int, int]]) -> None:
 def generate_verilog(einf: dict[str, tuple[int, int]]) -> str:
     # TODO: Generate "number of valid decodes"
     vl = "module a64dec(input [31:0]i, output v);\n"
-    vl += f"    wire [{len(einf)}:0]vtmp;\n"
+    vl += f"    wire [{len(einf) - 1}:0]vtmp;\n"
     for i, kv in enumerate(einf.items()):
         vl += f"    assign vtmp[{i:4}] = (i & 32'b{kv[1][0]:032b}) == 32'b{kv[1][1]:032b}; // {kv[0]}\n"
     vl += "    assign v = |vtmp;\n"
