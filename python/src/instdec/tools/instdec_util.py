@@ -52,7 +52,8 @@ def real_main(args: argparse.Namespace):
 
     ctx = dump_instructions(raw_json_dict)
     if args.enc_json is not None:
-        json.dump(ctx.encoding_info, open(args.enc_json, "w"))
+        with open(args.enc_json, "w") as f:
+            f.write(ctx.encoding_info_json)
 
     print(f"seen_identifiers: {sorted(arm_json_schema.seen_identifiers)}")
     print(f"seen_function_names: {sorted(arm_json_schema.seen_function_names)}")

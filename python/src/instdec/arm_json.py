@@ -235,6 +235,16 @@ class ParseContext:
     obj_stack: list[JSONSchemaObject] = attrs.Factory(list)
     encoding_info: dict[str, tuple[int, int]] = attrs.Factory(dict)
 
+    @property
+    def encoding_info_json(self) -> str:
+        nlen = max(map(len, self.encoding_info.keys()))
+        r = "{\n"
+        for iname, enc_tup in self.encoding_info.items():
+            spaces = " " * (nlen - len(iname))
+            r += f'   "{iname}":{spaces} ["{enc_tup[0]:#034b}", "{enc_tup[1]:#034b}"],\n'
+        r = r[:-2] + "\n}\n"
+        return r
+
 
 def get_encoding_list(ctx: ParseContext, instr_enc: Encodeset) -> list[Encodeset]:
     return [instr_enc] + ctx.group_encoding_stack[::-1] + ctx.set_encoding_stack[::-1]
