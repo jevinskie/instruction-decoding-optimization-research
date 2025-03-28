@@ -81,14 +81,14 @@ def generate_verilog(einf: dict[str, tuple[int, int]]) -> str:
     # TODO: Generate "number of valid decodes"
     nlen = max(map(len, einf.keys()))
     vl = "module a64dec(input [31:0]i, output v);\n"
-    for iname in einf:
-        vl += f"    wire {iname}_v;\n"
-    vl += "\n\n\n"
     for iname, binf in einf.items():
         spaces = " " * (nlen - len(iname))
-        vl += f"    assign {iname}_v{spaces} = (i & 32'b{binf[0]:032b}) == 32'b{binf[1]:032b};\n"
-    vl += "\n"
-    vl += "    assign v = " + " | ".join([f"{i}_v" for i in einf]) + ";\n"
+        vl += f"    wire {iname}_v{spaces} = (i & 32'b{binf[0]:032b}) == 32'b{binf[1]:032b};\n"
+    vl += "\n\n\n"
+    # vl += "    assign v = " + " | ".join([f"{i}_v" for i in einf]) + ";\n"
+    vl += "    assign v = 0;\n"
+    for iname, binf in einf.items():
+        vl += f"    assign v = v | {iname}_v;\n"
     vl += "\n"
     vl += "endmodule\n"
     return vl
