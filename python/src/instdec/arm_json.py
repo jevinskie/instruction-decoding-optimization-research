@@ -233,6 +233,7 @@ class ParseContext:
     group_condition_stack: list[Expression | None] = attrs.Factory(list)
     group_name_stack: list[str] = attrs.Factory(list)
     obj_stack: list[JSONSchemaObject] = attrs.Factory(list)
+    encoding_info: dict[str, tuple[int, int]] = attrs.Factory(dict)
 
 
 def get_encoding_list(ctx: ParseContext, instr_enc: Encodeset) -> list[Encodeset]:
@@ -380,7 +381,8 @@ def encodeset_overlap_overall_check_instr_cb(instr: Instruction, ctx: ParseConte
     for i, eset in enumerate(esetlist):
         bm |= eset.bitmask
         bp |= eset.bitpattern
-    print(f"bm: {bm:#034b} bp: {bp:#034b} name: {instr.name}")
+    ctx.encoding_info[instr.name] = (bm, bp)
+    # print(f"bm: {bm:#034b} bp: {bp:#034b} name: {instr.name}")
 
     if False and pholes.has_overlaps():
         lv: list[list[str]] = sorted(
@@ -419,7 +421,7 @@ def instr_cb(i: Instruction, ctx: ParseContext) -> None:
     encodeset_overlap_overall_check_instr_cb(i, ctx)
 
 
-def parse_instructions(instrs: Instructions, cb: InstrCB) -> None:
+def parse_instructions(instrs: Instructions, cb: InstrCB) -> ParseContext:
     ctx = ParseContext()
     ctx.obj_stack.append(instrs)
 
@@ -439,12 +441,13 @@ def parse_instructions(instrs: Instructions, cb: InstrCB) -> None:
 
     ctx.obj_stack.pop()
 
-    return
+    return ctx
 
 
-def dump_info(instrs: Instructions) -> None:
-    parse_instructions(instrs, instr_cb)
+def dump_info(instrs: Instructions) -> ParseContext:
+    ctx = parse_instructions(instrs, instr_cb)
     nc = dict(sorted(num_cons.items()))
     print(f"num_cons: {nc}")
     no = dict(sorted(num_expr_objs.items()))
     print(f"num_expr_objs: {no}")
+    return ctx

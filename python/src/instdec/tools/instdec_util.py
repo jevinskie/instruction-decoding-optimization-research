@@ -4,6 +4,7 @@ import argparse
 import json
 
 import rich.traceback
+from path import Path
 from rich import print
 
 from instdec import arm_json, arm_json_schema
@@ -12,7 +13,7 @@ from instdec.arm_json_schema import deserialize_instructions_json
 rich.traceback.install()
 
 
-def dump_instructions(raw_json_dict: dict) -> None:
+def dump_instructions(raw_json_dict: dict) -> arm_json.ParseContext:
     instructions = deserialize_instructions_json(raw_json_dict)
     if arm_json.has_instructions_w_children(instructions):
         raise ValueError("have instructions w/ children")
@@ -20,13 +21,27 @@ def dump_instructions(raw_json_dict: dict) -> None:
         print("good, no Instruction.Instruction w/ children")
 
     # print(instructions)
-    arm_json.dump_info(instructions)
+    ctx = arm_json.dump_info(instructions)
+    return ctx
 
 
 def get_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="instdec-py-util")
     parser.add_argument(
-        "-i", "--instr-json", dest="instr_json", required=True, help="Instructions.json path"
+        "-i",
+        "--instr-json",
+        dest="instr_json",
+        type=Path,
+        required=True,
+        help="Instructions.json path",
+    )
+    parser.add_argument(
+        "-e",
+        "--enc-json",
+        dest="enc_json",
+        type=Path,
+        required=False,
+        help="Output encoding info path",
     )
     return parser
 
@@ -35,7 +50,9 @@ def real_main(args: argparse.Namespace):
     print(f"args: {args}")
     raw_json_dict = dict(json.load(open(args.instr_json)))
 
-    dump_instructions(raw_json_dict)
+    ctx = dump_instructions(raw_json_dict)
+    if args.enc_json is not None:
+        json.dump(ctx.encoding_info, open(args.enc_json, "w"))
 
     print(f"seen_identifiers: {sorted(arm_json_schema.seen_identifiers)}")
     print(f"seen_function_names: {sorted(arm_json_schema.seen_function_names)}")
