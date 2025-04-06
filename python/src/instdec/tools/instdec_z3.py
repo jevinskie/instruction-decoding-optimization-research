@@ -97,13 +97,13 @@ def generate_espresso(einf: dict[str, tuple[int, int]]) -> str:
     el = StringList()
     el @= ".i 32"
     el @= ".o 1"
-    el @= ".ilb " + " ".join([f"I{i}" for i in range(32)])
+    el @= ".ilb " + " ".join([f"I{i}" for i in reversed(range(32))])
     el @= ".olb V"
     for i, kv in enumerate(einf.items()):
         bmi = kv[1][0]
         bpi = kv[1][1]
         bits = ""
-        for j in range(32):
+        for j in reversed(range(32)):
             sb = 1 << j
             if bmi & sb:
                 if bpi & sb:
