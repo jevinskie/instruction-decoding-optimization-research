@@ -2,7 +2,7 @@ import inspect
 import itertools
 import math
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import Any, Final, Self, TypeVar, dataclass_transform, overload
+from typing import Any, Final, Self, TypeVar, cast, dataclass_transform, overload
 
 import attr
 import attrs
@@ -268,3 +268,29 @@ def traverse_nested(
             if downcall_res is not None:
                 return downcall_res
     return None
+
+
+@defauto
+class StringList:
+    _lines: list[str] = attrs.Factory(list)
+
+    @property
+    def lines(self) -> list[str]:
+        return self._lines
+
+    def __matmul__(self, other) -> Self:
+        if isinstance(other, str):
+            # Append a single string
+            return type(self)(self._lines + [other])
+        elif isinstance(other, Sequence):
+            ol = cast(list[str], other)
+            # Concatenate with another list of strings
+            return type(self)(self._lines + ol)
+        else:
+            raise TypeError(
+                f"Unsupported operand type for @: 'StringList' and '{type(other).__name__}'"
+            )
+
+    def __str__(self) -> str:
+        # For easy printing
+        return "\n".join(self._lines)

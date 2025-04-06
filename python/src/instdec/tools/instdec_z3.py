@@ -6,10 +6,11 @@ import operator
 from functools import reduce
 
 import rich.traceback
-
-# from rich import print
 import z3
 from path import Path
+from rich import print
+
+from instdec.util import StringList
 
 rich.traceback.install()
 
@@ -79,30 +80,62 @@ def check_encoding(einf: dict[str, tuple[int, int]]) -> None:
 
 def generate_verilog(einf: dict[str, tuple[int, int]]) -> str:
     # TODO: Generate "number of valid decodes"
-    vl = "module a64dec(input [31:0]i, output v);\n"
-    vl += f"    wire [{len(einf) - 1}:0]vtmp;\n"
+    vl = StringList()
+    vl @= "module a64dec(input [31:0]i, output v);"
+    vl @= f"    wire [{len(einf) - 1}:0]vtmp;"
     for i, kv in enumerate(einf.items()):
-        vl += f"    assign vtmp[{i:4}] = (i & 32'b{kv[1][0]:032b}) == 32'b{kv[1][1]:032b}; // {kv[0]}\n"
-    vl += "    assign v = |vtmp;\n"
-    vl += "endmodule\n"
-    return vl
+        vl @= (
+            f"    assign vtmp[{i:4}] = (i & 32'b{kv[1][0]:032b}) == 32'b{kv[1][1]:032b}; // {kv[0]}"
+        )
+    vl @= "    assign v = |vtmp;"
+    vl @= "endmodule"
+    vl @= ""
+    return str(vl)
 
 
-def dump_verilog(einf: dict[str, tuple[int, int]], vpath: Path) -> None:
-    vl = generate_verilog(einf)
-    with open(vpath, "w") as f:
-        f.write(vl)
+def generate_espresso(einf: dict[str, tuple[int, int]]) -> str:
+    el = StringList()
+    el @= ".i 32"
+    el @= ".o 1"
+    el @= ".ilb " + " ".join([f"I{i}" for i in range(32)])
+    el @= ".olb V"
+    for i, kv in enumerate(einf.items()):
+        bmi = kv[1][0]
+        bpi = kv[1][1]
+        bits = ""
+        for j in range(32):
+            sb = 1 << j
+            if bmi & sb:
+                if bpi & sb:
+                    bits += "1"
+                else:
+                    bits += "0"
+            else:
+                bits += "-"
+        bits += " 1"
+        el @= bits
+    el @= ".e"
+    el @= ""
+    return str(el)
 
 
 def get_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="instdec-py-z3")
     parser.add_argument(
-        "-e",
+        "-i",
         "--enc-json",
         dest="enc_json",
         type=Path,
         required=True,
         help="Prebased encoding bitmask/bitpattern JSON path",
+    )
+    parser.add_argument(
+        "-e",
+        "--espresso",
+        dest="espresso",
+        type=Path,
+        required=False,
+        help="Output file for Espresso optimization",
     )
     parser.add_argument(
         "-v",
@@ -129,6 +162,11 @@ def real_main(args: argparse.Namespace):
         vl = generate_verilog(enc_info)
         with open(args.verilog, "w") as f:
             f.write(vl)
+
+    if args.espresso is not None:
+        espr = generate_espresso(enc_info)
+        with open(args.espresso, "w") as f:
+            f.write(espr)
 
 
 def main():
