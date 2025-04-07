@@ -121,18 +121,27 @@ def generate_espresso(einf: dict[str, tuple[int, int]]) -> str:
 
 def get_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="instdec-py-z3")
-    parser.add_argument(
+    in_group = parser.add_mutually_exclusive_group(required=True)
+    in_group.add_argument(
         "-i",
         "--enc-json",
         dest="enc_json",
         type=Path,
-        required=True,
+        required=False,
         help="Prebased encoding bitmask/bitpattern JSON path",
+    )
+    in_group.add_argument(
+        "-E",
+        "--espresso-in",
+        dest="espresso_in",
+        type=Path,
+        required=False,
+        help="Input Espresso file",
     )
     parser.add_argument(
         "-e",
-        "--espresso",
-        dest="espresso",
+        "--espresso-out",
+        dest="espresso_out",
         type=Path,
         required=False,
         help="Output file for Espresso optimization",
@@ -148,24 +157,36 @@ def get_arg_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def real_main(args: argparse.Namespace):
-    raw_json_dict = dict(json.load(open(args.enc_json)))
-
+def real_main(args: argparse.Namespace) -> None:
     enc_info: dict[str, tuple[int, int]] = {}
-    for iname, einfo_str in raw_json_dict.items():
-        enc_info[iname] = (int(einfo_str[0], 2), int(einfo_str[1], 2))
 
-    # print(enc_info)
-    # check_encoding(enc_info)
+    if args.enc_json is not None:
+        raw_json_dict = dict(json.load(open(args.enc_json)))
+        for iname, einfo_str in raw_json_dict.items():
+            enc_info[iname] = (int(einfo_str[0], 2), int(einfo_str[1], 2))
+        # print(enc_info)
+        # check_encoding(enc_info)
+    elif args.espresso_in is not None:
+        elines = open(args.espresso_in).readlines()
+        elines = list(filter(lambda s: s and not s.startswith("."), elines))
+        for i, el in enumerate(elines):
+            bs, vs = el.split()
+            if vs != "1":
+                raise ValueError(f"vs not '1' got '{vs}'")
+            bmi = int(bs.replace("1", "N").replace("0", "N").replace("-", "0").replace("N", "1"), 2)
+            bpi = int(bs.replace("-", "0"), 2)
+            enc_info[f"esp_{i}"] = (bmi, bpi)
+    else:
+        raise ValueError("need input json or espresso")
 
     if args.verilog is not None:
         vl = generate_verilog(enc_info)
         with open(args.verilog, "w") as f:
             f.write(vl)
 
-    if args.espresso is not None:
+    if args.espresso_out is not None:
         espr = generate_espresso(enc_info)
-        with open(args.espresso, "w") as f:
+        with open(args.espresso_out, "w") as f:
             f.write(espr)
 
 
