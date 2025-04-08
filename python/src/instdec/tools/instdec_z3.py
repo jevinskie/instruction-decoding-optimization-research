@@ -164,8 +164,6 @@ def real_main(args: argparse.Namespace) -> None:
         raw_json_dict = dict(json.load(open(args.enc_json)))
         for iname, einfo_str in raw_json_dict.items():
             enc_info[iname] = (int(einfo_str[0], 2), int(einfo_str[1], 2))
-        # print(enc_info)
-        # check_encoding(enc_info)
     elif args.espresso_in is not None:
         elines = open(args.espresso_in).readlines()
         elines = list(filter(lambda s: s and not s.startswith("."), elines))
@@ -178,6 +176,9 @@ def real_main(args: argparse.Namespace) -> None:
             enc_info[f"esp_{i}"] = (bmi, bpi)
     else:
         raise ValueError("need input json or espresso")
+
+    # print(enc_info)
+    check_encoding(enc_info)
 
     if args.verilog is not None:
         vl = generate_verilog(enc_info)
