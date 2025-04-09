@@ -1,80 +1,47 @@
 #!/usr/bin/env python3
 
 import argparse
-import operator
-from functools import reduce
+import subprocess
 
 import rich.traceback
-import z3
 from path import Path
-from rich import print
 
 from instdec.util import generate_espresso
 
 rich.traceback.install()
 
-
-def subterms(t):
-    seen = {}
-
-    def subterms_rec(t):
-        if z3.is_app(t):
-            for ch in t.children():
-                if ch in seen:
-                    continue
-                seen[ch] = True
-                yield ch
-                yield from subterms_rec(ch)
-
-    return {s for s in subterms_rec(t)}
+# fmt: off
+espresso_subcmds: tuple[str, ...] = (
+    "ESPRESSO", "many", "exact", "qm", "single_output", "so", "so_both",
+    "simplify", "echo", "signature", "opo", "opoall", "pair", "pairall",
+    "check", "stats", "verify", "PLAverify", "equiv", "map", "mapdc", "fsm",
+    "contain", "d1merge", "d1merge_in", "disjoint", "dsharp", "intersect",
+    "minterms", "primes", "separate", "sharp", "union", "xor", "essen",
+    "expand", "gasp", "irred", "make_sparse", "reduce", "taut", "super_gasp",
+    "lexsort", "test"
+)
+# fmt: on
 
 
-def are_equal(s, t1, t2):
-    s.push()
-    s.add(t1 != t2)
-    r = s.check()
-    s.pop()
-    return r == z3.unsat
-
-
-def simplify(slv, mdl, t):
-    subs = subterms(t)
-    values = {s: mdl.eval(s) for s in subs}
-    values[t] = mdl.eval(t)
-
-    def simplify_rec(t):
-        subs = subterms(t)
-        for s in subs:
-            if s.sort().eq(t.sort()) and values[s].eq(values[t]) and are_equal(slv, s, t):
-                return simplify_rec(s)
-        chs = [simplify_rec(ch) for ch in t.children()]
-        return t.decl()(chs)
-
-    return simplify_rec(t)
-
-
-def check_encoding(einf: dict[str, tuple[int, int]]) -> None:
-    slv = z3.Solver()
-    slv
-    ival = z3.BitVec("i", 32)
-    vvals: dict[str, z3.BoolRef] = {}
-    for iname, binf in einf.items():
-        bm = z3.BitVecVal(binf[0], 32)
-        bp = z3.BitVecVal(binf[1], 32)
-        valid = (ival & bm) == bp
-        if valid is False:
-            valid = z3.BoolVal(False)
-        vvals[iname] = valid
-    undef = ~reduce(operator.or_, vvals.values())
-    # print(vvals)
-    print(undef)
-    ud2 = z3.simplify(undef)
-    print(ud2)
-    ud3 = ud2
-    # ud3 = simplify(ud2)
-    print(ud3)
-    ud4 = z3.simplify(ud3)
-    print(ud4)
+def espresso_gauntlet(enc_info: dict[str, tuple[int, int]], ein_path: Path) -> None:
+    for subcmd in espresso_subcmds:
+        if subcmd in (
+            "pairall",
+            "verify",
+            "PLAverify",
+            "dsharp",
+            "intersect",
+            "sharp",
+            "xor",
+            "union",
+        ):
+            continue
+        cmd = ["espresso", "-d", "-t", "-v", "", f"-D{subcmd}", str(ein_path)]
+        cmd_str = " ".join(cmd)
+        print(f"cmd: {cmd_str}", flush=True)
+        spres = subprocess.run(cmd, capture_output=True)
+        with open(f"eo-{subcmd}.txt", "wb") as f:
+            f.write(spres.stdout)
 
 
 def get_arg_parser() -> argparse.ArgumentParser:
@@ -93,7 +60,7 @@ def get_arg_parser() -> argparse.ArgumentParser:
         dest="espresso_out",
         type=Path,
         required=False,
-        help="Output file for Espresso optimization",
+        help="Output Espresso file",
     )
     return parser
 
@@ -112,7 +79,7 @@ def real_main(args: argparse.Namespace) -> None:
         enc_info[f"esp_{i}"] = (bmi, bpi)
 
     # print(enc_info)
-    check_encoding(enc_info)
+    espresso_gauntlet(enc_info, args.espresso_in)
 
     if args.espresso_out is not None:
         espr = generate_espresso(enc_info)
