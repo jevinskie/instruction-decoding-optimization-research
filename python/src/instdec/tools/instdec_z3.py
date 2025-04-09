@@ -10,7 +10,7 @@ import z3
 from path import Path
 from rich import print
 
-from instdec.espresso import generate_espresso
+from instdec.espresso import generate_espresso, parse_espresso
 from instdec.verilog import generate_verilog
 
 rich.traceback.install()
@@ -125,15 +125,7 @@ def real_main(args: argparse.Namespace) -> None:
         for iname, einfo_str in raw_json_dict.items():
             enc_info[iname] = (int(einfo_str[0], 2), int(einfo_str[1], 2))
     elif args.espresso_in is not None:
-        elines = open(args.espresso_in).readlines()
-        elines = list(filter(lambda s: s and not s.startswith("."), elines))
-        for i, el in enumerate(elines):
-            bs, vs = el.split()
-            if vs != "1":
-                raise ValueError(f"vs not '1' got '{vs}'")
-            bmi = int(bs.replace("1", "N").replace("0", "N").replace("-", "0").replace("N", "1"), 2)
-            bpi = int(bs.replace("-", "0"), 2)
-            enc_info[f"esp_{i}"] = (bmi, bpi)
+        enc_info = parse_espresso(open(args.espresso_in).read())
     else:
         raise ValueError("need input json or espresso")
 

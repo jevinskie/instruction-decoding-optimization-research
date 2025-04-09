@@ -6,7 +6,7 @@ import subprocess
 import rich.traceback
 from path import Path
 
-from instdec.espresso import espresso_subcmds, generate_espresso
+from instdec.espresso import espresso_subcmds, generate_espresso, parse_espresso
 
 rich.traceback.install()
 
@@ -54,17 +54,7 @@ def get_arg_parser() -> argparse.ArgumentParser:
 
 
 def real_main(args: argparse.Namespace) -> None:
-    enc_info: dict[str, tuple[int, int]] = {}
-
-    elines = open(args.espresso_in).readlines()
-    elines = list(filter(lambda s: s and not s.startswith("."), elines))
-    for i, el in enumerate(elines):
-        bs, vs = el.split()
-        if vs != "1":
-            raise ValueError(f"vs not '1' got '{vs}'")
-        bmi = int(bs.replace("1", "N").replace("0", "N").replace("-", "0").replace("N", "1"), 2)
-        bpi = int(bs.replace("-", "0"), 2)
-        enc_info[f"esp_{i}"] = (bmi, bpi)
+    enc_info = parse_espresso(open(args.espresso_in).read())
 
     # print(enc_info)
     espresso_gauntlet(enc_info, args.espresso_in)

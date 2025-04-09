@@ -13,6 +13,20 @@ espresso_subcmds: tuple[str, ...] = (
 # fmt: on
 
 
+def parse_espresso(esrc: str) -> dict[str, tuple[int, int]]:
+    enc_info: dict[str, tuple[int, int]] = {}
+    elines = esrc.splitlines()
+    elines = list(filter(lambda s: s and not s.startswith("."), elines))
+    for i, el in enumerate(elines):
+        bs, vs = el.split()
+        if vs != "1":
+            raise ValueError(f"vs not '1' got '{vs}'")
+        bmi = int(bs.replace("1", "N").replace("0", "N").replace("-", "0").replace("N", "1"), 2)
+        bpi = int(bs.replace("-", "0"), 2)
+        enc_info[f"esp_{i}"] = (bmi, bpi)
+    return enc_info
+
+
 def generate_espresso(einf: dict[str, tuple[int, int]]) -> str:
     el = StringList()
     el @= ".i 32"
