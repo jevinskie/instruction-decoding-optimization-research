@@ -10,7 +10,8 @@ import z3
 from path import Path
 from rich import print
 
-from instdec.util import generate_espresso, generate_verilog
+from instdec.espresso import generate_espresso
+from instdec.verilog import generate_verilog
 
 rich.traceback.install()
 

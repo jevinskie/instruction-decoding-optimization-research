@@ -6,21 +6,9 @@ import subprocess
 import rich.traceback
 from path import Path
 
-from instdec.util import generate_espresso
+from instdec.espresso import espresso_subcmds, generate_espresso
 
 rich.traceback.install()
-
-# fmt: off
-espresso_subcmds: tuple[str, ...] = (
-    "ESPRESSO", "many", "exact", "qm", "single_output", "so", "so_both",
-    "simplify", "echo", "signature", "opo", "opoall", "pair", "pairall",
-    "check", "stats", "verify", "PLAverify", "equiv", "map", "mapdc", "fsm",
-    "contain", "d1merge", "d1merge_in", "disjoint", "dsharp", "intersect",
-    "minterms", "primes", "separate", "sharp", "union", "xor", "essen",
-    "expand", "gasp", "irred", "make_sparse", "reduce", "taut", "super_gasp",
-    "lexsort", "test"
-)
-# fmt: on
 
 
 def espresso_gauntlet(enc_info: dict[str, tuple[int, int]], ein_path: Path) -> None:
