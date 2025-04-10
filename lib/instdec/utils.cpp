@@ -29,19 +29,7 @@ void write_file(const fs::path &path, const std::string &str) {
 }
 
 std::vector<uint8_t> read_file_bytes(const std::filesystem::path &path) {
-    const auto fd = ::open(path.c_str(), O_RDONLY);
-    assert(fd >= 0);
-    struct stat st;
-    assert(!::fstat(fd, &st));
-    const auto sz = static_cast<size_t>(st.st_size);
-    if (!sz) {
-        assert(!::close(fd));
-        return {};
-    }
-    std::vector<uint8_t> res(sz);
-    assert(sz == ::read(fd, res.data(), res.size()));
-    assert(!::close(fd));
-    return res;
+    return read_file_pod<uint8_t>(path);
 }
 
 std::string read_file_string(const std::filesystem::path &path) {
