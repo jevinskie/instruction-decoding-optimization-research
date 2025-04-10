@@ -1,9 +1,9 @@
-[submodule "3rdparty/replxx"]
-	path = 3rdparty/replxx
-	url = https://github.com/AmokHuginnsson/replxx
 [submodule "3rdparty/fmt"]
 	path = 3rdparty/fmt
 	url = https://github.com/fmtlib/fmt
 [submodule "3rdparty/scnlib"]
 	path = 3rdparty/scnlib
 	url = https://github.com/eliaskosunen/scnlib
+[submodule "3rdparty/json"]
+	path = 3rdparty/json
+	url = https://github.com/nlohmann/json
