@@ -35,14 +35,14 @@ struct IFreq {
 static_assert(sizeof(IFreq) == 2 * sizeof(uint32_t));
 
 static std::vector<IFreq> parse_inst_freq(const fs::path &ifreq_file) {
-    std::vector<IFreq> res;
-    const auto bytes = read_file_bytes(ifreq_file);
-    assert(bytes.size() % sizeof(IFreq) == 0);
-    const std::span<const IFreq> ifreqs{reinterpret_cast<const IFreq *>(bytes.data()),
-                                        bytes.size() / sizeof(IFreq)};
-    res.reserve(ifreqs.size());
-    std::copy(ifreqs.begin(), ifreqs.end(), std::back_inserter(res));
-    return res;
+    // std::vector<IFreq> res;
+    // const auto bytes = read_file_bytes(ifreq_file);
+    // assert(bytes.size() % sizeof(IFreq) == 0);
+    // const std::span<const IFreq> ifreqs{reinterpret_cast<const IFreq *>(bytes.data()),
+    //                                     bytes.size() / sizeof(IFreq)};
+    // res.reserve(ifreqs.size());
+    // std::copy(ifreqs.begin(), ifreqs.end(), std::back_inserter(res));
+    return read_file_pod<IFreq>(ifreq_file);
 }
 
 static void print_inst_freqs(const std::vector<IFreq> &ifreqs) {
