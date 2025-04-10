@@ -1,8 +1,7 @@
-#include "instdec/utils.hpp"
-#include <iterator>
-#include <sys/types.h>
 #undef NDEBUG
 #include <cassert>
+
+#include "instdec/utils.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -16,7 +15,6 @@
 #include <scn/scan.h>
 #include <structopt/app.hpp>
 
-#include "instdec/instdec.hpp"
 using namespace instdec;
 
 namespace fs = std::filesystem;
