@@ -4,6 +4,7 @@ set(INSTDEC_SRC
 
 set(INSTDEC_HDR_STANDALONE
     instdec.hpp
+    common.hpp
 )
 
 set(INSTDEC_HDR_STANDALONE_PRIVATE
