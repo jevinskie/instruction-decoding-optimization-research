@@ -6,7 +6,6 @@ from rich import print
 def generate_dnf(einf: dict[str, tuple[int, int]]) -> None:
     ib = sympy.symbols([f"i{n}" for n in range(32)])
     terms = {}
-    # out = sympy.symbols("out")
     for i, kv in enumerate(einf.items()):
         name, bvs = kv
         bm, bp = bvs
