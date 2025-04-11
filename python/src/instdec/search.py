@@ -130,9 +130,42 @@ class Node(anytree.NodeMixin):
         return hash(tuple(hash_list))
 
 
+def create_tree_from_histogram() -> Node:
+    hist = {}
+    trees = [Node(hist[b], b) for b in hist.keys()]
+    num_leafs = len(trees)
+    trees.sort()
+    for i in range(num_leafs - 1):
+        left, right = trees[i : i + 2]
+        parent = Node(left.weight + right.weight, None)
+        parent.left_and_right_child = (left, right)
+        trees[i + 1] = parent
+        for j in range(i + 1, num_leafs - 1):
+            if trees[j + 1].weight > trees[j].weight:
+                break
+            trees[j : j + 2] = (trees[j + 1], trees[j])
+    root_node = trees[-1]
+    for n in anytree.iterators.preorderiter.PreOrderIter(root_node):
+        n.finalized = True
+    return root_node
+
+
+def count_matched(bitmask: int, bitpattern: int, einf: dict[str, tuple[int, int]]) -> int:
+    if bitpattern == 0 or bitmask == 0:
+        return 0
+    n = 0
+    for bm, bp in einf.values():
+        if (bm & bitpattern) & bitmask == bp & bitmask:
+            n += 1
+    return n
+
+
 def generate_search_tree(einf: dict[str, tuple[int, int]]) -> None:
     tree = {}
-    for iname, bvs in einf.items():
-        bm, bp = bvs
+    for i in reversed(range(32)):
+        bm = 1 << i
+        upperbits = 0xFFFF_FFFF ^ ((2**i) - 1)
+        print(f"i: {i:2d} bm: {bm:08x} {bm:032b} ub: {upperbits:032b}")
+
     print("tree:")
     print(tree)
