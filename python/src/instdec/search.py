@@ -70,7 +70,7 @@ def conditional_method_cache(condition_attr):
 @auto_clear_cache_on_false(["__hash__"], "finalized")
 class Node(anytree.NodeMixin):
     name: str
-    _finalized: bool = attrs.field(default=False, repr=False)
+    finalized: bool = attrs.field(default=False, repr=False)
 
     @property
     def left_child(self) -> Self | None:

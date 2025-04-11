@@ -11,6 +11,7 @@ from path import Path
 from rich import print
 
 from instdec.espresso import generate_espresso, parse_espresso
+from instdec.logic import generate_dnf
 from instdec.search import generate_search_tree
 from instdec.verilog import generate_verilog
 
@@ -123,6 +124,7 @@ def get_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("-c", "--check", action="store_true", help="Check encoding?")
     parser.add_argument("-s", "--cpsat", action="store_true", help="CP SAT")
     parser.add_argument("-S", "--search", action="store_true", help="Search tree")
+    parser.add_argument("--dnf", action="store_true", help="Disjuntive normal form")
     return parser
 
 
@@ -148,6 +150,8 @@ def real_main(args: argparse.Namespace) -> None:
         cpsat_check_encoding(enc_info)
     if args.search:
         generate_search_tree(enc_info)
+    if args.dnf:
+        generate_dnf(enc_info)
 
     if args.verilog is not None:
         vl = generate_verilog(enc_info)
