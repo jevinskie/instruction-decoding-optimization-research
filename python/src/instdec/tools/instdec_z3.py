@@ -57,7 +57,6 @@ def simplify(slv, mdl, t):
 
 def check_encoding(einf: dict[str, tuple[int, int]]) -> None:
     slv = z3.Solver()
-    slv
     ival = z3.BitVec("i", 32)
     vvals: dict[str, z3.BoolRef] = {}
     for iname, binf in einf.items():
@@ -67,16 +66,21 @@ def check_encoding(einf: dict[str, tuple[int, int]]) -> None:
         if valid is False:
             valid = z3.BoolVal(False)
         vvals[iname] = valid
-    undef = ~reduce(operator.or_, vvals.values())
+    inst_is_defined = reduce(operator.or_, vvals.values())
+    inst_is_undef = ~inst_is_defined
+    slv.check(inst_is_undef)
+    model = slv.model()
+    print(model)
+    print("endmodel\n\n!!!!!!!!!!!\n\n\n")
     # print(vvals)
-    print(undef)
-    ud2 = z3.simplify(undef)
-    print(ud2)
-    ud3 = ud2
-    # ud3 = simplify(ud2)
-    print(ud3)
-    ud4 = z3.simplify(ud3)
-    print(ud4)
+    print(inst_is_undef)
+    id2 = z3.simplify(inst_is_defined)
+    print(id2)
+    # id3 = id2
+    id3 = simplify(id2, model, [])
+    # print(id3)
+    id4 = z3.simplify(id3)
+    print(id4)
 
 
 def get_arg_parser() -> argparse.ArgumentParser:
