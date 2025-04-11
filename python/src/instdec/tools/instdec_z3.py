@@ -114,6 +114,9 @@ def get_arg_parser() -> argparse.ArgumentParser:
         required=False,
         help="Output Verilog path",
     )
+    parser.add_argument("-p", "--print", action="store_true", help="Print encoding")
+    parser.add_argument("-c", "--check", action="store_true", help="Check encoding?")
+    parser.add_argument("-s", "--cpsat", action="store_true", help="CP SAT")
     return parser
 
 
@@ -129,8 +132,14 @@ def real_main(args: argparse.Namespace) -> None:
     else:
         raise ValueError("need input json or espresso")
 
-    # print(enc_info)
-    check_encoding(enc_info)
+    if args.print:
+        print(enc_info)
+    if args.check:
+        check_encoding(enc_info)
+    if args.cpsat:
+        from instdec.cpsat import cpsat_check_encoding
+
+        cpsat_check_encoding(enc_info)
 
     if args.verilog is not None:
         vl = generate_verilog(enc_info)

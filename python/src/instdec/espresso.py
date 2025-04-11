@@ -33,9 +33,7 @@ def generate_espresso(einf: dict[str, tuple[int, int]]) -> str:
     el @= ".o 1"
     el @= ".ilb " + " ".join([f"I{i}" for i in reversed(range(32))])
     el @= ".olb V"
-    for i, kv in enumerate(einf.items()):
-        bmi = kv[1][0]
-        bpi = kv[1][1]
+    for bmi, bpi in einf.values():
         bits = ""
         for j in reversed(range(32)):
             sb = 1 << j
