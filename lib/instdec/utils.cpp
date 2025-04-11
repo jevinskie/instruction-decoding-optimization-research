@@ -43,4 +43,19 @@ std::string read_file_string(const std::filesystem::path &path) {
     return res;
 }
 
+std::vector<std::string> split_lines(const std::string_view str) {
+    std::vector<std::string> lines;
+    size_t pos = 0;
+    while (pos < str.size()) {
+        const auto next_pos = str.find_first_of("\n", pos);
+        if (next_pos == std::string_view::npos) {
+            lines.emplace_back(str.substr(pos));
+            break;
+        }
+        lines.emplace_back(str.substr(pos, next_pos - pos));
+        pos = next_pos + 1;
+    }
+    return lines;
+}
+
 } // namespace instdec

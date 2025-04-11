@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <span>
 #include <string>
+#include <string_view>
 #include <sys/fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -54,6 +55,8 @@ std::vector<T> read_file_pod(const std::filesystem::path &path) {
     assert(!::close(fd));
     return res;
 }
+
+std::vector<std::string> split_lines(const std::string_view str);
 
 } // namespace instdec
 
