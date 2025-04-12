@@ -3,7 +3,6 @@ from typing import Self
 
 import anytree
 import attrs
-from rich import print
 
 
 def auto_clear_cache_on_false(cache_clearing_methods, attribute_name, trigger_value=False):
@@ -160,12 +159,23 @@ def count_matched(bitmask: int, bitpattern: int, einf: dict[str, tuple[int, int]
     return n
 
 
-def generate_search_tree(einf: dict[str, tuple[int, int]]) -> None:
-    tree = {}
-    for i in reversed(range(32)):
-        bm = 1 << i
-        upperbits = 0xFFFF_FFFF ^ ((2**i) - 1)
-        print(f"i: {i:2d} bm: {bm:08x} {bm:032b} ub: {upperbits:032b}")
+# this is stupid, won't ever work
+def generate_search_tree_helper(
+    bit: int, einf: dict[str, tuple[int, int]], bm: int = 0, bp: int = 0
+) -> None:
+    if bit < 0:
+        return
+    tbm = 1 << bit
+    nbm = bm | tbm
+    nbp0 = bp & bm
+    nbp1 = nbp0 | tbm
+    # count0 = count_matched(nbm, nbp0, einf)
+    # count1 = count_matched(nbm, nbp1, einf)
+    # print(f"bit: {bit:2d} nbm: {nbm:032b} nbp0: {nbp0:032b} nbp1: {nbp1:032b}")
+    # print(f"count0: {count0} count1: {count1}")
+    generate_search_tree_helper(bit - 1, einf, nbm, nbp0)
+    generate_search_tree_helper(bit - 1, einf, nbm, nbp1)
 
-    print("tree:")
-    print(tree)
+
+def generate_search_tree(einf: dict[str, tuple[int, int]]) -> None:
+    return generate_search_tree_helper(31, einf)

@@ -11,7 +11,7 @@ from path import Path
 from rich import print
 
 from instdec.espresso import generate_espresso, parse_espresso
-from instdec.logic import generate_dnf
+from instdec.logic import geneerate_dimacs, generate_cnf, generate_dnf, terms_from_enc_info
 from instdec.search import generate_search_tree
 from instdec.verilog import generate_verilog
 
@@ -89,42 +89,20 @@ def get_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="instdec-py-z3")
     in_group = parser.add_mutually_exclusive_group(required=True)
     in_group.add_argument(
-        "-i",
-        "--enc-json",
-        dest="enc_json",
-        type=Path,
-        required=False,
-        help="Prebased encoding bitmask/bitpattern JSON path",
+        "-i", "--enc-json", type=Path, help="Prebased encoding bitmask/bitpattern JSON path"
     )
-    in_group.add_argument(
-        "-E",
-        "--espresso-in",
-        dest="espresso_in",
-        type=Path,
-        required=False,
-        help="Input Espresso file",
-    )
+    in_group.add_argument("-E", "--espresso-in", type=Path, help="Input Espresso file")
     parser.add_argument(
-        "-e",
-        "--espresso-out",
-        dest="espresso_out",
-        type=Path,
-        required=False,
-        help="Output file for Espresso optimization",
+        "-e", "--espresso-out", type=Path, help="Output file for Espresso optimization"
     )
-    parser.add_argument(
-        "-v",
-        "--verilog",
-        dest="verilog",
-        type=Path,
-        required=False,
-        help="Output Verilog path",
-    )
+    parser.add_argument("-v", "--verilog", type=Path, help="Output Verilog path")
     parser.add_argument("-p", "--print", action="store_true", help="Print encoding")
     parser.add_argument("-c", "--check", action="store_true", help="Check encoding?")
     parser.add_argument("-s", "--cpsat", action="store_true", help="CP SAT")
     parser.add_argument("-S", "--search", action="store_true", help="Search tree")
     parser.add_argument("--dnf", action="store_true", help="Disjuntive normal form")
+    parser.add_argument("--cnf", action="store_true", help="Conjunctive normal form")
+    parser.add_argument("--dimacs", type=Path, help="Output DIMACS CNF path")
     return parser
 
 
@@ -152,6 +130,13 @@ def real_main(args: argparse.Namespace) -> None:
         generate_search_tree(enc_info)
     if args.dnf:
         generate_dnf(enc_info)
+    if args.cnf or args.dimacs:
+        terms = terms_from_enc_info(enc_info)
+        cnf_clauses, cnf_num_vars = generate_cnf(terms)
+        print(f"len(cnf_clauses): {len(cnf_clauses)} cnf_num_vars: {cnf_num_vars}")
+        dimacs = geneerate_dimacs(cnf_clauses, cnf_num_vars)
+        with open(args.dimacs, "w") as f:
+            f.write(dimacs)
 
     if args.verilog is not None:
         vl = generate_verilog(enc_info)
