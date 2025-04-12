@@ -90,23 +90,3 @@ def generate_cnf(terms: list[list[int]]) -> tuple[list[list[int]], int]:
 
 def geneerate_dimacs(clauses: list, num_vars: int) -> str:
     return f"p cnf {num_vars} {len(clauses)}\n" + "\n".join([f"{c} 0" for c in clauses]) + "\n"
-
-
-# Example usage
-if __name__ == "__main__":
-    # Sample terms (replace with reading from a file)
-    sample_terms = [
-        "11-100-0------------------------ 1",
-        "10-10---01---------------------- 1",
-        "--1-1001-0---------------------- 1",
-        # ... 793 terms total
-    ]
-
-    # For real use, read from a file
-    # with open('terms.txt', 'r') as f:
-    #     terms = f.readlines()
-    terms = sample_terms  # Using sample for demonstration
-
-    clauses, num_vars = generate_cnf(terms)
-    geneerate_dimacs(clauses, num_vars)
-    print(f"CNF written to 'output.cnf' with {num_vars} variables and {len(clauses)} clauses.")
