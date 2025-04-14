@@ -22,13 +22,13 @@ using namespace instdec;
 namespace fs = std::filesystem;
 
 struct Args {
-    std::optional<fs::path> inst_freq_file;
+    std::optional<fs::path> instfreq_file;
     std::optional<fs::path> espresso_file;
     std::optional<bool> treegy  = false;
     std::optional<bool> naive   = false;
     std::optional<bool> verbose = false;
 };
-STRUCTOPT(Args, inst_freq_file, espresso_file, treegy, naive, verbose);
+STRUCTOPT(Args, instfreq_file, espresso_file, treegy, naive, verbose);
 
 struct IFreq {
     uint32_t iword;
@@ -219,8 +219,8 @@ void naive_repl(const fs::path &espresso_path) {
 }
 
 int main_task(const Args &args) {
-    if (args.inst_freq_file) {
-        const auto ifreqs = parse_inst_freq(*args.inst_freq_file);
+    if (args.instfreq_file) {
+        const auto ifreqs = parse_inst_freq(*args.instfreq_file);
         print_inst_freqs(ifreqs);
     }
     if (args.espresso_file) {
