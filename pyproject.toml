@@ -23,6 +23,7 @@ dependencies = [
   "rich>=14.0.0",
   "simplejson>=3.20.1",
   "sympy>=1.13.3",
+  "toolz>=1.0.0",
   "z3-solver>=4.14.1.0"
 ]
 description = "Python bindings and utilities for instruction decoding research"
