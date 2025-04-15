@@ -68,8 +68,6 @@ def expr_idents(expr: Expression) -> list[str]:
             idents.append(e.value)
 
     helper(expr)
-    if len(idents) != len(set(idents)):
-        raise ValueError("got duplicate AST.Identifiers")
     return idents
 
 
