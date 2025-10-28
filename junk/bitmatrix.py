@@ -185,9 +185,9 @@ def eval_lut_np_bit(ibm: tuple[int, int, int, int]) -> None:
     print(f"prods_w_dc:\n{prods_w_dc}")
 
     # sums = np.bitwise_or(sums, ttm)
-    sums = np.logical_and.reduce(prods_w_dc, 1)
+    sums = np.bitwise_and.reduce(prods_w_dc, 1)
     print(f"bit sums:\n{sums}")
-    sum = np.logical_or.reduce(sums)
+    sum = np.bitwise_or.reduce(sums)
     print(f"bit sum: {sum}")
     # prods = dot_prod_1d_bit(prods)
     # print(f"bit prods2:\n{prods2}")
