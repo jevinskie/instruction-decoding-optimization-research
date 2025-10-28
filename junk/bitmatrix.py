@@ -8,6 +8,7 @@ import numpy as np
 
 # from rich import print
 import sympy as sp
+import sympy.logic.boolalg as boa
 from more_itertools import chunked
 
 # sp.init_printing(use_unicode=False)
@@ -255,14 +256,16 @@ def eval_lut_np_bit_sym(ibm: tuple[sp.Symbol, sp.Symbol, sp.Symbol, sp.Symbol]) 
     print(f"bs ibm: {ibm}")
     lut = sp.Matrix([list(ibm), list(ibm), list(ibm), list(ibm)])
     print(f"bs lut:\n{lut}")
-    prods = 0
-    prods = lut & s_ttm
+    # prods = 0
+    # prods = lut & s_ttm
+    # prods = sp.And(list(ibm), s_ttm)
+    prods = boa.Xor(lut, s_ttm)
     print(f"bs prods:\n{prods}")
-    prods_w_dc = np.bitwise_or(prods, s_ttd)
+    prods_w_dc = boa.Or(prods, s_ttd)
     print(f"bs prods_w_dc:\n{prods_w_dc}")
 
     # sums = np.bitwise_or(sums, ttm)
-    sums = np.bitwise_and.reduce(prods_w_dc, 1)
+    sums = reduce(boa.Or, prods_w_dc)
     print(f"bs sums:\n{sums}")
     sum = np.bitwise_or.reduce(sums)
     print(f"bs sum: {sum}")
