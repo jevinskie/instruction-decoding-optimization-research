@@ -179,9 +179,9 @@ def eval_lut_np(ibm: tuple[int, int, int, int]) -> None:
 
 def eval_lut_np_bit(ibm: tuple[int, int, int, int]) -> None:
     print(f"bit lut: {ibm}")
-    prods = np.logical_and([list(ibm)], ttm)
+    prods = np.bitwise_and([list(ibm)], ttm)
     print(f"bit prods:\n{prods}")
-    prods_w_dc = np.logical_or(prods, ttd)
+    prods_w_dc = np.bitwise_or(prods, ttd)
     print(f"prods_w_dc:\n{prods_w_dc}")
 
     # sums = np.bitwise_or(sums, ttm)
