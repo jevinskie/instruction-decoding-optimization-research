@@ -3,8 +3,9 @@
 import operator
 from collections.abc import Callable
 from functools import reduce
-from typing import Any, cast
+from typing import cast
 
+import numpy as np
 from rich import print
 
 tts = """
@@ -112,7 +113,7 @@ def dot_prod_bin(v_a: list[int], v_b: list[int]) -> int:
     return dot_prod_generic(v_a, v_b, operator.__and__, operator.__or__)
 
 
-def eval_lut(ibm: tuple[int, int, int, int], f=mat_mul, g=dot_prod) -> Any:
+def eval_lut(ibm: tuple[int, int, int, int], f=mat_mul, g=dot_prod) -> None:
     [a, b, c, d] = ibm
     print(f"lut: {ibm}")
     sums = f([list(ibm)], ttm)
@@ -124,7 +125,6 @@ def eval_lut(ibm: tuple[int, int, int, int], f=mat_mul, g=dot_prod) -> Any:
     sp = g(sums[0], prods[0])
     print(f"sp:\n{sp}")
     print()
-    return 0
 
 
 t_maj3 = (1, 1, 1, 0)
@@ -143,3 +143,37 @@ eval_lut(t_maj3, mat_mul_bin, dot_prod_bin)
 eval_lut(t_maj2a, mat_mul_bin, dot_prod_bin)
 eval_lut(t_no_maj2b, mat_mul_bin, dot_prod_bin)
 eval_lut(t_no_maj1, mat_mul_bin, dot_prod_bin)
+
+# NumPy
+
+
+def eval_lut_np(ibm: tuple[int, int, int, int], f=mat_mul, g=dot_prod) -> None:
+    [a, b, c, d] = ibm
+    print(f"lut: {ibm}")
+    sums = f([list(ibm)], ttm)
+    print(f"sums:\n{sums}")
+
+    prods = f(sums, ttm)
+    print(f"prods:\n{prods}")
+
+    sp = g(sums[0], prods[0])
+    print(f"sp:\n{sp}")
+    print()
+
+
+n_maj3 = np.array(t_maj3)
+n_maj2a = np.array(t_maj2a)
+n_no_maj2b = np.array(t_no_maj2b)
+n_no_maj1 = np.array(t_no_maj1)
+
+eval_lut_np(t_maj3)
+eval_lut_np(t_maj2a)
+eval_lut_np(t_no_maj2b)
+eval_lut_np(t_no_maj1)
+
+print("\n\nbin:\n\n")
+
+eval_lut_np(t_maj3, mat_mul_bin, dot_prod_bin)
+eval_lut_np(t_maj2a, mat_mul_bin, dot_prod_bin)
+eval_lut_np(t_no_maj2b, mat_mul_bin, dot_prod_bin)
+eval_lut_np(t_no_maj1, mat_mul_bin, dot_prod_bin)
