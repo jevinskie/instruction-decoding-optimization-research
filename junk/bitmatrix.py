@@ -5,7 +5,12 @@ import operator
 from functools import reduce
 
 import numpy as np
-from rich import print
+
+# from rich import print
+import sympy as sp
+from more_itertools import chunked
+
+sp.init_printing(use_unicode=False)
 
 tts = """
 -111
@@ -45,7 +50,8 @@ inv_ttd = [
 t_maj3 = (1, 1, 1, 0)
 t_maj2a = (1, 0, 0, 1)
 t_no_maj2b = (0, 1, 0, 1)
-t_no_maj1 = (1, 0, 0, 0)
+t_no_maj1_0 = (1, 0, 0, 0)
+t_no_maj1_1 = (0, 1, 0, 0)
 
 
 # def mat_bin_op(
@@ -151,44 +157,83 @@ def dot_prod_1d_bit(m_a: list[int], m_b: list[int]) -> int:
 
 
 def eval_lut_np(ibm: tuple[int, int, int, int]) -> None:
-    print(f"lut: {ibm}")
-    sums = np.matmul([list(ibm)], ttm)
-    print(f"sums:\n{sums}")
+    lut = np.array(ibm)
+    print(f"lut: {lut}")
+    lutm = np.array([list(ibm), list(ibm), list(ibm), list(ibm)])
+    print(f"lutm:\n{lutm}")
 
-    prods = np.matmul(sums, ttm)
+    prods = np.matmul(lut, ttm)
     print(f"prods:\n{prods}")
+    prods_w_dc = prods + ttd
+    print(f"prods_w_dc:\n{prods_w_dc}")
 
-    sp = np.dot(sums[0], prods[0])
-    print(f"sp:\n{sp}")
+    sums = np.add.reduce(prods_w_dc, 1)
+    print(f"sums:\n{sums}")
+    sum = np.add.reduce(sums)
+    print(f"sum: {sum}")
+
+    # sp = np.dot(sums[0], prods[0])
+    # print(f"sp:\n{sp}")
     print()
 
 
 def eval_lut_np_bit(ibm: tuple[int, int, int, int]) -> None:
     print(f"bit lut: {ibm}")
-    sums = np.bitwise_and([list(ibm)], ttm)
-    print(f"bit sums:\n{sums}")
-
-    prods = np.bitwise_or(sums, ttm)
+    prods = np.bitwise_and([list(ibm)], ttm)
     print(f"bit prods:\n{prods}")
+    prods_w_dc = np.bitwise_or(prods, ttd)
+    print(f"prods_w_dc:\n{prods_w_dc}")
 
-    sp = dot_prod_1d_bit(sums[0], prods[0])
-    print(f"dot prod:\n{sp}")
+    # sums = np.bitwise_or(sums, ttm)
+    sums = np.bitwise_and.reduce(prods_w_dc, 1)
+    print(f"bit sums:\n{sums}")
+    sum = np.bitwise_or.reduce(sums)
+    print(f"bit sum: {sum}")
+    # prods = dot_prod_1d_bit(prods)
+    # print(f"bit prods2:\n{prods2}")
+
+    # sp = dot_prod_1d_bit(sums[0], prods[0])
+    # print(f"dot prod:\n{sp}")
     print()
 
 
 n_maj3 = np.array(t_maj3)
 n_maj2a = np.array(t_maj2a)
 n_no_maj2b = np.array(t_no_maj2b)
-n_no_maj1 = np.array(t_no_maj1)
+n_no_maj1_0 = np.array(t_no_maj1_0)
+n_no_maj1_1 = np.array(t_no_maj1_1)
+
+syms_str = [f"v_{i}_{j}" for i in range(4) for j in range(4)]
+print(f"syms_str: {syms_str}")
+syms_list = sp.symbols(" ".join(syms_str), integer=True)
+print(f"syms_list: {syms_list}")
+syms = np.array(list(chunked(syms_list, 4)))
+print(f"syms: {syms}")
+
+isyms_list = sp.symbols("a b c d", integer=True)
+print(f"isyms_list: {isyms_list}")
+t_isyms = tuple(isyms_list)
+print(f"t_isyms: {t_isyms}")
+isyms = np.array(t_isyms)
+print(f"isyms: {isyms}")
+
+print(f"ttm:\n{np.array(ttm)}")
+print()
+print(f"ttd:\n{np.array(ttd)}")
+print()
 
 eval_lut_np(t_maj3)
 eval_lut_np(t_maj2a)
 eval_lut_np(t_no_maj2b)
-eval_lut_np(t_no_maj1)
+eval_lut_np(t_no_maj1_0)
+eval_lut_np(t_no_maj1_1)
+eval_lut_np(t_isyms)
 
 print("\n\nbin:\n\n")
 
 eval_lut_np_bit(t_maj3)
 eval_lut_np_bit(t_maj2a)
 eval_lut_np_bit(t_no_maj2b)
-eval_lut_np_bit(t_no_maj1)
+eval_lut_np_bit(t_no_maj1_0)
+eval_lut_np_bit(t_no_maj1_1)
+# eval_lut_np_bit(t_isyms)
