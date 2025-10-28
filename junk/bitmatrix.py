@@ -10,7 +10,8 @@ import numpy as np
 import sympy as sp
 from more_itertools import chunked
 
-sp.init_printing(use_unicode=False)
+# sp.init_printing(use_unicode=False)
+sp.init_printing(use_unicode=True)
 
 tts = """
 -111
@@ -207,7 +208,7 @@ syms_str = [f"v_{i}_{j}" for i in range(4) for j in range(4)]
 print(f"syms_str: {syms_str}")
 syms_list = sp.symbols(" ".join(syms_str), integer=True)
 print(f"syms_list: {syms_list}")
-syms = np.array(list(chunked(syms_list, 4)))
+syms = sp.Matrix(list(chunked(syms_list, 4)))
 print(f"syms: {syms}")
 
 isyms_list = sp.symbols("a b c d", integer=True)
@@ -217,10 +218,10 @@ print(f"t_isyms: {t_isyms}")
 isyms = np.array(t_isyms)
 print(f"isyms: {isyms}")
 
-isyms_bit_list = sp.symbols("a b c d", integer=True)
+isyms_bit_list = sp.symbols("Ba Bb Bc Bd", integer=True)
 print(f"isyms_bit_list: {isyms_bit_list}")
 t_isyms_bit = tuple(isyms_bit_list)
-print(f"t_isyms: {t_isyms_bit}")
+print(f"t_isyms_bit: {t_isyms_bit}")
 isyms_bit = np.array(t_isyms_bit)
 print(f"isyms_bit: {isyms_bit}")
 
@@ -243,4 +244,34 @@ eval_lut_np_bit(t_maj2a)
 eval_lut_np_bit(t_no_maj2b)
 eval_lut_np_bit(t_no_maj1_0)
 eval_lut_np_bit(t_no_maj1_1)
-eval_lut_np_bit(t_isyms_bit)
+
+s_ttm = sp.Matrix(ttm)
+s_ttd = sp.Matrix(ttd)
+
+print(f"s_ttm: {s_ttm}")
+
+
+def eval_lut_np_bit_sym(ibm: tuple[sp.Symbol, sp.Symbol, sp.Symbol, sp.Symbol]) -> None:
+    print(f"bs ibm: {ibm}")
+    lut = sp.Matrix([list(ibm), list(ibm), list(ibm), list(ibm)])
+    print(f"bs lut:\n{lut}")
+    prods = 0
+    prods = lut & s_ttm
+    print(f"bs prods:\n{prods}")
+    prods_w_dc = np.bitwise_or(prods, s_ttd)
+    print(f"bs prods_w_dc:\n{prods_w_dc}")
+
+    # sums = np.bitwise_or(sums, ttm)
+    sums = np.bitwise_and.reduce(prods_w_dc, 1)
+    print(f"bs sums:\n{sums}")
+    sum = np.bitwise_or.reduce(sums)
+    print(f"bs sum: {sum}")
+    # prods = dot_prod_1d_bit(prods)
+    # print(f"bit prods2:\n{prods2}")
+
+    # sp = dot_prod_1d_bit(sums[0], prods[0])
+    # print(f"dot prod:\n{sp}")
+    print()
+
+
+eval_lut_np_bit_sym(t_isyms_bit)
