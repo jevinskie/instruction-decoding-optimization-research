@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
 
+import operator
+from functools import reduce
+
 import numpy as np
 from rich import print
 
@@ -143,6 +146,10 @@ t_no_maj1 = (1, 0, 0, 0)
 # NumPy
 
 
+def dot_prod_1d_bit(m_a: list[int], m_b: list[int]) -> int:
+    return reduce(operator.__or__, [x & y for x, y in zip(m_a, m_b)])
+
+
 def eval_lut_np(ibm: tuple[int, int, int, int]) -> None:
     print(f"lut: {ibm}")
     sums = np.matmul([list(ibm)], ttm)
@@ -164,7 +171,7 @@ def eval_lut_np_bit(ibm: tuple[int, int, int, int]) -> None:
     prods = np.bitwise_or(sums, ttm)
     print(f"bit prods:\n{prods}")
 
-    sp = np.dot(sums[0], prods[0])
+    sp = dot_prod_1d_bit(sums[0], prods[0])
     print(f"dot prod:\n{sp}")
     print()
 
