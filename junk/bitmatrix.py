@@ -11,8 +11,8 @@ import sympy as sp
 import sympy.logic.boolalg as boa
 from more_itertools import chunked
 
-# sp.init_printing(use_unicode=False)
-sp.init_printing(use_unicode=True)
+sp.init_printing(use_unicode=False)
+# sp.init_printing(use_unicode=True)
 
 tts = """
 -111
@@ -21,12 +21,19 @@ tts = """
 1--1
 """
 
+
+def mat_bool(m: list[list[int]]) -> list[list[bool]]:
+    return [[bool(v) for v in r] for r in m]
+
+
 ttm = [
     [0, 1, 1, 1],
     [1, 1, 0, 0],
     [1, 0, 1, 0],
     [1, 0, 0, 1],
 ]
+
+ttmb = mat_bool(ttm)
 
 inv_ttm = [
     [1, 0, 0, 0],
@@ -41,6 +48,8 @@ ttd = [
     [0, 1, 0, 1],
     [0, 1, 1, 0],
 ]
+
+ttdb = mat_bool(ttd)
 
 inv_ttd = [
     [0, 1, 1, 1],
@@ -248,20 +257,27 @@ eval_lut_np_bit(t_no_maj1_1)
 
 s_ttm = sp.Matrix(ttm)
 s_ttd = sp.Matrix(ttd)
+s_ttmb = sp.Matrix(ttmb)
+s_ttdb = sp.Matrix(ttdb)
 
 print(f"s_ttm: {s_ttm}")
+print(f"s_ttd: {s_ttd}")
+print(f"s_ttmb: {s_ttmb}")
+print(f"s_ttdb: {s_ttdb}")
 
 
 def eval_lut_np_bit_sym(ibm: tuple[sp.Symbol, sp.Symbol, sp.Symbol, sp.Symbol]) -> None:
     print(f"bs ibm: {ibm}")
-    lut = sp.Matrix([list(ibm), list(ibm), list(ibm), list(ibm)])
+    lutl = [list(ibm), list(ibm), list(ibm), list(ibm)]
+    lut = sp.Matrix(lutl)
     print(f"bs lut:\n{lut}")
     # prods = 0
     # prods = lut & s_ttm
     # prods = sp.And(list(ibm), s_ttm)
-    prods = boa.Xor(lut, s_ttm)
+    # prods = boa.Xor(lut, s_ttmb)
+    prods = sp.And(lut, s_ttmb)
     print(f"bs prods:\n{prods}")
-    prods_w_dc = boa.Or(prods, s_ttd)
+    prods_w_dc = boa.Or(prods, s_ttdb)
     print(f"bs prods_w_dc:\n{prods_w_dc}")
 
     # sums = np.bitwise_or(sums, ttm)
