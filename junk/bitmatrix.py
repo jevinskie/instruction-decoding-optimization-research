@@ -53,56 +53,10 @@ inv_ttd = [
 ]
 
 
-def mat_bool(m: list[list[int]]) -> list[list[bool]]:
-    return [[bool(v) for v in r] for r in m]
-
-
-def mat_unbool(m: list[list[bool]]) -> list[list[int]]:
-    return [[int(v) for v in r] for r in m]
-
-
-def mat_bool_sym(m: sp.Matrix) -> sp.Matrix:
-    return [[bool(v) for v in r] for r in m]
-
-
-def unbool_sym_scalar(v):
-    if isinstance(v, bool):
-        if v is True:
-            return sp.Integer(1)
-        elif v is False:
-            return sp.Integer(0)
-    elif isinstance(v, (boa.BooleanFalse, boa.BooleanTrue)):
-        if isinstance(v, boa.BooleanTrue):
-            return sp.Integer(1)
-        elif isinstance(v, boa.BooleanFalse):
-            return sp.Integer(0)
-        else:
-            raise ValueError(f"v: {v} type(v): {type(v)}")
-    return v
-
-
-def mat_unbool_sym(m: sp.Matrix) -> sp.Matrix:
-    return m.applyfunc(unbool_sym_scalar)
-
-
 T = TypeVar("T")
 
 UnOp = Callable[[T], T]
 BinOp = Callable[[T, T], T]
-
-
-def py_matmul1(a: np.ndarray, b: np.ndarray):
-    ra, ca = a.shape
-    rb, cb = b.shape
-    assert ca == rb, f"{ca} != {rb}"
-
-    output = np.zeros(shape=(ra, cb))
-    for i in range(ra):
-        for j in range(cb):
-            for k in range(rb):
-                output[i, j] += a[i, k] * b[k, j]
-
-    return output
 
 
 @define(auto_attribs=True, init=False)
@@ -145,7 +99,7 @@ class BMat(Generic[T]):
         m = len(mat)
         n = len(mat[0])
         assert all([len(row) == n for row in mat])
-        print(f"NR: m: {m} n: {n} mat: {mat}")
+        # print(f"NR: m: {m} n: {n} mat: {mat}")
         r = cast(list[list[T]], [[None] * n for _ in range(m)])
         for i in range(m):
             for j in range(n):
@@ -183,29 +137,24 @@ class BMat(Generic[T]):
                     a = self[i, k]
                     b = other[k, j]
                     bv = BMat.normalize_scalar(prod_op(a, b))
-                    print(f"mm prod_op({a}, {b}) => {bv}")
+                    # print(f"mm prod_op({a}, {b}) => {bv}")
                     rv = BMat.normalize_scalar(sum_op(v, bv))
-                    print(f"mm sum_op({v}, {bv}) => {rv}")
+                    # print(f"mm sum_op({v}, {bv}) => {rv}")
                     r[i][j] = rv
         return BMat(r)
 
     def mat_bin_op(self, other: BMat[T], bin_op: BinOp) -> BMat[T]:
-        m = self.shape[0]
-        n1 = self.shape[1]
-        n2 = other.shape[0]
-        assert n1 == n2
-        n = n1
-        p = other.shape[1]
-        r = cast(list[list[T]], [[None] * p for _ in range(m)])
+        m, n = self.shape
+        assert self.shape == other.shape
+        r = cast(list[list[T]], [[None] * n for _ in range(m)])
 
         for i in range(n):
-            for j in range(p):
-                for k in range(m):
-                    a = self[i, k]
-                    b = other[k, j]
-                    bv = BMat.normalize_scalar(bin_op(a, b))
-                    print(f"bo bin_op({a}, {b}) => {bv}")
-                    r[i][j] = bv
+            for j in range(m):
+                a = self[i, j]
+                b = other[i, j]
+                bv = BMat.normalize_scalar(bin_op(a, b))
+                # print(f"bo bin_op({a}, {b}) => {bv}")
+                r[i][j] = bv
         return BMat(r)
 
     def matadd(self, other: BMat[T]) -> BMat[T]:
@@ -220,7 +169,7 @@ class BMat(Generic[T]):
             for j in range(m):
                 v = self[i, j]
                 uv = BMat.normalize_scalar(un_op(v))
-                print(f"un un_op({v}) => {uv}")
+                # print(f"un un_op({v}) => {uv}")
                 r[i][j] = uv
         return BMat(r)
 
@@ -552,7 +501,8 @@ def eval_lut_np_bit_sym(ibm: tuple[sp.Symbol, sp.Symbol, sp.Symbol, sp.Symbol]) 
     lut = BMat(lutl)
     print(f"bs lut:\n{lut}")
     print(f"bs ttmb:\n{ttmb}")
-    prods = lut.matmul(ttmb, sp.And, sp.Or)
+    # prods = lut.matmul(ttmb, sp.And, sp.Or)
+    prods = lut.mat_bin_op(ttmb, sp.And)
     print(f"bs prods:\n{prods}")
     prods_w_dc = prods.mat_bin_op(ttdb, sp.Or)
     print(f"bs prods_w_dc:\n{prods_w_dc}")
