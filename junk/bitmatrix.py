@@ -540,11 +540,11 @@ def eval_lut_np_bit_sym(ibm: tuple[sp.Symbol, sp.Symbol, sp.Symbol, sp.Symbol]) 
     prods_w_dc = prods.mat_bin_op(ttdb, sp.Or)
     print(f"bs prods_w_dc:\n{prods_w_dc}")
 
-    red = [[reduce(sp.Or, row) for row in prods_w_dc.rows]]
+    red = [[reduce(sp.And, row) for row in prods_w_dc.rows]]
     print(f"red: {red}")
     sums = BMat.normalize_raw(red)
     print(f"bs sums:\n{sums}")
-    sum = reduce(sp.Or, sums)
+    sum = reduce(sp.Or, sums[0])
     print(f"bs sum: {sum}")
     print()
 
