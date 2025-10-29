@@ -271,8 +271,8 @@ SPVal = sp.Symbol | sp.Integer
 def mat_bin_sym(
     m_a: sp.Matrix,
     m_b: sp.Matrix,
-    bin_op: Callable[[SPVal, SPVal], SPVal],
-    red_op=Callable[[SPVal, SPVal], SPVal],
+    prod_op: Callable[[SPVal, SPVal], SPVal],
+    sum_op=Callable[[SPVal, SPVal], SPVal],
     ident: SPVal = sp.Integer(0),
 ) -> sp.Matrix:
     m = m_a.shape[0]
@@ -299,15 +299,15 @@ def mat_bin_sym(
                 v = r[i, j]
                 a = m_a[i, k]
                 b = m_b[k, j]
-                print(f"a: {a} b: {b}")
-                bv = bin_op(a, b)
-                rv = red_op(v, bv)
+                # print(f"a: {a} b: {b}")
+                bv = prod_op(a, b)
+                rv = sum_op(v, bv)
                 r[i, j] = rv
     # return cast(sp.Matrix, r)
     return r
 
 
-def mat_add_sym(
+def mat_sum_sym(
     m_a: sp.Matrix,
     m_b: sp.Matrix,
 ) -> sp.Matrix:
@@ -348,11 +348,11 @@ def eval_lut_np_bit_sym(ibm: tuple[sp.Symbol, sp.Symbol, sp.Symbol, sp.Symbol]) 
     # prods = lut.applyfunc(operator.__and__, s_ttm)
     prods = mat_bin_sym(lut, s_ttm, sp.And, sp.Or)
     print(f"bs prods:\n{prods}")
-    prods_w_dc = mat_add_sym(prods, s_ttd)
+    prods_w_dc = mat_sum_sym(prods, s_ttd)
     print(f"bs prods_w_dc:\n{prods_w_dc}")
 
     # sums = np.bitwise_or(sums, ttm)
-    sums = sp.reduce(sp.Or, prods_w_dc)
+    sums = reduce(sp.Or, prods_w_dc[..., 0])
     print(f"bs sums:\n{sums}")
     sum = np.bitwise_or.reduce(sums)
     print(f"bs sum: {sum}")
