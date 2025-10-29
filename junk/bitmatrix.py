@@ -9,6 +9,7 @@ import numpy as np
 
 # from rich import print
 import sympy as sp
+import sympy.logic.boolalg as boa
 from more_itertools import chunked
 
 sp.init_printing(use_unicode=False)
@@ -34,8 +35,22 @@ def mat_bool_sym(m: sp.Matrix) -> sp.Matrix:
     return [[bool(v) for v in r] for r in m]
 
 
+def unbool_sym_scalar(v):
+    if isinstance(v, bool):
+        if v:
+            return sp.Integer(1)
+        else:
+            return sp.Integer(0)
+    elif isinstance(v, boa.Boolean):
+        if v:
+            return sp.Integer(1)
+        else:
+            return sp.Integer(0)
+    return v
+
+
 def mat_unbool_sym(m: sp.Matrix) -> sp.Matrix:
-    return m.applyfunc(lambda x: sp.Integer(x))
+    return m.applyfunc(unbool_sym_scalar)
 
 
 ttm = [
@@ -269,13 +284,13 @@ eval_lut_np_bit(t_no_maj1_1)
 
 s_ttm = sp.Matrix(ttm)
 s_ttd = sp.Matrix(ttd)
-s_ttmb = sp.Matrix(ttmb)
-s_ttdb = sp.Matrix(ttdb)
+# s_ttmb = sp.Matrix(ttmb)
+# s_ttdb = sp.Matrix(ttdb)
 
 print(f"s_ttm: {s_ttm}")
 print(f"s_ttd: {s_ttd}")
-print(f"s_ttmb: {s_ttmb}")
-print(f"s_ttdb: {s_ttdb}")
+# print(f"s_ttmb: {s_ttmb}")
+# print(f"s_ttdb: {s_ttdb}")
 
 SPVal = sp.Symbol | sp.Integer
 
@@ -300,7 +315,7 @@ def mat_bin_sym(
     assert n1 == n2
     n = n1
     print(f"m: {m} n: {n} p: {p}")
-    r = sp.Matrix([[ident] * p for _ in range(m)])
+    r = sp.Matrix(np.array([[ident] * p for _ in range(m)]))
 
     print(f"ty m_a: {type(m_a)} dt: {m_b} ty m_b: {type(m_b)}")
     print(f"m_a: {m_a} m_b: {m_b}")
@@ -314,8 +329,11 @@ def mat_bin_sym(
                 # print(f"a: {a} b: {b}")
                 bv = prod_op(a, b)
                 rv = sum_op(v, bv)
-                r[i, j] = rv
+                rvi = unbool_sym_scalar(rv)
+                print(f"rv: {rv} rvi: {rvi}")
+                r[i, j] = rvi
     # return cast(sp.Matrix, r)
+    # return r
     return mat_unbool_sym(r)
 
 
@@ -330,7 +348,7 @@ def mat_sum_sym(
     assert n1 == n2
     n = n1
     print(f"m: {m} n: {n} p: {p}")
-    r = sp.Matrix([[sp.Integer(0)] * p for _ in range(m)])
+    r = sp.Matrix(np.array([[sp.Integer(0)] * p for _ in range(m)]))
 
     print(f"ty m_a: {type(m_a)} dt: {m_b} ty m_b: {type(m_b)}")
     print(f"m_a: {m_a} m_b: {m_b}")
@@ -343,7 +361,8 @@ def mat_sum_sym(
                 b = m_b[k, j]
                 rv = sp.Or(v, sp.Or(a, b))
                 # print(f"shapes: r: {r.shape}")
-                r[i, j] = rv
+                rvi = unbool_sym_scalar(rv)
+                r[i, j] = rvi
     # return cast(sp.Matrix, r)
     return r
 
@@ -351,7 +370,7 @@ def mat_sum_sym(
 def eval_lut_np_bit_sym(ibm: tuple[sp.Symbol, sp.Symbol, sp.Symbol, sp.Symbol]) -> None:
     print(f"bs ibm: {ibm}")
     lutl = [list(ibm), list(ibm), list(ibm), list(ibm)]
-    lut = sp.Matrix(lutl)
+    lut = sp.Matrix(np.array(lutl))
     print(f"bs lut:\n{lut}")
     # prods = 0
     # prods = lut & s_ttm
