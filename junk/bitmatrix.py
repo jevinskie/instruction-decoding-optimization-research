@@ -5,7 +5,7 @@ from __future__ import annotations
 import operator
 from collections.abc import Callable
 from functools import reduce
-from typing import Generic, Self, TypeVar, cast
+from typing import Any, Generic, Self, TypeVar, cast
 
 import numpy as np
 import sympy as sp
@@ -99,6 +99,18 @@ class BMat(Generic[T]):
     #     yield from self.v
 
     @staticmethod
+    def normalize_scalar(val: T) -> T:
+        r: Any = None
+        if isinstance(val, bool):
+            r = int(val)
+        elif isinstance(val, boa.BooleanFalse):
+            r = 0
+        elif isinstance(val, boa.BooleanTrue):
+            r = 1
+        assert r is not None
+        return cast(T, r)
+
+    @staticmethod
     def normalize_raw(mat: list[list[T]]) -> list[list[T]]:
         m = len(mat)
         n = len(mat[0])
@@ -108,13 +120,8 @@ class BMat(Generic[T]):
         for i in range(m):
             for j in range(n):
                 v = mat[i][j]
-                if isinstance(v, bool):
-                    v = int(v)
-                elif isinstance(v, boa.BooleanFalse):
-                    v = 0
-                elif isinstance(v, boa.BooleanTrue):
-                    v = 1
-                r[i][j] = v
+                nv = BMat.normalize_scalar(v)
+                r[i][j] = nv
         return r
 
     def normalize(self) -> None:
@@ -146,6 +153,7 @@ class BMat(Generic[T]):
                     a = self[i, k]
                     b = other[k, j]
                     bv = prod_op(a, b)
+                    print(f"prod_op({a}, {b}) => {bv}")
                     rv = sum_op(v, bv)
                     r[i][j] = rv
         return BMat(r)
