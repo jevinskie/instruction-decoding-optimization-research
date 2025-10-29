@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
 
+from __future__ import annotations
 
 import operator
 from collections.abc import Callable
 from functools import reduce
+from typing import Self, TypeVar
 
 import numpy as np
-
-# from rich import print
 import sympy as sp
 import sympy.logic.boolalg as boa
+from attrs import define
 from more_itertools import chunked
 
 sp.init_printing(use_unicode=False)
 # sp.init_printing(use_unicode=True)
+
+# from rich import print
 
 tts = """
 -111
@@ -53,6 +56,50 @@ def unbool_sym_scalar(v):
 
 def mat_unbool_sym(m: sp.Matrix) -> sp.Matrix:
     return m.applyfunc(unbool_sym_scalar)
+
+
+T = TypeVar("T")
+
+UnOp = Callable[[T], T]
+BinOp = Callable[[T, T], T]
+
+
+@define(auto_attribs=True, init=False)
+class BMat:
+    v: list[list]
+    shape: tuple[int, int]
+
+    def __init__(self, mat: list[list]) -> None:
+        m = len(mat)
+        n = len(mat[0])
+        assert all([len(row) == n for row in mat])
+        self.shape = m, n
+
+    def matmul(
+        self, other: BMat, prod_op: BinOp = operator.mul, sum_op: BinOp = operator.add, ident=0
+    ) -> BMat:
+        m = self.shape[0]
+        n1 = self.shape[1]
+        n2 = other.shape[0]
+        assert n1 == n2
+        n = n1
+        p = other.shape[1]
+        print(f"m: {m} n: {n} p: {p}")
+        r: list[list] = [[ident] * p for _ in range(m)]
+
+        for i in range(m):
+            for j in range(p):
+                for k in range(n):
+                    v = r[i][j]
+                    a = self[i][k]
+                    b = other[k][j]
+                    bv = prod_op(a, b)
+                    rv = sum_op(v, bv)
+                    r[i][j] = rv
+        return BMat(r)
+
+    def __matmul__(self, other: Self):
+        return self.matmul(other)
 
 
 ttm = [
@@ -371,8 +418,13 @@ def mat_sum_sym(
 
 def eval_lut_np_bit_sym(ibm: tuple[sp.Symbol, sp.Symbol, sp.Symbol, sp.Symbol]) -> None:
     print(f"bs ibm: {ibm}")
-    lutl = [list(ibm), list(ibm), list(ibm), list(ibm)]
-    lut = np.array(lutl)
+    # lutl = [list(ibm), list(ibm), list(ibm), list(ibm)]
+    # lut = np.array(lutl)
+    lut = np.array(
+        [
+            ibm,
+        ]
+    )
     print(f"bs lut:\n{lut}")
     # prods = 0
     # prods = lut & s_ttm
