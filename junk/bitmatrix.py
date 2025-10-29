@@ -11,7 +11,6 @@ import numpy as np
 import sympy as sp
 import sympy.logic.boolalg as boa
 from attrs import define
-from more_itertools import chunked
 
 sp.init_printing(use_unicode=False)
 # sp.init_printing(use_unicode=True)
@@ -74,7 +73,8 @@ class BMat(Generic[T]):
         n = len(mat[0])
         assert all([len(row) == n for row in mat])
         self.shape = m, n
-        self.v = mat
+        # self.v = [[mat[i][j] for j in range(n)] for i in range(m)]
+        self.v = BMat.normalize_raw(mat)
 
     @property
     def value(self) -> BMat:
@@ -83,6 +83,29 @@ class BMat(Generic[T]):
     # @property
     # def rows(self) -> Generator[list[T]]:
     #     yield from self.v
+
+    @staticmethod
+    def normalize_raw(mat: list[list[T]]) -> list[list[T]]:
+        m = len(mat)
+        n = len(mat[0])
+        assert all([len(row) == n for row in mat])
+        r: list[list[T]] = cast(list[list[T]], [[None] * m for _ in range(n)])
+        for i in range(m):
+            for j in range(n):
+                v = mat[i][j]
+                if isinstance(v, bool):
+                    v = int(v)
+                elif isinstance(v, boa.BooleanFalse):
+                    v = 0
+                elif isinstance(v, boa.BooleanTrue):
+                    v = 1
+                print(f"[{i}, {j}] v: {v}")
+                print(f"r: {r}")
+                r[j][i] = v
+        return r
+
+    def normalize(self) -> None:
+        self.v = BMat.normalize_raw(self.v)
 
     @property
     def rows(self) -> list[list[T]]:
@@ -177,11 +200,11 @@ ttm = [
     [1, 0, 0, 1],
 ]
 
-ttmb = BMat(ttm)
-print(f"ttmb:\n{ttmb}")
+_ttmb = BMat(ttm)
+print(f"_ttmb:\n{_ttmb}")
 
-ttmb2 = ttmb @ ttmb
-print(f"ttmb2:\n{ttmb2}")
+_ttmb2 = _ttmb @ _ttmb
+print(f"ttmb2:\n{_ttmb2}")
 
 inv_ttm = [
     [1, 0, 0, 0],
@@ -189,6 +212,8 @@ inv_ttm = [
     [0, 1, 0, 1],
     [0, 1, 1, 0],
 ]
+
+ttmb = BMat(ttm)
 
 ttd = [
     [1, 0, 0, 0],
@@ -213,15 +238,15 @@ t_no_maj1_0 = (1, 0, 0, 0)
 t_no_maj1_1 = (0, 1, 0, 0)
 
 
-def mat_bin_op(
-    m_a: list[list[int]],
-    m_b: list[list[int]],
-    bin_op: Callable[[int, int], int],
-    red_op=Callable[[int, int], int],
-) -> list[list[int]]:
-    return [
-        [reduce(red_op, [bin_op(x, y) for (x, y) in zip(r, c)]) for c in zip(*m_b)] for r in m_a
-    ]
+# def mat_bin_op(
+#     m_a: list[list[int]],
+#     m_b: list[list[int]],
+#     bin_op: Callable[[int, int], int],
+#     red_op=Callable[[int, int], int],
+# ) -> list[list[int]]:
+#     return [
+#         [reduce(red_op, [bin_op(x, y) for (x, y) in zip(r, c)]) for c in zip(*m_b)] for r in m_a
+#     ]
 
 
 # def mat_bin_op2(
@@ -311,8 +336,8 @@ def mat_bin_op(
 # NumPy
 
 
-def dot_prod_1d_bit(m_a: list[int], m_b: list[int]) -> int:
-    return reduce(operator.__or__, [x & y for x, y in zip(m_a, m_b)])
+# def dot_prod_1d_bit(m_a: list[int], m_b: list[int]) -> int:
+#     return reduce(operator.__or__, [x & y for x, y in zip(m_a, m_b)])
 
 
 def eval_lut_np(ibm: tuple[int, int, int, int]) -> None:
@@ -356,25 +381,25 @@ def eval_lut_np_bit(ibm: tuple[int, int, int, int]) -> None:
     print()
 
 
-n_maj3 = np.array(t_maj3)
-n_maj2a = np.array(t_maj2a)
-n_no_maj2b = np.array(t_no_maj2b)
-n_no_maj1_0 = np.array(t_no_maj1_0)
-n_no_maj1_1 = np.array(t_no_maj1_1)
+# n_maj3 = np.array(t_maj3)
+# n_maj2a = np.array(t_maj2a)
+# n_no_maj2b = np.array(t_no_maj2b)
+# n_no_maj1_0 = np.array(t_no_maj1_0)
+# n_no_maj1_1 = np.array(t_no_maj1_1)
 
-syms_str = [f"v_{i}_{j}" for i in range(4) for j in range(4)]
-print(f"syms_str: {syms_str}")
-syms_list = sp.symbols(" ".join(syms_str), integer=True)
-print(f"syms_list: {syms_list}")
-syms = sp.Matrix(list(chunked(syms_list, 4)))
-print(f"syms: {syms}")
+# syms_str = [f"v_{i}_{j}" for i in range(4) for j in range(4)]
+# print(f"syms_str: {syms_str}")
+# syms_list = sp.symbols(" ".join(syms_str), integer=True)
+# print(f"syms_list: {syms_list}")
+# syms = sp.Matrix(list(chunked(syms_list, 4)))
+# print(f"syms: {syms}")
 
-isyms_list = sp.symbols("a b c d", integer=True)
-print(f"isyms_list: {isyms_list}")
-t_isyms = tuple(isyms_list)
-print(f"t_isyms: {t_isyms}")
-isyms = np.array(t_isyms)
-print(f"isyms: {isyms}")
+# isyms_list = sp.symbols("a b c d", integer=True)
+# print(f"isyms_list: {isyms_list}")
+# t_isyms = tuple(isyms_list)
+# print(f"t_isyms: {t_isyms}")
+# isyms = np.array(t_isyms)
+# print(f"isyms: {isyms}")
 
 isyms_bit_list = sp.symbols("Ba Bb Bc Bd", integer=True)
 print(f"isyms_bit_list: {isyms_bit_list}")
@@ -383,109 +408,113 @@ print(f"t_isyms_bit: {t_isyms_bit}")
 isyms_bit = np.array(t_isyms_bit)
 print(f"isyms_bit: {isyms_bit}")
 
-print(f"ttm:\n{np.array(ttm)}")
+print(f"ttm:\n{ttm}")
 print()
-print(f"ttd:\n{np.array(ttd)}")
+print(f"ttd:\n{ttd}")
+print()
+print(f"ttmb:\n{ttmb}")
+print()
+print(f"ttdb:\n{ttdb}")
 print()
 
-eval_lut_np(t_maj3)
-eval_lut_np(t_maj2a)
-eval_lut_np(t_no_maj2b)
-eval_lut_np(t_no_maj1_0)
-eval_lut_np(t_no_maj1_1)
-eval_lut_np(t_isyms)
+# eval_lut_np(t_maj3)
+# eval_lut_np(t_maj2a)
+# eval_lut_np(t_no_maj2b)
+# eval_lut_np(t_no_maj1_0)
+# eval_lut_np(t_no_maj1_1)
+# eval_lut_np(t_isyms)
 
-print("\n\nbin:\n\n")
+# print("\n\nbin:\n\n")
 
-eval_lut_np_bit(t_maj3)
-eval_lut_np_bit(t_maj2a)
-eval_lut_np_bit(t_no_maj2b)
-eval_lut_np_bit(t_no_maj1_0)
-eval_lut_np_bit(t_no_maj1_1)
+# eval_lut_np_bit(t_maj3)
+# eval_lut_np_bit(t_maj2a)
+# eval_lut_np_bit(t_no_maj2b)
+# eval_lut_np_bit(t_no_maj1_0)
+# eval_lut_np_bit(t_no_maj1_1)
 
-s_ttm = sp.Matrix(ttm)
-s_ttd = sp.Matrix(ttd)
+# s_ttm = sp.Matrix(ttm)
+# s_ttd = sp.Matrix(ttd)
 # s_ttmb = sp.Matrix(ttmb)
 # s_ttdb = sp.Matrix(ttdb)
 
-print(f"s_ttm: {s_ttm}")
-print(f"s_ttd: {s_ttd}")
+# print(f"s_ttm: {s_ttm}")
+# print(f"s_ttd: {s_ttd}")
 # print(f"s_ttmb: {s_ttmb}")
 # print(f"s_ttdb: {s_ttdb}")
 
-SPVal = sp.Symbol | sp.Integer
+# SPVal = sp.Symbol | sp.Integer
 
 
-def mat_bin_sym(
-    m_a: np.ndarray,
-    m_b: np.ndarray,
-    prod_op: Callable[[SPVal, SPVal], SPVal],
-    sum_op=Callable[[SPVal, SPVal], SPVal],
-    ident: SPVal = sp.Integer(0),
-) -> np.ndarray:
-    m = m_a.shape[0]
-    n1 = m_a.shape[1]
-    n2 = m_b.shape[0]
-    p = m_b.shape[1]
-    # m = len(m_a)
-    # n1 = len(m_a[0])
-    # n2 = len(m_b)
-    # assert n1 == n2
-    # n = n1
-    # p = len(m_b[0])
-    assert n1 == n2
-    n = n1
-    print(f"m: {m} n: {n} p: {p}")
-    r = np.array([[ident] * p for _ in range(m)])
+# def mat_bin_sym(
+#     m_a: np.ndarray,
+#     m_b: np.ndarray,
+#     prod_op: Callable[[SPVal, SPVal], SPVal],
+#     sum_op=Callable[[SPVal, SPVal], SPVal],
+#     ident: SPVal = sp.Integer(0),
+# ) -> np.ndarray:
+#     m = m_a.shape[0]
+#     n1 = m_a.shape[1]
+#     n2 = m_b.shape[0]
+#     p = m_b.shape[1]
+#     # m = len(m_a)
+#     # n1 = len(m_a[0])
+#     # n2 = len(m_b)
+#     # assert n1 == n2
+#     # n = n1
+#     # p = len(m_b[0])
+#     assert n1 == n2
+#     n = n1
+#     print(f"m: {m} n: {n} p: {p}")
+#     r = np.array([[ident] * p for _ in range(m)])
 
-    print(f"ty m_a: {type(m_a)} dt: {m_b} ty m_b: {type(m_b)}")
-    print(f"m_a: {m_a} m_b: {m_b}")
+#     print(f"ty m_a: {type(m_a)} dt: {m_b} ty m_b: {type(m_b)}")
+#     print(f"m_a: {m_a} m_b: {m_b}")
 
-    for i in range(m):
-        for j in range(p):
-            for k in range(n):
-                v = r[i, j]
-                a = m_a[i, k]
-                b = m_b[k, j]
-                # print(f"a: {a} b: {b}")
-                bv = prod_op(a, b)
-                rv = sum_op(v, bv)
-                rvi = unbool_sym_scalar(rv)
-                print(f"rv: {rv} rvi: {rvi} ty: {type(rvi)}")
-                r[i, j] = rvi
-    # return cast(sp.Matrix, r)
-    return r
-    # return mat_unbool_sym(r)
+#     for i in range(m):
+#         for j in range(p):
+#             for k in range(n):
+#                 v = r[i, j]
+#                 a = m_a[i, k]
+#                 b = m_b[k, j]
+#                 # print(f"a: {a} b: {b}")
+#                 bv = prod_op(a, b)
+#                 rv = sum_op(v, bv)
+#                 rvi = unbool_sym_scalar(rv)
+#                 print(f"rv: {rv} rvi: {rvi} ty: {type(rvi)}")
+#                 r[i, j] = rvi
+#     # return cast(sp.Matrix, r)
+#     return r
+#     # return mat_unbool_sym(r)
 
 
-def mat_sum_sym(
-    m_a: np.ndarray,
-    m_b: np.ndarray,
-) -> np.ndarray:
-    m = m_a.shape[0]
-    n1 = m_a.shape[1]
-    n2 = m_b.shape[0]
-    p = m_b.shape[1]
-    assert n1 == n2
-    n = n1
-    print(f"m: {m} n: {n} p: {p}")
-    r = np.array([[sp.Integer(0)] * p for _ in range(m)])
+# def mat_sum_sym(
+#     m_a: np.ndarray,
+#     m_b: np.ndarray,
+# ) -> np.ndarray:
+#     m = m_a.shape[0]
+#     n1 = m_a.shape[1]
+#     n2 = m_b.shape[0]
+#     p = m_b.shape[1]
+#     assert n1 == n2
+#     n = n1
+#     print(f"m: {m} n: {n} p: {p}")
+#     r = np.array([[sp.Integer(0)] * p for _ in range(m)])
 
-    print(f"ty m_a: {type(m_a)} dt: {m_b} ty m_b: {type(m_b)}")
-    print(f"m_a: {m_a} m_b: {m_b}")
+#     print(f"ty m_a: {type(m_a)} dt: {m_b} ty m_b: {type(m_b)}")
+#     print(f"m_a: {m_a} m_b: {m_b}")
 
-    for i in range(m):
-        for j in range(p):
-            for k in range(n):
-                v = r[i, j]
-                a = m_a[i, k]
-                b = m_b[k, j]
-                rv = sp.Or(v, sp.Or(a, b))
-                # print(f"shapes: r: {r.shape}")
-                rvi = unbool_sym_scalar(rv)
-                r[i, j] = rvi
-    # return cast(sp.Matrix, r)
-    return r
+#     for i in range(m):
+#         for j in range(p):
+#             for k in range(n):
+#                 v = r[i, j]
+#                 a = m_a[i, k]
+#                 b = m_b[k, j]
+#                 rv = sp.Or(v, sp.Or(a, b))
+#                 # print(f"shapes: r: {r.shape}")
+#                 rvi = unbool_sym_scalar(rv)
+#                 r[i, j] = rvi
+#     # return cast(sp.Matrix, r)
+#     return r
 
 
 def eval_lut_np_bit_sym(ibm: tuple[sp.Symbol, sp.Symbol, sp.Symbol, sp.Symbol]) -> None:
@@ -498,9 +527,9 @@ def eval_lut_np_bit_sym(ibm: tuple[sp.Symbol, sp.Symbol, sp.Symbol, sp.Symbol]) 
     prods_w_dc = prods.mat_bin_op(ttdb, sp.Or)
     print(f"bs prods_w_dc:\n{prods_w_dc}")
 
-    sums = [reduce(operator.__or__, row) for row in prods_w_dc.rows]
+    sums = BMat.normalize_raw([[reduce(sp.Or, row) for row in prods_w_dc.rows]])
     print(f"bs sums:\n{sums}")
-    sum = reduce(operator.__or__, sums)
+    sum = reduce(sp.Or, sums)
     print(f"bs sum: {sum}")
     print()
 
