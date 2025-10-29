@@ -98,6 +98,40 @@ class BMat:
                     r[i][j] = rv
         return BMat(r)
 
+    def mat_bin_op(self, other: BMat, bin_op: BinOp) -> BMat:
+        m = self.shape[0]
+        n1 = self.shape[1]
+        n2 = other.shape[0]
+        assert n1 == n2
+        n = n1
+        p = other.shape[1]
+        print(f"m: {m} n: {n} p: {p}")
+        r: list[list] = [[None] * p for _ in range(m)]
+
+        for i in range(m):
+            for j in range(p):
+                for k in range(n):
+                    a = self[i][k]
+                    b = other[k][j]
+                    bv = bin_op(a, b)
+                    r[i][j] = bv
+        return BMat(r)
+
+    def matadd(self, other: BMat) -> BMat:
+        return self.mat_bin_op(other, operator.add)
+
+    def mat_un_op(self, un_op: UnOp) -> BMat:
+        m = self.shape[0]
+        n = self.shape[1]
+        r: list[list] = [[None] * n for _ in range(m)]
+
+        for i in range(m):
+            for j in range(n):
+                v = self[i][j]
+                uv = un_op(v)
+                r[i][j] = uv
+        return BMat(r)
+
     def __matmul__(self, other: Self):
         return self.matmul(other)
 
