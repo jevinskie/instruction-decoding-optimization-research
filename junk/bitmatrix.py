@@ -37,15 +37,17 @@ def mat_bool_sym(m: sp.Matrix) -> sp.Matrix:
 
 def unbool_sym_scalar(v):
     if isinstance(v, bool):
-        if v:
+        if v is True:
             return sp.Integer(1)
-        else:
+        elif v is False:
             return sp.Integer(0)
     elif isinstance(v, (boa.BooleanFalse, boa.BooleanTrue)):
-        if v:
+        if isinstance(v, boa.BooleanTrue):
             return sp.Integer(1)
-        else:
+        elif isinstance(v, boa.BooleanFalse):
             return sp.Integer(0)
+        else:
+            raise ValueError(f"v: {v} type(v): {type(v)}")
     return v
 
 
