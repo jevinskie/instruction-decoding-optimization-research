@@ -107,6 +107,8 @@ class BMat(Generic[T]):
             r = 0
         elif isinstance(val, boa.BooleanTrue):
             r = 1
+        else:
+            r = val
         assert r is not None
         return cast(T, r)
 
@@ -152,9 +154,10 @@ class BMat(Generic[T]):
                     v = r[i][j]
                     a = self[i, k]
                     b = other[k, j]
-                    bv = prod_op(a, b)
+                    bv = BMat.normalize_scalar(prod_op(a, b))
                     print(f"prod_op({a}, {b}) => {bv}")
-                    rv = sum_op(v, bv)
+                    rv = BMat.normalize_scalar(sum_op(v, bv))
+                    print(f"sum_op({v}, {bv}) => {rv}")
                     r[i][j] = rv
         return BMat(r)
 
@@ -172,7 +175,7 @@ class BMat(Generic[T]):
                 for k in range(m):
                     a = self[i, k]
                     b = other[k, j]
-                    bv = bin_op(a, b)
+                    bv = BMat.normalize_scalar(bin_op(a, b))
                     r[i][j] = bv
         return BMat(r)
 
@@ -548,7 +551,7 @@ def eval_lut_np_bit_sym(ibm: tuple[sp.Symbol, sp.Symbol, sp.Symbol, sp.Symbol]) 
     lut = BMat(lutl)
     print(f"bs lut:\n{lut}")
     print(f"bs ttmb:\n{ttmb}")
-    prods = ttmb.matmul(lut, sp.And, sp.Or)
+    prods = lut.matmul(ttmb, sp.And, sp.Or)
     print(f"bs prods:\n{prods}")
     prods_w_dc = prods.mat_bin_op(ttdb, sp.Or)
     print(f"bs prods_w_dc:\n{prods_w_dc}")
