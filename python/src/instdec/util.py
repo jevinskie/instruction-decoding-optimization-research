@@ -36,7 +36,7 @@ def defauto(maybe_cls: C | None, *args, **kwargs) -> C | Callable[[C], C]:
 
 
 def num_b10_digits(n: int) -> int:
-    return int(math.ceil(math.log10(n + 1)))
+    return math.ceil(math.log10(n + 1))
 
 
 def bitfield_indices(width: int) -> list[str]:
@@ -126,9 +126,7 @@ class Pigeonholes:
             for ispn in self._spans:
                 if spn == ispn:
                     if not spn.equal_w_name(ispn):
-                        spstrs: list[str] = []
-                        for espn in self._spans:
-                            spstrs.append(espn.ascii_art(32))
+                        spstrs: list[str] = [espn.ascii_art(32) for espn in self._spans]
                         spstrs.sort()
                         for s in spstrs:
                             print(s)
@@ -281,7 +279,7 @@ class StringList:
     def __matmul__(self, other) -> Self:
         if isinstance(other, str):
             # Append a single string
-            return type(self)(self._lines + [other])
+            return type(self)([*self._lines, other])
         elif isinstance(other, Sequence):
             ol = cast(list[str], other)
             # Concatenate with another list of strings

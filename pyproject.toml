@@ -52,10 +52,14 @@ repository = "https://github.com/jevinskie/instruction-decoding-optimization-res
 
 [tool.ruff]
 line-length = 100
+preview = true
+required-version = ">=0.14"
+show-fixes = true
 target-version = "py311"
+unsafe-fixes = true
 
 [tool.ruff.lint]
-extend-select = ["I"]
+extend-select = ["I", "PERF", "RUF", "FA", "UP"]
 
 [tool.setuptools]
 package-dir = {"" = "python/src"}

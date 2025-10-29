@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Callable
-from typing import Any, DefaultDict
+from typing import Any
 
 import attrs
 from rich import print
@@ -245,11 +245,11 @@ class ParseContext:
 
 
 def get_encoding_list(ctx: ParseContext, instr_enc: Encodeset) -> list[Encodeset]:
-    return [instr_enc] + ctx.group_encoding_stack[::-1] + ctx.set_encoding_stack[::-1]
+    return [instr_enc, *ctx.group_encoding_stack[::-1], *ctx.set_encoding_stack[::-1]]
 
 
 def get_condition_list(ctx: ParseContext, instr_cond: Expression | None) -> list[Expression | None]:
-    return [instr_cond] + ctx.group_condition_stack[::-1] + ctx.set_condition_stack[::-1]
+    return [instr_cond, *ctx.group_condition_stack[::-1], *ctx.set_condition_stack[::-1]]
 
 
 def get_conditon_list_defined(ctx: ParseContext, instr_cond: Expression | None) -> list[Expression]:
@@ -339,8 +339,8 @@ def dump_idents_instr_cb(i: Instruction, ctx: ParseContext) -> None:
         print(f"smth: {smth}")
 
 
-num_cons: DefaultDict[int, int] = defaultdict(int)
-num_expr_objs: DefaultDict[int, int] = defaultdict(int)
+num_cons: defaultdict[int, int] = defaultdict(int)
+num_expr_objs: defaultdict[int, int] = defaultdict(int)
 
 
 def inspect_constraints_instr_cb(instr: Instruction, ctx: ParseContext) -> None:

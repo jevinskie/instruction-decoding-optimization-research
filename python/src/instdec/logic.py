@@ -71,16 +71,14 @@ def generate_cnf(terms: list[list[int]]) -> tuple[list[list[int]], int]:
         literals = term
 
         # Clauses for y_i <-> p_i
-        for lit in literals:
-            clauses.append([-y_i, lit])  # ~y_i \/ lit
+        clauses.extend([-y_i, lit] for lit in literals)  # ~y_i \/ lit
         # y_i \/ ~lit_1 \/ ~lit_2 \/ ...
         clauses.append([y_i] + [-lit for lit in literals])
 
     # Clauses for z <-> (y_0 \/ y_1 \/ ... \/ y_792)
     y_vars = list(range(y_base, y_base + num_terms))
-    clauses.append([-z] + y_vars)  # ~z \/ y_0 \/ ... \/ y_792
-    for y_i in y_vars:
-        clauses.append([z, -y_i])  # z \/ ~y_i
+    clauses.append([-z, *y_vars])  # ~z \/ y_0 \/ ... \/ y_792
+    clauses.extend([z, -y_i] for y_i in y_vars)  # z \/ ~y_i
 
     # Enforce f = 1
     clauses.append([z])

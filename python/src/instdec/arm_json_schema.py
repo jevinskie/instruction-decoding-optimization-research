@@ -232,10 +232,7 @@ class Encodeset:
         yield from self.values
 
     def get_fields(self) -> list[EncodesetField]:
-        fields: list[EncodesetField] = []
-        for v in self.values:
-            if isinstance(v, EncodesetField):
-                fields.append(v)
+        fields: list[EncodesetField] = [v for v in self.values if isinstance(v, EncodesetField)]
         names = [lambda f: f.value for f in fields]
         if len(names) != len(set(names)):
             raise ValueError("duplicates in Encodeset EncodesetField names")
@@ -255,10 +252,7 @@ class Encodeset:
         return self.get_field(name) is not None
 
     def get_bits(self) -> list[EncodesetBits]:
-        bits: list[EncodesetBits] = []
-        for v in self.values:
-            if isinstance(v, EncodesetBits):
-                bits.append(v)
+        bits: list[EncodesetBits] = [v for v in self.values if isinstance(v, EncodesetBits)]
         ranges = [lambda b: b.range for b in bits]
         if len(ranges) != len(set(ranges)):
             raise ValueError("duplicates in Encodeset EncodesetBits ranges")

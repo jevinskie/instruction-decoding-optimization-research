@@ -5,7 +5,7 @@ from __future__ import annotations
 import operator
 from collections.abc import Callable
 from functools import reduce
-from typing import Self, TypeVar
+from typing import Generic, Self, TypeVar
 
 import numpy as np
 import sympy as sp
@@ -65,7 +65,7 @@ BinOp = Callable[[T, T], T]
 
 
 @define(auto_attribs=True, init=False)
-class BMat:
+class BMat(Generic[T]):
     v: list[list]
     shape: tuple[int, int]
 
@@ -74,6 +74,11 @@ class BMat:
         n = len(mat[0])
         assert all([len(row) == n for row in mat])
         self.shape = m, n
+        self.v = mat
+
+    @property
+    def value(self) -> BMat:
+        return BMat(self.v)
 
     def matmul(
         self, other: BMat, prod_op: BinOp = operator.mul, sum_op: BinOp = operator.add, ident=0
@@ -90,12 +95,12 @@ class BMat:
         for i in range(m):
             for j in range(p):
                 for k in range(n):
-                    v = r[i][j]
-                    a = self[i][k]
-                    b = other[k][j]
+                    v = r[i, j]
+                    a = self[i, k]
+                    b = other[k, j]
                     bv = prod_op(a, b)
                     rv = sum_op(v, bv)
-                    r[i][j] = rv
+                    r[i, j] = rv
         return BMat(r)
 
     def mat_bin_op(self, other: BMat, bin_op: BinOp) -> BMat:
@@ -111,10 +116,10 @@ class BMat:
         for i in range(m):
             for j in range(p):
                 for k in range(n):
-                    a = self[i][k]
-                    b = other[k][j]
+                    a = self[i, k]
+                    b = other[k, j]
                     bv = bin_op(a, b)
-                    r[i][j] = bv
+                    r[i, j] = bv
         return BMat(r)
 
     def matadd(self, other: BMat) -> BMat:
@@ -127,10 +132,13 @@ class BMat:
 
         for i in range(m):
             for j in range(n):
-                v = self[i][j]
+                v = self[i, j]
                 uv = un_op(v)
-                r[i][j] = uv
+                r[i, j] = uv
         return BMat(r)
+
+    def __getitem__(self, slice: slice) -> T:
+        return 0
 
     def __matmul__(self, other: Self):
         return self.matmul(other)
@@ -454,11 +462,9 @@ def eval_lut_np_bit_sym(ibm: tuple[sp.Symbol, sp.Symbol, sp.Symbol, sp.Symbol]) 
     print(f"bs ibm: {ibm}")
     # lutl = [list(ibm), list(ibm), list(ibm), list(ibm)]
     # lut = np.array(lutl)
-    lut = np.array(
-        [
-            ibm,
-        ]
-    )
+    lut = np.array([
+        ibm,
+    ])
     print(f"bs lut:\n{lut}")
     # prods = 0
     # prods = lut & s_ttm

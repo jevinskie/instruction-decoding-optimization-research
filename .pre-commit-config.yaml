@@ -45,11 +45,6 @@ repos:
   - id: ruff
     args: [--fix, --exit-non-zero-on-fix, --show-fixes]
   - id: ruff-format
-- repo: https://github.com/bwhmather/ssort
-  rev: 0.15.0
-  hooks:
-  - id: ssort
-    types_or: [python]
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v6.0.0
   hooks:
