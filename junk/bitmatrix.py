@@ -5,7 +5,7 @@ from __future__ import annotations
 import operator
 from collections.abc import Callable
 from functools import reduce
-from typing import Any, Generic, Self, TypeVar, cast
+from typing import Any, Generic, TypeVar, cast
 
 import numpy as np
 import sympy as sp
@@ -155,9 +155,9 @@ class BMat(Generic[T]):
                     a = self[i, k]
                     b = other[k, j]
                     bv = BMat.normalize_scalar(prod_op(a, b))
-                    print(f"prod_op({a}, {b}) => {bv}")
+                    print(f"mm prod_op({a}, {b}) => {bv}")
                     rv = BMat.normalize_scalar(sum_op(v, bv))
-                    print(f"sum_op({v}, {bv}) => {rv}")
+                    print(f"mm sum_op({v}, {bv}) => {rv}")
                     r[i][j] = rv
         return BMat(r)
 
@@ -176,6 +176,7 @@ class BMat(Generic[T]):
                     a = self[i, k]
                     b = other[k, j]
                     bv = BMat.normalize_scalar(bin_op(a, b))
+                    print(f"bo bin_op({a}, {b}) => {bv}")
                     r[i][j] = bv
         return BMat(r)
 
@@ -190,7 +191,8 @@ class BMat(Generic[T]):
         for i in range(n):
             for j in range(m):
                 v = self[i, j]
-                uv = un_op(v)
+                uv = BMat.normalize_scalar(un_op(v))
+                print(f"un un_op({v}) => {uv}")
                 r[i][j] = uv
         return BMat(r)
 
@@ -212,12 +214,12 @@ class BMat(Generic[T]):
             assert not isinstance(value, list)
             assert len(idx) == 2
             i, j = idx
-            self.v[i][j] = value
+            self.v[i][j] = BMat.normalize_scalar(value)
         else:
             assert isinstance(value, list)
-            self.v[idx] = value
+            self.v[idx] = [BMat.normalize_scalar(v) for v in value]
 
-    def __matmul__(self, other: Self):
+    def __matmul__(self, other: BMat[T]):
         return self.matmul(other)
 
 
