@@ -5,7 +5,7 @@ from __future__ import annotations
 import operator
 from collections.abc import Callable
 from functools import reduce
-from typing import Generic, Self, TypeVar
+from typing import Generic, Self, TypeVar, cast
 
 import numpy as np
 import sympy as sp
@@ -66,10 +66,10 @@ BinOp = Callable[[T, T], T]
 
 @define(auto_attribs=True, init=False)
 class BMat(Generic[T]):
-    v: list[list]
+    v: list[list[T]]
     shape: tuple[int, int]
 
-    def __init__(self, mat: list[list]) -> None:
+    def __init__(self, mat: list[list[T]]) -> None:
         m = len(mat)
         n = len(mat[0])
         assert all([len(row) == n for row in mat])
@@ -89,18 +89,17 @@ class BMat(Generic[T]):
         assert n1 == n2
         n = n1
         p = other.shape[1]
-        print(f"m: {m} n: {n} p: {p}")
         r: list[list] = [[ident] * p for _ in range(m)]
 
         for i in range(m):
             for j in range(p):
                 for k in range(n):
-                    v = r[i, j]
+                    v = r[i][j]
                     a = self[i, k]
                     b = other[k, j]
                     bv = prod_op(a, b)
                     rv = sum_op(v, bv)
-                    r[i, j] = rv
+                    r[i][j] = rv
         return BMat(r)
 
     def mat_bin_op(self, other: BMat, bin_op: BinOp) -> BMat:
@@ -110,7 +109,6 @@ class BMat(Generic[T]):
         assert n1 == n2
         n = n1
         p = other.shape[1]
-        print(f"m: {m} n: {n} p: {p}")
         r: list[list] = [[None] * p for _ in range(m)]
 
         for i in range(m):
@@ -119,7 +117,7 @@ class BMat(Generic[T]):
                     a = self[i, k]
                     b = other[k, j]
                     bv = bin_op(a, b)
-                    r[i, j] = bv
+                    r[i][j] = bv
         return BMat(r)
 
     def matadd(self, other: BMat) -> BMat:
@@ -128,17 +126,37 @@ class BMat(Generic[T]):
     def mat_un_op(self, un_op: UnOp) -> BMat:
         m = self.shape[0]
         n = self.shape[1]
-        r: list[list] = [[None] * n for _ in range(m)]
+        r: list[list[T]] = cast(list[list[T]], [[None] * n for _ in range(m)])
 
         for i in range(m):
             for j in range(n):
                 v = self[i, j]
                 uv = un_op(v)
-                r[i, j] = uv
+                r[i][j] = uv
         return BMat(r)
 
-    def __getitem__(self, slice: slice) -> T:
-        return 0
+    def __getitem__(self, idx: int | tuple[int, int] | slice) -> T | list[T]:
+        if isinstance(idx, slice):
+            raise NotImplementedError("slice getitem")
+        elif isinstance(idx, tuple):
+            assert len(idx) == 2
+            i, j = idx
+            return self.v[i][j]
+        else:
+            return self.v[idx]
+
+    def __setitem__(self, idx: int | tuple[int, int] | slice, value: T | list[T]) -> None:
+        print(f"idx: {idx}")
+        if isinstance(idx, slice):
+            raise NotImplementedError("slice setitem")
+        elif isinstance(idx, tuple):
+            assert not isinstance(value, list)
+            assert len(idx) == 2
+            i, j = idx
+            self.v[i][j] = value
+        else:
+            assert isinstance(value, list)
+            self.v[idx] = value
 
     def __matmul__(self, other: Self):
         return self.matmul(other)
@@ -151,7 +169,11 @@ ttm = [
     [1, 0, 0, 1],
 ]
 
-ttmb = mat_bool(ttm)
+ttmb = BMat(ttm)
+print(f"ttmb:\n{ttmb}")
+
+ttmb2 = ttmb @ ttmb
+print(f"ttmb2:\n{ttmb2}")
 
 inv_ttm = [
     [1, 0, 0, 0],
@@ -167,7 +189,7 @@ ttd = [
     [0, 1, 1, 0],
 ]
 
-ttdb = mat_bool(ttd)
+ttdb = BMat(ttd)
 
 inv_ttd = [
     [0, 1, 1, 1],
@@ -460,20 +482,21 @@ def mat_sum_sym(
 
 def eval_lut_np_bit_sym(ibm: tuple[sp.Symbol, sp.Symbol, sp.Symbol, sp.Symbol]) -> None:
     print(f"bs ibm: {ibm}")
-    # lutl = [list(ibm), list(ibm), list(ibm), list(ibm)]
+    lutl = [list(ibm), list(ibm), list(ibm), list(ibm)]
     # lut = np.array(lutl)
-    lut = np.array([
-        ibm,
-    ])
-    print(f"bs lut:\n{lut}")
+    # lut = np.array([
+    #     ibm,
+    # ])
+    print(f"bs lut:\n{lutl}")
     # prods = 0
     # prods = lut & s_ttm
     # prods = sp.And(list(ibm), s_ttm)
     # prods = boa.Xor(lut, s_ttmb)
     # prods = lut.applyfunc(operator.__and__, s_ttm)
-    prods = mat_bin_sym(lut, s_ttm, sp.And, sp.Or)
+    prods = ttmb.matmul(BMat(lutl), sp.And, sp.Or)
     print(f"bs prods:\n{prods}")
-    prods_w_dc = mat_sum_sym(prods, s_ttd)
+    prods_w_dc = prods.mat_bin_op(ttdb, sp.Or)
+    # prods_w_dc = mat_sum_sym(prods, s_ttd)
     print(f"bs prods_w_dc:\n{prods_w_dc}")
 
     sums = np.bitwise_and.reduce(prods_w_dc, 1)
