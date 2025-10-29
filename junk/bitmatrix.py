@@ -41,7 +41,7 @@ def unbool_sym_scalar(v):
             return sp.Integer(1)
         else:
             return sp.Integer(0)
-    elif isinstance(v, boa.Boolean):
+    elif isinstance(v, (boa.BooleanFalse, boa.BooleanTrue)):
         if v:
             return sp.Integer(1)
         else:
@@ -330,7 +330,7 @@ def mat_bin_sym(
                 bv = prod_op(a, b)
                 rv = sum_op(v, bv)
                 rvi = unbool_sym_scalar(rv)
-                print(f"rv: {rv} rvi: {rvi}")
+                print(f"rv: {rv} rvi: {rvi} ty: {type(rvi)}")
                 r[i, j] = rvi
     # return cast(sp.Matrix, r)
     # return r
@@ -383,9 +383,11 @@ def eval_lut_np_bit_sym(ibm: tuple[sp.Symbol, sp.Symbol, sp.Symbol, sp.Symbol]) 
     print(f"bs prods_w_dc:\n{prods_w_dc}")
 
     # sums = np.bitwise_or(sums, ttm)
-    # sums = reduce(sp.Or, prods_w_dc)
-    sums = prods_w_dc[0]
+    sums = reduce(sp.Or, prods_w_dc)
+    # sums = prods_w_dc[0]
     print(f"bs sums:\n{sums}")
+    sums2 = np.bitwise_or(prods_w_dc, ttm)
+    print(f"bs sums2:\n{sums2}")
     sum = np.bitwise_or.reduce(sums)
     print(f"bs sum: {sum}")
     # prods = dot_prod_1d_bit(prods)
