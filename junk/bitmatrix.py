@@ -63,6 +63,20 @@ UnOp = Callable[[T], T]
 BinOp = Callable[[T, T], T]
 
 
+def py_matmul1(a: np.ndarray, b: np.ndarray):
+    ra, ca = a.shape
+    rb, cb = b.shape
+    assert ca == rb, f"{ca} != {rb}"
+
+    output = np.zeros(shape=(ra, cb))
+    for i in range(ra):
+        for j in range(cb):
+            for k in range(rb):
+                output[i, j] += a[i, k] * b[k, j]
+
+    return output
+
+
 @define(auto_attribs=True, init=False)
 class BMat(Generic[T]):
     v: list[list[T]]
@@ -89,7 +103,8 @@ class BMat(Generic[T]):
         m = len(mat)
         n = len(mat[0])
         assert all([len(row) == n for row in mat])
-        r: list[list[T]] = cast(list[list[T]], [[None] * m for _ in range(n)])
+        print(f"NR: m: {m} n: {n} mat: {mat}")
+        r: list[list[T]] = cast(list[list[T]], [[None] * n for _ in range(m)])
         for i in range(m):
             for j in range(n):
                 v = mat[i][j]
@@ -99,9 +114,7 @@ class BMat(Generic[T]):
                     v = 0
                 elif isinstance(v, boa.BooleanTrue):
                     v = 1
-                print(f"[{i}, {j}] v: {v}")
-                print(f"r: {r}")
-                r[j][i] = v
+                r[i][j] = v
         return r
 
     def normalize(self) -> None:
@@ -122,9 +135,9 @@ class BMat(Generic[T]):
         p = other.shape[1]
         r: list[list] = [[ident] * p for _ in range(m)]
 
-        for i in range(m):
+        for i in range(n):
             for j in range(p):
-                for k in range(n):
+                for k in range(m):
                     v = r[i][j]
                     a = self[i, k]
                     b = other[k, j]
@@ -142,9 +155,9 @@ class BMat(Generic[T]):
         p = other.shape[1]
         r: list[list] = [[None] * p for _ in range(m)]
 
-        for i in range(m):
+        for i in range(n):
             for j in range(p):
-                for k in range(n):
+                for k in range(m):
                     a = self[i, k]
                     b = other[k, j]
                     bv = bin_op(a, b)
@@ -159,8 +172,8 @@ class BMat(Generic[T]):
         n = self.shape[1]
         r: list[list[T]] = cast(list[list[T]], [[None] * n for _ in range(m)])
 
-        for i in range(m):
-            for j in range(n):
+        for i in range(n):
+            for j in range(m):
                 v = self[i, j]
                 uv = un_op(v)
                 r[i][j] = uv
@@ -527,7 +540,9 @@ def eval_lut_np_bit_sym(ibm: tuple[sp.Symbol, sp.Symbol, sp.Symbol, sp.Symbol]) 
     prods_w_dc = prods.mat_bin_op(ttdb, sp.Or)
     print(f"bs prods_w_dc:\n{prods_w_dc}")
 
-    sums = BMat.normalize_raw([[reduce(sp.Or, row) for row in prods_w_dc.rows]])
+    red = [[reduce(sp.Or, row) for row in prods_w_dc.rows]]
+    print(f"red: {red}")
+    sums = BMat.normalize_raw(red)
     print(f"bs sums:\n{sums}")
     sum = reduce(sp.Or, sums)
     print(f"bs sum: {sum}")
