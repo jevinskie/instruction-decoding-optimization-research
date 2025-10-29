@@ -80,6 +80,14 @@ class BMat(Generic[T]):
     def value(self) -> BMat:
         return BMat(self.v)
 
+    # @property
+    # def rows(self) -> Generator[list[T]]:
+    #     yield from self.v
+
+    @property
+    def rows(self) -> list[list[T]]:
+        return [[v for v in row] for row in self.v]
+
     def matmul(
         self, other: BMat, prod_op: BinOp = operator.mul, sum_op: BinOp = operator.add, ident=0
     ) -> BMat:
@@ -483,34 +491,17 @@ def mat_sum_sym(
 def eval_lut_np_bit_sym(ibm: tuple[sp.Symbol, sp.Symbol, sp.Symbol, sp.Symbol]) -> None:
     print(f"bs ibm: {ibm}")
     lutl = [list(ibm), list(ibm), list(ibm), list(ibm)]
-    # lut = np.array(lutl)
-    # lut = np.array([
-    #     ibm,
-    # ])
-    print(f"bs lut:\n{lutl}")
-    # prods = 0
-    # prods = lut & s_ttm
-    # prods = sp.And(list(ibm), s_ttm)
-    # prods = boa.Xor(lut, s_ttmb)
-    # prods = lut.applyfunc(operator.__and__, s_ttm)
-    prods = ttmb.matmul(BMat(lutl), sp.And, sp.Or)
+    lut = BMat(lutl)
+    print(f"bs lut:\n{lut}")
+    prods = ttmb.matmul(lut, sp.And, sp.Or)
     print(f"bs prods:\n{prods}")
     prods_w_dc = prods.mat_bin_op(ttdb, sp.Or)
-    # prods_w_dc = mat_sum_sym(prods, s_ttd)
     print(f"bs prods_w_dc:\n{prods_w_dc}")
 
-    sums = np.bitwise_and.reduce(prods_w_dc, 1)
-    # sums = np.bitwise_or(prods_w_dc, ttm)
-    # sums = reduce(sp.Or, sp.Matrix(prods_w_dc))
-    # sums = prods_w_dc[0]
+    sums = [reduce(operator.__or__, row) for row in prods_w_dc.rows]
     print(f"bs sums:\n{sums}")
     sum = reduce(operator.__or__, sums)
     print(f"bs sum: {sum}")
-    # prods = dot_prod_1d_bit(prods)
-    # print(f"bit prods2:\n{prods2}")
-
-    # sp = dot_prod_1d_bit(sums[0], prods[0])
-    # print(f"dot prod:\n{sp}")
     print()
 
 
