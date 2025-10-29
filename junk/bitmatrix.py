@@ -26,6 +26,18 @@ def mat_bool(m: list[list[int]]) -> list[list[bool]]:
     return [[bool(v) for v in r] for r in m]
 
 
+def mat_unbool(m: list[list[bool]]) -> list[list[int]]:
+    return [[int(v) for v in r] for r in m]
+
+
+def mat_bool_sym(m: sp.Matrix) -> sp.Matrix:
+    return [[bool(v) for v in r] for r in m]
+
+
+def mat_unbool_sym(m: sp.Matrix) -> sp.Matrix:
+    return m.applyfunc(lambda x: sp.Integer(x))
+
+
 ttm = [
     [0, 1, 1, 1],
     [1, 1, 0, 0],
@@ -304,7 +316,7 @@ def mat_bin_sym(
                 rv = sum_op(v, bv)
                 r[i, j] = rv
     # return cast(sp.Matrix, r)
-    return r
+    return mat_unbool_sym(r)
 
 
 def mat_sum_sym(
@@ -352,7 +364,8 @@ def eval_lut_np_bit_sym(ibm: tuple[sp.Symbol, sp.Symbol, sp.Symbol, sp.Symbol]) 
     print(f"bs prods_w_dc:\n{prods_w_dc}")
 
     # sums = np.bitwise_or(sums, ttm)
-    sums = reduce(sp.Or, prods_w_dc[..., 0])
+    # sums = reduce(sp.Or, prods_w_dc)
+    sums = prods_w_dc[0]
     print(f"bs sums:\n{sums}")
     sum = np.bitwise_or.reduce(sums)
     print(f"bs sum: {sum}")
