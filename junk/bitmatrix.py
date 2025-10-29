@@ -2,13 +2,13 @@
 
 
 import operator
+from collections.abc import Callable
 from functools import reduce
 
 import numpy as np
 
 # from rich import print
 import sympy as sp
-import sympy.logic.boolalg as boa
 from more_itertools import chunked
 
 sp.init_printing(use_unicode=False)
@@ -65,15 +65,15 @@ t_no_maj1_0 = (1, 0, 0, 0)
 t_no_maj1_1 = (0, 1, 0, 0)
 
 
-# def mat_bin_op(
-#     m_a: list[list[int]],
-#     m_b: list[list[int]],
-#     bin_op: Callable[[int, int], int],
-#     red_op=Callable[[int, int], int],
-# ) -> list[list[int]]:
-#     return [
-#         [reduce(red_op, [bin_op(x, y) for (x, y) in zip(r, c)]) for c in zip(*m_b)] for r in m_a
-#     ]
+def mat_bin_op(
+    m_a: list[list[int]],
+    m_b: list[list[int]],
+    bin_op: Callable[[int, int], int],
+    red_op=Callable[[int, int], int],
+) -> list[list[int]]:
+    return [
+        [reduce(red_op, [bin_op(x, y) for (x, y) in zip(r, c)]) for c in zip(*m_b)] for r in m_a
+    ]
 
 
 # def mat_bin_op2(
@@ -265,6 +265,76 @@ print(f"s_ttd: {s_ttd}")
 print(f"s_ttmb: {s_ttmb}")
 print(f"s_ttdb: {s_ttdb}")
 
+SPVal = sp.Symbol | sp.Integer
+
+
+def mat_bin_sym(
+    m_a: sp.Matrix,
+    m_b: sp.Matrix,
+    bin_op: Callable[[SPVal, SPVal], SPVal],
+    red_op=Callable[[SPVal, SPVal], SPVal],
+    ident: SPVal = sp.Integer(0),
+) -> sp.Matrix:
+    m = m_a.shape[0]
+    n1 = m_a.shape[1]
+    n2 = m_b.shape[0]
+    p = m_b.shape[1]
+    # m = len(m_a)
+    # n1 = len(m_a[0])
+    # n2 = len(m_b)
+    # assert n1 == n2
+    # n = n1
+    # p = len(m_b[0])
+    assert n1 == n2
+    n = n1
+    print(f"m: {m} n: {n} p: {p}")
+    r = sp.Matrix([[ident] * p for _ in range(m)])
+
+    print(f"ty m_a: {type(m_a)} dt: {m_b} ty m_b: {type(m_b)}")
+    print(f"m_a: {m_a} m_b: {m_b}")
+
+    for i in range(m):
+        for j in range(p):
+            for k in range(n):
+                v = r[i, j]
+                a = m_a[i, k]
+                b = m_b[k, j]
+                print(f"a: {a} b: {b}")
+                bv = bin_op(a, b)
+                rv = red_op(v, bv)
+                r[i, j] = rv
+    # return cast(sp.Matrix, r)
+    return r
+
+
+def mat_add_sym(
+    m_a: sp.Matrix,
+    m_b: sp.Matrix,
+) -> sp.Matrix:
+    m = m_a.shape[0]
+    n1 = m_a.shape[1]
+    n2 = m_b.shape[0]
+    p = m_b.shape[1]
+    assert n1 == n2
+    n = n1
+    print(f"m: {m} n: {n} p: {p}")
+    r = sp.Matrix([[sp.Integer(0)] * p for _ in range(m)])
+
+    print(f"ty m_a: {type(m_a)} dt: {m_b} ty m_b: {type(m_b)}")
+    print(f"m_a: {m_a} m_b: {m_b}")
+
+    for i in range(m):
+        for j in range(p):
+            for k in range(n):
+                v = r[i, j]
+                a = m_a[i, k]
+                b = m_b[k, j]
+                rv = sp.Or(v, sp.Or(a, b))
+                # print(f"shapes: r: {r.shape}")
+                r[i, j] = rv
+    # return cast(sp.Matrix, r)
+    return r
+
 
 def eval_lut_np_bit_sym(ibm: tuple[sp.Symbol, sp.Symbol, sp.Symbol, sp.Symbol]) -> None:
     print(f"bs ibm: {ibm}")
@@ -275,13 +345,14 @@ def eval_lut_np_bit_sym(ibm: tuple[sp.Symbol, sp.Symbol, sp.Symbol, sp.Symbol]) 
     # prods = lut & s_ttm
     # prods = sp.And(list(ibm), s_ttm)
     # prods = boa.Xor(lut, s_ttmb)
-    prods = sp.And(lut, s_ttmb)
+    # prods = lut.applyfunc(operator.__and__, s_ttm)
+    prods = mat_bin_sym(lut, s_ttm, sp.And, sp.Or)
     print(f"bs prods:\n{prods}")
-    prods_w_dc = boa.Or(prods, s_ttdb)
+    prods_w_dc = mat_add_sym(prods, s_ttd)
     print(f"bs prods_w_dc:\n{prods_w_dc}")
 
     # sums = np.bitwise_or(sums, ttm)
-    sums = reduce(boa.Or, prods_w_dc)
+    sums = sp.reduce(sp.Or, prods_w_dc)
     print(f"bs sums:\n{sums}")
     sum = np.bitwise_or.reduce(sums)
     print(f"bs sum: {sum}")
