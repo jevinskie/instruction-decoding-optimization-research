@@ -12,10 +12,10 @@ import sympy as sp
 import sympy.logic.boolalg as boa
 from attrs import define
 
-sp.init_printing(use_unicode=False)
-# sp.init_printing(use_unicode=True)
+# sp.init_printing(use_unicode=False)
+sp.init_printing(use_unicode=True)
 
-# from rich import print
+from rich import print  # noqa: E402
 
 tts = """
 -111
@@ -104,7 +104,7 @@ class BMat(Generic[T]):
         n = len(mat[0])
         assert all([len(row) == n for row in mat])
         print(f"NR: m: {m} n: {n} mat: {mat}")
-        r: list[list[T]] = cast(list[list[T]], [[None] * n for _ in range(m)])
+        r = cast(list[list[T]], [[None] * n for _ in range(m)])
         for i in range(m):
             for j in range(n):
                 v = mat[i][j]
@@ -125,15 +125,19 @@ class BMat(Generic[T]):
         return [[v for v in row] for row in self.v]
 
     def matmul(
-        self, other: BMat, prod_op: BinOp = operator.mul, sum_op: BinOp = operator.add, ident=0
-    ) -> BMat:
+        self,
+        other: BMat[T],
+        prod_op: BinOp = operator.mul,
+        sum_op: BinOp = operator.add,
+        ident: T = 0,
+    ) -> BMat[T]:
         m = self.shape[0]
         n1 = self.shape[1]
         n2 = other.shape[0]
         assert n1 == n2
         n = n1
         p = other.shape[1]
-        r: list[list] = [[ident] * p for _ in range(m)]
+        r = cast(list[list[T]], [[ident] * p for _ in range(m)])
 
         for i in range(n):
             for j in range(p):
@@ -146,14 +150,14 @@ class BMat(Generic[T]):
                     r[i][j] = rv
         return BMat(r)
 
-    def mat_bin_op(self, other: BMat, bin_op: BinOp) -> BMat:
+    def mat_bin_op(self, other: BMat[T], bin_op: BinOp) -> BMat[T]:
         m = self.shape[0]
         n1 = self.shape[1]
         n2 = other.shape[0]
         assert n1 == n2
         n = n1
         p = other.shape[1]
-        r: list[list] = [[None] * p for _ in range(m)]
+        r = cast(list[list[T]], [[None] * p for _ in range(m)])
 
         for i in range(n):
             for j in range(p):
@@ -164,13 +168,13 @@ class BMat(Generic[T]):
                     r[i][j] = bv
         return BMat(r)
 
-    def matadd(self, other: BMat) -> BMat:
+    def matadd(self, other: BMat[T]) -> BMat[T]:
         return self.mat_bin_op(other, operator.add)
 
-    def mat_un_op(self, un_op: UnOp) -> BMat:
+    def mat_un_op(self, un_op: UnOp) -> BMat[T]:
         m = self.shape[0]
         n = self.shape[1]
-        r: list[list[T]] = cast(list[list[T]], [[None] * n for _ in range(m)])
+        r = cast(list[list[T]], [[None] * n for _ in range(m)])
 
         for i in range(n):
             for j in range(m):
@@ -535,6 +539,7 @@ def eval_lut_np_bit_sym(ibm: tuple[sp.Symbol, sp.Symbol, sp.Symbol, sp.Symbol]) 
     lutl = [list(ibm), list(ibm), list(ibm), list(ibm)]
     lut = BMat(lutl)
     print(f"bs lut:\n{lut}")
+    print(f"bs ttmb:\n{ttmb}")
     prods = ttmb.matmul(lut, sp.And, sp.Or)
     print(f"bs prods:\n{prods}")
     prods_w_dc = prods.mat_bin_op(ttdb, sp.Or)
