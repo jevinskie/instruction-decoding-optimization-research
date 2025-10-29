@@ -13,9 +13,8 @@ import sympy.logic.boolalg as boa
 from attrs import define
 
 # sp.init_printing(use_unicode=False)
-sp.init_printing(use_unicode=True)
-
-from rich import print  # noqa: E402
+# sp.init_printing(use_unicode=True)
+from rich import print
 
 tts = """
 -111
@@ -324,7 +323,7 @@ def eval_lut_np(ibm: tuple[int, int, int, int]) -> None:
     lutm = np.array([list(ibm), list(ibm), list(ibm), list(ibm)])
     print(f"lutm:\n{lutm}")
 
-    prods = np.matmul(lut, ttm)
+    prods = np.matmul(lutm, ttm)
     print(f"prods:\n{prods}")
     prods_w_dc = prods + ttd
     print(f"prods_w_dc:\n{prods_w_dc}")
@@ -400,7 +399,7 @@ print()
 # eval_lut_np(t_no_maj2b)
 # eval_lut_np(t_no_maj1_0)
 # eval_lut_np(t_no_maj1_1)
-# eval_lut_np(t_isyms)
+eval_lut_np(t_isyms_bit)
 
 # print("\n\nbin:\n\n")
 
