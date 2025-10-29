@@ -296,12 +296,12 @@ SPVal = sp.Symbol | sp.Integer
 
 
 def mat_bin_sym(
-    m_a: sp.Matrix,
-    m_b: sp.Matrix,
+    m_a: np.ndarray,
+    m_b: np.ndarray,
     prod_op: Callable[[SPVal, SPVal], SPVal],
     sum_op=Callable[[SPVal, SPVal], SPVal],
     ident: SPVal = sp.Integer(0),
-) -> sp.Matrix:
+) -> np.ndarray:
     m = m_a.shape[0]
     n1 = m_a.shape[1]
     n2 = m_b.shape[0]
@@ -315,7 +315,7 @@ def mat_bin_sym(
     assert n1 == n2
     n = n1
     print(f"m: {m} n: {n} p: {p}")
-    r = sp.Matrix(np.array([[ident] * p for _ in range(m)]))
+    r = np.array([[ident] * p for _ in range(m)])
 
     print(f"ty m_a: {type(m_a)} dt: {m_b} ty m_b: {type(m_b)}")
     print(f"m_a: {m_a} m_b: {m_b}")
@@ -333,14 +333,14 @@ def mat_bin_sym(
                 print(f"rv: {rv} rvi: {rvi} ty: {type(rvi)}")
                 r[i, j] = rvi
     # return cast(sp.Matrix, r)
-    # return r
-    return mat_unbool_sym(r)
+    return r
+    # return mat_unbool_sym(r)
 
 
 def mat_sum_sym(
-    m_a: sp.Matrix,
-    m_b: sp.Matrix,
-) -> sp.Matrix:
+    m_a: np.ndarray,
+    m_b: np.ndarray,
+) -> np.ndarray:
     m = m_a.shape[0]
     n1 = m_a.shape[1]
     n2 = m_b.shape[0]
@@ -348,7 +348,7 @@ def mat_sum_sym(
     assert n1 == n2
     n = n1
     print(f"m: {m} n: {n} p: {p}")
-    r = sp.Matrix(np.array([[sp.Integer(0)] * p for _ in range(m)]))
+    r = np.array([[sp.Integer(0)] * p for _ in range(m)])
 
     print(f"ty m_a: {type(m_a)} dt: {m_b} ty m_b: {type(m_b)}")
     print(f"m_a: {m_a} m_b: {m_b}")
@@ -370,7 +370,7 @@ def mat_sum_sym(
 def eval_lut_np_bit_sym(ibm: tuple[sp.Symbol, sp.Symbol, sp.Symbol, sp.Symbol]) -> None:
     print(f"bs ibm: {ibm}")
     lutl = [list(ibm), list(ibm), list(ibm), list(ibm)]
-    lut = sp.Matrix(np.array(lutl))
+    lut = np.array(lutl)
     print(f"bs lut:\n{lut}")
     # prods = 0
     # prods = lut & s_ttm
@@ -382,12 +382,10 @@ def eval_lut_np_bit_sym(ibm: tuple[sp.Symbol, sp.Symbol, sp.Symbol, sp.Symbol]) 
     prods_w_dc = mat_sum_sym(prods, s_ttd)
     print(f"bs prods_w_dc:\n{prods_w_dc}")
 
-    # sums = np.bitwise_or(sums, ttm)
-    sums = reduce(sp.Or, prods_w_dc)
+    sums = np.bitwise_or(prods_w_dc, ttm)
+    # sums = reduce(sp.Or, sp.Matrix(prods_w_dc))
     # sums = prods_w_dc[0]
     print(f"bs sums:\n{sums}")
-    sums2 = np.bitwise_or(prods_w_dc, ttm)
-    print(f"bs sums2:\n{sums2}")
     sum = np.bitwise_or.reduce(sums)
     print(f"bs sum: {sum}")
     # prods = dot_prod_1d_bit(prods)
