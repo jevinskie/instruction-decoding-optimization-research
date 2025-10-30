@@ -51,6 +51,12 @@ inv_ttd = [
     [1, 0, 0, 1],
 ]
 
+t_maj3 = (1, 1, 1, 0)
+t_maj2a = (1, 0, 0, 1)
+t_no_maj2b = (0, 1, 0, 1)
+t_no_maj1_0 = (1, 0, 0, 0)
+t_no_maj1_1 = (0, 1, 0, 0)
+
 
 T = TypeVar("T")
 
@@ -206,12 +212,6 @@ print()
 print(f"ttdb:\n{ttdb}")
 print()
 
-t_maj3 = (1, 1, 1, 0)
-t_maj2a = (1, 0, 0, 1)
-t_no_maj2b = (0, 1, 0, 1)
-t_no_maj1_0 = (1, 0, 0, 0)
-t_no_maj1_1 = (0, 1, 0, 0)
-
 isyms_bit_list = sp.symbols("Ba Bb Bc Bd", integer=True)
 print(f"isyms_bit_list: {isyms_bit_list}")
 t_isyms_bit = tuple(isyms_bit_list)
@@ -255,7 +255,7 @@ def eval_lut_np_bit(ibm: tuple[int, int, int, int]) -> None:
 eval_lut_np(t_isyms_bit)
 
 
-def eval_lut_np_bit_sym(ibm: tuple[sp.Symbol, sp.Symbol, sp.Symbol, sp.Symbol]) -> None:
+def eval_lut_np_bit_sym(ibm: tuple[T, T, T, T]) -> None:
     print(f"bs ibm: {ibm}")
     lutl = [list(ibm), list(ibm), list(ibm), list(ibm)]
     lut = BMat(lutl)
@@ -271,9 +271,39 @@ def eval_lut_np_bit_sym(ibm: tuple[sp.Symbol, sp.Symbol, sp.Symbol, sp.Symbol]) 
     print(f"bs reduce_prods_raw: {reduce_prods_raw}")
     reduce_prods = BMat.normalize_raw(reduce_prods_raw)
     print(f"bs reduce_prods:\n{reduce_prods}")
-    sum = reduce(sp.Or, reduce_prods[0])
-    print(f"bs sum: {sum}")
+    sum_raw = reduce(sp.Or, reduce_prods[0])
+    sum_norm = BMat.normalize_scalar(sum_raw)
+    print(f"bs sum: {sum_norm} sum_raw: {sum_raw}")
     print()
 
 
 eval_lut_np_bit_sym(t_isyms_bit)
+
+
+def eval_lut_np_bit_sym_npnpnp(ibm: tuple[T, T, T, T]) -> None:
+    print(f"ns ibm: {ibm}")
+    lutl = [list(ibm), list(ibm), list(ibm), list(ibm)]
+    lut = BMat(lutl)
+    print(f"ns lut:\n{lut}")
+    print(f"ns ttmb:\n{ttmb}")
+    # prods = lut.matmul(ttmb, sp.And, sp.Or)
+    prods = lut.mat_bin_op(ttmb, operator.mul)
+    print(f"ns prods:\n{prods}")
+    prods_w_dc = prods.mat_bin_op(ttdb, operator.add)
+    print(f"ns prods_w_dc:\n{prods_w_dc}")
+
+    reduce_prods_raw = [[reduce(operator.mul, row) for row in prods_w_dc.rows]]
+    print(f"ns reduce_prods_raw: {reduce_prods_raw}")
+    reduce_prods = BMat.normalize_raw(reduce_prods_raw)
+    print(f"ns reduce_prods:\n{reduce_prods}")
+    sum_raw = reduce(operator.add, reduce_prods[0])
+    sum_norm = BMat.normalize_scalar(sum_raw)
+    print(f"ns sum: {sum_norm} sum_raw: {sum_raw}")
+    print()
+
+
+eval_lut_np_bit_sym(t_isyms_bit)
+eval_lut_np_bit_sym(t_maj3)
+
+eval_lut_np_bit_sym_npnpnp(t_isyms_bit)
+eval_lut_np_bit_sym_npnpnp(t_maj3)
