@@ -20,15 +20,34 @@ class PLA:
 
     @staticmethod
     def from_str(pla_str: str) -> PLA:
+        t: list[Term] = []
+        ni: int | None = None
+        no: int | None = None
         lin: list[str] | None = None
         lout: list[str] | None = None
-        t: list[Term] = []
         n: str | None = None
         for ln in pla_str.splitlines():
-            # match ln in
+            if ln.startswith("#"):
+                continue
+            if ln.startswith("."):
+                cmd = ln.removeprefix(".")
+                match cmd:
+                    case "i":
+                        ni = int(cmd.removeprefix("i"))
+                    case "o":
+                        no = int(cmd.removeprefix("o"))
+                    case "ilb":
+                        lin = list(cmd.removeprefix("ilb").split())
+                    case "olb":
+                        lout = list(cmd.removeprefix("olb").split())
+                    case "p":
+                        pass
+                    case "e":
+                        pass
+
             str(ln)
             pass
-        map(str, (lin, lout, t, n))
+        map(str, (lin, lout, t, n, no, ni))
         return PLA(0, 0)
 
     def to_str(self) -> str:
