@@ -26,6 +26,7 @@ class PLA:
         lin: list[str] | None = None
         lout: list[str] | None = None
         n: str | None = None
+        expected_p: int | None = None
         for ln in pla_str.splitlines():
             if ln.startswith("#"):
                 continue
@@ -41,10 +42,12 @@ class PLA:
                     case "olb":
                         lout = list(cmd.removeprefix("olb").split())
                     case "p":
-                        pass
+                        expected_p = int(cmd.removeprefix("p"))
                     case "e":
-                        pass
+                        break
 
+            if expected_p is not None and len(t) != expected_p:
+                raise ValueError(f"Got {len(t)} terms not {expected_p} as specified by '.p N'")
             str(ln)
             pass
         map(str, (lin, lout, t, n, no, ni))
