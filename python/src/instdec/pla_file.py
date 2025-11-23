@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 import attrs
 
 
@@ -7,6 +9,9 @@ import attrs
 class Term:
     ins: str
     outs: str
+
+
+_term_pattern = re.compile(r"([01-]+)\s+([01-]+)")
 
 
 @attrs.define(auto_attribs=True)
@@ -28,6 +33,8 @@ class PLA:
         n: str | None = None
         expected_p: int | None = None
         for ln in pla_str.splitlines():
+            if len(ln) == 0:
+                continue
             if ln.startswith("#"):
                 continue
             if ln.startswith("."):
@@ -45,12 +52,16 @@ class PLA:
                         expected_p = int(cmd.removeprefix("p"))
                     case "e":
                         break
-
-            if expected_p is not None and len(t) != expected_p:
-                raise ValueError(f"Got {len(t)} terms not {expected_p} as specified by '.p N'")
-            str(ln)
-            pass
-        map(str, (lin, lout, t, n, no, ni))
+            term_matches = _term_pattern.match(ln)
+            if term_matches:
+                in_terms_str, out_terms_str = term_matches.groups()
+                t.append(Term(in_terms_str, out_terms_str))
+            else:
+                raise ValueError(f"unhandled line: {ln}")
+        if expected_p is not None and len(t) != expected_p:
+            raise ValueError(f"Got {len(t)} terms not {expected_p} as specified by '.p N'")
+        if len(t) == 0:
+            return PLA([], ni if ni is not None else 0, no if no is not None else 0, lin, lout, n)
         return PLA(0, 0)
 
     def to_str(self) -> str:
