@@ -32,7 +32,7 @@ def generate_espresso(einf: dict[str, tuple[int, int]]) -> str:
     el @= ".i 32"
     el @= ".o 1"
     el @= ".ilb " + " ".join([f"I{i}" for i in reversed(range(32))])
-    el @= ".olb V"
+    el @= ".ob V"
     for bmi, bpi in einf.values():
         bits = ""
         for j in reversed(range(32)):

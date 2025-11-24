@@ -4,6 +4,8 @@ import re
 
 import attrs
 
+from instdec.util import StringList
+
 
 @attrs.define(auto_attribs=True, frozen=True)
 class Term:
@@ -85,5 +87,36 @@ class PLA:
             raise ValueError(".o bad")
         return PLA(t, ni, no, lin, lout)
 
-    def to_str(self) -> str:
-        return ""
+    def to_pla(self) -> str:
+        q = StringList()
+        q @= f".i {self.num_in}"
+        q @= f".o {self.num_out}"
+        q @= ".ilb " + " ".join(
+            self.labels_in if self.labels_in else [f"I{i}" for i in reversed(range(self.num_in))]
+        )
+        q @= ".ob " + " ".join(
+            self.labels_out if self.labels_out else [f"O{i}" for i in reversed(range(self.num_out))]
+        )
+        q @= f".p {len(self.terms)}"
+        for term in self.terms:
+            q @= f"{term.ins} {term.outs}"
+        q @= ".e"
+        q @= ""
+        return str(q)
+
+    def to_verilog(self) -> str:
+        q = StringList()
+        q @= f".i {self.num_in}"
+        q @= f".o {self.num_out}"
+        q @= ".ilb " + " ".join(
+            self.labels_in if self.labels_in else [f"I{i}" for i in reversed(range(self.num_in))]
+        )
+        q @= ".ob " + " ".join(
+            self.labels_out if self.labels_out else [f"O{i}" for i in reversed(range(self.num_out))]
+        )
+        q @= f".p {len(self.terms)}"
+        for term in self.terms:
+            q @= f"{term.ins} {term.outs}"
+        q @= ".e"
+        q @= ""
+        return str(q)
