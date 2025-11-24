@@ -39,6 +39,7 @@ requires-python = ">=3.11"
 dev = [
   "mypy>=1.18.2",
   "pre-commit>=4.5.0",
+  "pytest>=9.0.1",
   "ruff>=0.14.6"
 ]
 
@@ -49,6 +50,11 @@ instdec-py-z3 = "instdec.tools.instdec_z3:main"
 
 [project.urls]
 repository = "https://github.com/jevinskie/instruction-decoding-optimization-research"
+
+[tool.pytest]
+addopts = ["--import-mode=importlib"]
+minversion = "9.0"
+testpaths = ["python/tests"]
 
 [tool.ruff]
 line-length = 100
