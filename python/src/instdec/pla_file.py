@@ -87,6 +87,10 @@ class PLA:
             raise ValueError(".o bad")
         return PLA(t, ni, no, lin, lout)
 
+    @property
+    def num_terms(self) -> int:
+        return len(self.terms)
+
     def to_pla(self) -> str:
         q = StringList()
         q @= f".i {self.num_in}"
@@ -105,18 +109,29 @@ class PLA:
         return str(q)
 
     def to_verilog(self) -> str:
-        q = StringList()
-        q @= f".i {self.num_in}"
-        q @= f".o {self.num_out}"
-        q @= ".ilb " + " ".join(
-            self.labels_in if self.labels_in else [f"I{i}" for i in reversed(range(self.num_in))]
-        )
-        q @= ".ob " + " ".join(
-            self.labels_out if self.labels_out else [f"O{i}" for i in reversed(range(self.num_out))]
-        )
-        q @= f".p {len(self.terms)}"
-        for term in self.terms:
-            q @= f"{term.ins} {term.outs}"
-        q @= ".e"
-        q @= ""
-        return str(q)
+        ni, no, nt = self.num_in, self.num_out, self.num_terms
+        vl = StringList()
+        vl @= f"module circt(input [{ni - 1}:0]i, output [{no - 1}:0]o);"
+        # vl @= f"    wire [{no - 1}:0]otmp;"
+        for i in range(no):
+            vl @= f"    wire [{nt - 1}:0]otmp_{i};"
+        for i, term in enumerate(self.terms):
+            bm = term.ins.replace("1", "N").replace("0", "N").replace("-", "0").replace("N", "1")
+            bp = term.ins.replace("-", "0")
+            for j, oval in enumerate(term.outs):
+                if oval == "-":
+                    continue
+                if oval == "1":
+                    op = "=="
+                else:
+                    if oval != "0":
+                        raise ValueError(f"oval: {oval}")
+                    op = "!="
+                vl @= f"    assign otmp_{j}[{i:4}] = (i & {ni}'b{bm}) {op} {ni}'b{bp};"
+        # assign vtmp[{i:4}] = (i & 32'b{kv[1][0]:032b}) == 32'b{kv[1][1]:032b}; // {kv[0]}
+        for i in range(no):
+            vl @= f"    wire [{nt - 1}:0]otmp_{i};"
+        # vl @= "    assign o = |otmp;"
+        vl @= "endmodule"
+        vl @= ""
+        return str(vl)
