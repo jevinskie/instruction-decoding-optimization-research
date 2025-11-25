@@ -44,55 +44,97 @@ four_bit_pal_test_c = r"""
 .e
 """
 
+multiout_test_c = r"""
+.i 4
+.o 2
+.ilb A B C D
+.ob MAJ0 MAJ1
+.p 4
+-111 10
+11-- 11
+1-1- 1-
+1--1 10
+.e
+"""
+
+GOLD_A = PLA(
+    terms=[
+        Term(ins="0111", outs="1"),
+        Term(ins="1001", outs="1"),
+        Term(ins="1010", outs="1"),
+        Term(ins="1011", outs="1"),
+        Term(ins="1100", outs="1"),
+        Term(ins="1101", outs="1"),
+        Term(ins="1110", outs="1"),
+        Term(ins="1111", outs="1"),
+    ],
+    num_in=4,
+    num_out=1,
+    labels_in=["A", "B", "C", "D"],
+    labels_out=["MAJ"],
+)
+
+GOLD_B = PLA(
+    terms=[
+        Term(ins="0111", outs="1"),
+        Term(ins="1011", outs="1"),
+        Term(ins="1101", outs="1"),
+        Term(ins="1110", outs="1"),
+        Term(ins="1111", outs="1"),
+    ],
+    num_in=4,
+    num_out=1,
+    labels_in=["A", "B", "C", "D"],
+    labels_out=["MAJ"],
+)
+
+GOLD_C = PLA(
+    terms=[
+        Term(ins="-111", outs="1"),
+        Term(ins="11--", outs="1"),
+        Term(ins="1-1-", outs="1"),
+        Term(ins="1--1", outs="1"),
+    ],
+    num_in=4,
+    num_out=1,
+    labels_in=["A", "B", "C", "D"],
+    labels_out=["MAJ"],
+)
+
+GOLD_D = PLA(
+    terms=[
+        Term(ins="-111", outs="10"),
+        Term(ins="11--", outs="11"),
+        Term(ins="1-1-", outs="1-"),
+        Term(ins="1--1", outs="10"),
+    ],
+    num_in=4,
+    num_out=2,
+    labels_in=["A", "B", "C", "D"],
+    labels_out=["MAJ0", "MAJ1"],
+)
+
 
 def test_pla_file_load_a():
     po = PLA.from_str(four_bit_pal_test_a)
-    assert po == PLA(
-        terms=[
-            Term(ins="0111", outs="1"),
-            Term(ins="1001", outs="1"),
-            Term(ins="1010", outs="1"),
-            Term(ins="1011", outs="1"),
-            Term(ins="1100", outs="1"),
-            Term(ins="1101", outs="1"),
-            Term(ins="1110", outs="1"),
-            Term(ins="1111", outs="1"),
-        ],
-        num_in=4,
-        num_out=1,
-        labels_in=["A", "B", "C", "D"],
-        labels_out=["MAJ"],
-    )
+    assert po == GOLD_A
 
 
 def test_pla_file_load_b():
     po = PLA.from_str(four_bit_pal_test_b)
-    assert po == PLA(
-        terms=[
-            Term(ins="0111", outs="1"),
-            Term(ins="1011", outs="1"),
-            Term(ins="1101", outs="1"),
-            Term(ins="1110", outs="1"),
-            Term(ins="1111", outs="1"),
-        ],
-        num_in=4,
-        num_out=1,
-        labels_in=["A", "B", "C", "D"],
-        labels_out=["MAJ"],
-    )
+    assert po == GOLD_B
 
 
 def test_pla_file_load_c():
     po = PLA.from_str(four_bit_pal_test_c)
-    assert po == PLA(
-        terms=[
-            Term(ins="-111", outs="1"),
-            Term(ins="11--", outs="1"),
-            Term(ins="1-1-", outs="1"),
-            Term(ins="1--1", outs="1"),
-        ],
-        num_in=4,
-        num_out=1,
-        labels_in=["A", "B", "C", "D"],
-        labels_out=["MAJ"],
-    )
+    assert po == GOLD_C
+
+
+def test_pla_file_load_d():
+    po = PLA.from_str(multiout_test_c)
+    assert po == GOLD_D
+
+
+def test_verilog_a():
+    po = PLA.from_str(multiout_test_c)
+    print(po.to_verilog())
