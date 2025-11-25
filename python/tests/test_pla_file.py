@@ -53,7 +53,7 @@ multiout_test_c = r"""
 -111 10
 11-- 11
 1-1- 1-
-1--1 10
+1--1 01
 .e
 """
 
@@ -106,7 +106,7 @@ GOLD_D = PLA(
         Term(ins="-111", outs="10"),
         Term(ins="11--", outs="11"),
         Term(ins="1-1-", outs="1-"),
-        Term(ins="1--1", outs="10"),
+        Term(ins="1--1", outs="01"),
     ],
     num_in=4,
     num_out=2,

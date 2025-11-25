@@ -115,10 +115,18 @@ class PLA:
         # vl @= f"    wire [{no - 1}:0]otmp;"
         for i in range(no):
             vl @= f"    wire [{nt - 1}:0]otmp_{i};"
-        for i, term in enumerate(self.terms):
-            bm = term.ins.replace("1", "N").replace("0", "N").replace("-", "0").replace("N", "1")
-            bp = term.ins.replace("-", "0")
-            for j, oval in enumerate(term.outs):
+        vl @= ""
+        for out_bit in range(no):
+            vl @= f"    // out_bit: {out_bit}"
+            for term_num, term in enumerate(self.terms):
+                oval = term.outs[out_bit]
+                if oval == "-":
+                    continue
+                bm = (
+                    term.ins.replace("1", "N").replace("0", "N").replace("-", "0").replace("N", "1")
+                )
+                bp = term.ins.replace("-", "0")
+                oval = term.outs[out_bit]
                 if oval == "-":
                     continue
                 if oval == "1":
@@ -127,10 +135,8 @@ class PLA:
                     if oval != "0":
                         raise ValueError(f"oval: {oval}")
                     op = "!="
-                vl @= f"    assign otmp_{j}[{i:4}] = (i & {ni}'b{bm}) {op} {ni}'b{bp};"
-        # assign vtmp[{i:4}] = (i & 32'b{kv[1][0]:032b}) == 32'b{kv[1][1]:032b}; // {kv[0]}
-        for i in range(no):
-            vl @= f"    wire [{nt - 1}:0]otmp_{i};"
+                vl @= f"    assign otmp_{out_bit}[{term_num}] = (i & {ni}'b{bm}) {op} {ni}'b{bp}; // ob: {out_bit} tn: {term_num} "
+            vl @= ""
         # vl @= "    assign o = |otmp;"
         vl @= "endmodule"
         vl @= ""
