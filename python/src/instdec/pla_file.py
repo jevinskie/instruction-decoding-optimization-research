@@ -113,10 +113,12 @@ class PLA:
         vl = StringList()
         vl @= f"module circt(input [{ni - 1}:0]i, output [{no - 1}:0]o);"
         for i in range(no):
-            vl @= f"    wire [{nt - 1}:0]minterms_{i};"
+            vl @= f"    reg [{nt - 1}:0]minterms_{i};"
         vl @= ""
         for out_bit in range(no):
             vl @= f"    // out_bit: {out_bit}"
+            vl @= "always @(*) begin"
+            vl @= f"minterms_{out_bit} = '0;"
             for term_num, term in enumerate(self.terms):
                 oval = term.outs[out_bit]
                 if oval == "-":
@@ -134,8 +136,9 @@ class PLA:
                     if oval != "0":
                         raise ValueError(f"oval: {oval}")
                     continue
-                vl @= f"    assign minterms_{out_bit}[{term_num}] = (i & {ni}'b{bit_mask}) == {ni}'b{bit_pattern}; // ob: {out_bit} tn: {term_num} "
+                vl @= f"    minterms_{out_bit}[{term_num}] = (i & {ni}'b{bit_mask}) == {ni}'b{bit_pattern}; // ob: {out_bit} tn: {term_num} "
             vl @= ""
+        vl @= "end"
         for i in range(no):
             vl @= f"   assign o[{i}] = |minterms_{i};"
         vl @= "endmodule"
