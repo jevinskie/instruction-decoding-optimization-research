@@ -112,9 +112,8 @@ class PLA:
         ni, no, nt = self.num_in, self.num_out, self.num_terms
         vl = StringList()
         vl @= f"module circt(input [{ni - 1}:0]i, output [{no - 1}:0]o);"
-        # vl @= f"    wire [{no - 1}:0]otmp;"
         for i in range(no):
-            vl @= f"    wire [{nt - 1}:0]otmp_{i};"
+            vl @= f"    wire [{nt - 1}:0]minterms_{i};"
         vl @= ""
         for out_bit in range(no):
             vl @= f"    // out_bit: {out_bit}"
@@ -122,22 +121,23 @@ class PLA:
                 oval = term.outs[out_bit]
                 if oval == "-":
                     continue
-                bm = (
+                bit_mask = (
                     term.ins.replace("1", "N").replace("0", "N").replace("-", "0").replace("N", "1")
                 )
-                bp = term.ins.replace("-", "0")
+                bit_pattern = term.ins.replace("-", "0")
                 oval = term.outs[out_bit]
                 if oval == "-":
                     continue
                 if oval == "1":
-                    op = "=="
+                    pass
                 else:
                     if oval != "0":
                         raise ValueError(f"oval: {oval}")
-                    op = "!="
-                vl @= f"    assign otmp_{out_bit}[{term_num}] = (i & {ni}'b{bm}) {op} {ni}'b{bp}; // ob: {out_bit} tn: {term_num} "
+                    continue
+                vl @= f"    assign minterms_{out_bit}[{term_num}] = (i & {ni}'b{bit_mask}) == {ni}'b{bit_pattern}; // ob: {out_bit} tn: {term_num} "
             vl @= ""
-        # vl @= "    assign o = |otmp;"
+        for i in range(no):
+            vl @= f"   assign o[{i}] = |minterms_{i};"
         vl @= "endmodule"
         vl @= ""
         return str(vl)

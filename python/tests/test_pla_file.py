@@ -44,7 +44,7 @@ four_bit_pal_test_c = r"""
 .e
 """
 
-multiout_test_c = r"""
+multiout_test_d = r"""
 .i 4
 .o 2
 .ilb A B C D
@@ -131,10 +131,11 @@ def test_pla_file_load_c():
 
 
 def test_pla_file_load_d():
-    po = PLA.from_str(multiout_test_c)
+    po = PLA.from_str(multiout_test_d)
     assert po == GOLD_D
 
 
 def test_verilog_a():
-    po = PLA.from_str(multiout_test_c)
-    print(po.to_verilog())
+    po = PLA.from_str(four_bit_pal_test_c)
+    print("\n" + po.to_verilog())
+    open("circt.v", "w").write(po.to_verilog())
