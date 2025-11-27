@@ -117,8 +117,8 @@ class PLA:
         vl @= ""
         for out_bit in range(no):
             vl @= f"    // out_bit: {out_bit}"
-            vl @= "always @(*) begin"
-            vl @= f"minterms_{out_bit} = '0;"
+            vl @= "    always @(*) begin"
+            vl @= f"        minterms_{out_bit} = 'x;"
             for term_num, term in enumerate(self.terms):
                 oval = term.outs[out_bit]
                 if oval == "-":
@@ -136,9 +136,12 @@ class PLA:
                     if oval != "0":
                         raise ValueError(f"oval: {oval}")
                     continue
-                vl @= f"    minterms_{out_bit}[{term_num}] = (i & {ni}'b{bit_mask}) == {ni}'b{bit_pattern}; // ob: {out_bit} tn: {term_num} "
+                if True or bit_mask.count("1") != ni:
+                    vl @= f"        minterms_{out_bit}[{term_num}] = (i & {ni}'b{bit_mask}) == {ni}'b{bit_pattern}; // ob: {out_bit} tn: {term_num}"
+                else:
+                    vl @= f"        minterms_{out_bit}[{term_num}] = i == {ni}'b{bit_pattern}; // ob: {out_bit} tn: {term_num}"
+            vl @= "    end"
             vl @= ""
-        vl @= "end"
         for i in range(no):
             vl @= f"   assign o[{i}] = |minterms_{i};"
         vl @= "endmodule"

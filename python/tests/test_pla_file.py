@@ -6,14 +6,14 @@ four_bit_pal_test_a = r"""
 .ilb A B C D
 .ob MAJ
 .p 8
-0111 1
-1001 1
-1010 1
-1011 1
-1100 1
-1101 1
-1110 1
 1111 1
+0111 1
+1011 1
+1101 1
+1001 1
+1110 1
+1010 1
+1100 1
 .e
 """
 
@@ -37,10 +37,10 @@ four_bit_pal_test_c = r"""
 .ilb A B C D
 .ob MAJ
 .p 4
--111 1
 11-- 1
 1-1- 1
 1--1 1
+-111 1
 .e
 """
 
@@ -59,14 +59,14 @@ multiout_test_d = r"""
 
 GOLD_A = PLA(
     terms=[
-        Term(ins="0111", outs="1"),
-        Term(ins="1001", outs="1"),
-        Term(ins="1010", outs="1"),
-        Term(ins="1011", outs="1"),
-        Term(ins="1100", outs="1"),
-        Term(ins="1101", outs="1"),
-        Term(ins="1110", outs="1"),
         Term(ins="1111", outs="1"),
+        Term(ins="0111", outs="1"),
+        Term(ins="1011", outs="1"),
+        Term(ins="1101", outs="1"),
+        Term(ins="1001", outs="1"),
+        Term(ins="1110", outs="1"),
+        Term(ins="1010", outs="1"),
+        Term(ins="1100", outs="1"),
     ],
     num_in=4,
     num_out=1,
@@ -90,10 +90,10 @@ GOLD_B = PLA(
 
 GOLD_C = PLA(
     terms=[
-        Term(ins="-111", outs="1"),
         Term(ins="11--", outs="1"),
         Term(ins="1-1-", outs="1"),
         Term(ins="1--1", outs="1"),
+        Term(ins="-111", outs="1"),
     ],
     num_in=4,
     num_out=1,
@@ -136,6 +136,9 @@ def test_pla_file_load_d():
 
 
 def test_verilog_a():
-    po = PLA.from_str(four_bit_pal_test_c)
-    print("\n" + po.to_verilog())
-    open("circt.v", "w").write(po.to_verilog())
+    pa = PLA.from_str(four_bit_pal_test_a)
+    print("\n" + pa.to_verilog())
+    open("qa.v", "w").write(pa.to_verilog())
+    pc = PLA.from_str(four_bit_pal_test_c)
+    print("\n" + pc.to_verilog())
+    open("qc.v", "w").write(pc.to_verilog())
