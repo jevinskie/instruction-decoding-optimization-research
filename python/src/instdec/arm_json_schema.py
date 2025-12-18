@@ -620,12 +620,13 @@ def _add_cattrs_hooks():
         args = None
         if "arguments" in sqop_str:
             if not isinstance(sqop_str["arguments"], list):
-                args = tuple(sqop_str["arguments"])
+                args = (converter.structure(sqop_str["arguments"], Expression),)
             else:
-                args = tuple(sqop_str["arguments"])
+                args = tuple([converter.structure(a, Expression) for a in sqop_str["arguments"]])
         if args is None:
             args = tuple()
-        return cls(sqop_str["var"], args)
+        var = converter.structure(sqop_str["var"], Expression)
+        return cls(var, args)
 
     converter.register_structure_hook(SquareOp, structure_squareop)
 

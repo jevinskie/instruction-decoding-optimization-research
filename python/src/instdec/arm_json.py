@@ -207,9 +207,9 @@ def merge_constraints(constraints: list[Expression | None]) -> list[Expression]:
         if cons in rset:
             if cons == Bool(True):
                 continue
-            raise ValueError(
-                f"merge_constraints: got duplicate constraint. Is this bad? cons: {cons}"
-            )
+            # raise ValueError(
+            #     f"merge_constraints: got duplicate constraint. Is this bad? cons: {cons}"
+            # )
         rset.add(cons)
         res.append(cons)
     return res
