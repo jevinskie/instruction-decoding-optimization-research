@@ -84,6 +84,15 @@ class Bool:
 
 
 @defauto
+class Integer:
+    value: int
+    _type: Literal["AST.Integer"] = attrs.field(default="AST.Integer", repr=False, alias="_type")
+
+    def __rich_repr__(self) -> rich.repr.Result:
+        yield self.value
+
+
+@defauto
 class Set:
     values: tuple[Value, ...]
     _type: Literal["AST.Set"] = attrs.field(default="AST.Set", repr=False, alias="_type")
@@ -121,6 +130,13 @@ class SquareOp:
     _type: Literal["AST.SquareOp"] = attrs.field(default="AST.SquareOp", repr=False, alias="_type")
 
 
+@defauto
+class Slice:
+    left: Expression
+    right: Expression
+    _type: Literal["AST.Slice"] = attrs.field(default="AST.Slice", repr=False, alias="_type")
+
+
 seen_function_names: set[str] = set()
 
 
@@ -139,7 +155,9 @@ class Function:
 
 
 # Define Expression as a union of all possible AST node types
-Expression = Bool | BinaryOp | Function | Identifier | Set | SquareOp | UnaryOp | Value
+Expression = (
+    Bool | BinaryOp | Function | Identifier | Integer | Set | Slice | SquareOp | UnaryOp | Value
+)
 Valueish = Value | Set
 
 
@@ -505,6 +523,7 @@ JSONSchemaObjectClasses = (
     EncodsetShouldBeBits,
     Function,
     Identifier,
+    Integer,
     Instruction,
     InstructionAlias,
     InstructionGroup,
@@ -515,6 +534,7 @@ JSONSchemaObjectClasses = (
     OperationAlias,
     Range,
     Set,
+    Slice,
     SquareOp,
     Trits,
     UnaryOp,

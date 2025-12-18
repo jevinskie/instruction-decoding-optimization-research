@@ -21,9 +21,11 @@ from .arm_json_schema import (
     InstructionGroup,
     InstructionOrInstructionGroup,
     Instructions,
+    Integer,
     JSONSchemaObject,
     JSONSchemaObjectClasses,
     Set,
+    Slice,
     SquareOp,
     UnaryOp,
     UnOp,
@@ -46,6 +48,9 @@ def expr_get_objs(expr: Expression) -> list[JSONSchemaObject]:
         if isinstance(e, BinaryOp):
             helper(e.left)
             helper(e.right)
+        elif isinstance(e, Slice):
+            helper(e.left)
+            helper(e.right)
         elif isinstance(e, UnaryOp):
             helper(e.expr)
         elif isinstance(e, Set):
@@ -65,6 +70,9 @@ def expr_idents(expr: Expression) -> list[str]:
 
     def helper(e: Expression):
         if isinstance(e, BinaryOp):
+            helper(e.left)
+            helper(e.right)
+        elif isinstance(e, Slice):
             helper(e.left)
             helper(e.right)
         elif isinstance(e, UnaryOp):
@@ -114,6 +122,10 @@ class Interpteter:
                 print("BAD BAD BAD", flush=True)
                 Interpteter(cur_node.var).evaluate()
                 raise NotImplementedError("SquareOp Interpreter.evaluate")
+            elif isinstance(cur_node, Slice):
+                lv = Interpteter(cur_node.left).evaluate()
+                rv = Interpteter(cur_node.right).evaluate()
+                raise NotImplementedError("Slice Interpreter.evaluate")
             elif isinstance(cur_node, UnaryOp):
                 ov = Interpteter(cur_node.expr).evaluate()
                 if isinstance(ov, Set):
@@ -121,6 +133,8 @@ class Interpteter:
                 return self.eval_unop(cur_node, ov)
             elif isinstance(cur_node, Bool):
                 return self.eval_bool(cur_node)
+            elif isinstance(cur_node, Integer):
+                return self.eval_int(cur_node)
             elif isinstance(cur_node, Identifier):
                 return self.eval_id(cur_node)
             elif isinstance(cur_node, (Value, Set)):
@@ -187,6 +201,9 @@ class Interpteter:
             return Value(meaning="Bool", value=Trits("1"))
         else:
             return Value(meaning="Bool", value=Trits("0"))
+
+    def eval_int(self, cur_node: Integer) -> Value:
+        return Value(meaning="Integer", value=Trits(f"{cur_node.value:b}"))
 
     def eval_id(self, cur_node: Identifier) -> Value:
         return Value(meaning=f"ID.{cur_node.value}", value=Trits("X"))
