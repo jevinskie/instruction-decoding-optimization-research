@@ -49,6 +49,7 @@ def get_arg_parser() -> argparse.ArgumentParser:
 def real_main(args: argparse.Namespace):
     print(f"args: {args}")
     raw_json_dict = dict(json.load(open(args.instr_json)))
+    raw_json_dict["instructions"] = [i for i in raw_json_dict["instructions"] if i["name"] == "A64"]
 
     ctx = dump_instructions(raw_json_dict)
     if args.enc_json is not None:

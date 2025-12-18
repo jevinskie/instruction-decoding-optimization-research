@@ -111,6 +111,9 @@ def real_main(args: argparse.Namespace) -> None:
 
     if args.enc_json is not None:
         raw_json_dict = dict(json.load(open(args.enc_json)))
+        raw_json_dict["instructions"] = [
+            i for i in raw_json_dict["instructions"] if i["name"] == "A64"
+        ]
         for iname, einfo_str in raw_json_dict.items():
             enc_info[iname] = (int(einfo_str[0], 2), int(einfo_str[1], 2))
     elif args.espresso_in is not None:
