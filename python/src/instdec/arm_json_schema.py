@@ -117,7 +117,7 @@ class UnaryOp:
 @defauto
 class SquareOp:
     var: Expression
-    arguments: tuple[Expression, ...] | Expression | None
+    arguments: tuple[Expression, ...]
     _type: Literal["AST.SquareOp"] = attrs.field(default="AST.SquareOp", repr=False, alias="_type")
 
 
@@ -539,7 +539,7 @@ def _add_cattrs_hooks():
             raise TypeError(f"got cls {cls} not Operations")
         for k in ops_dict.keys():
             ops_dict[k] = converter.structure(ops_dict[k], Operationish)
-        return Operations(**ops_dict)
+        return cls(**ops_dict)
 
     converter.register_structure_hook(Operations, structure_operations)
 
@@ -560,7 +560,7 @@ def _add_cattrs_hooks():
                 attrs_dict[field.name] = converter.structure(iset_dict[field.name], field.type)
 
         # Create and return the InstructionSet instance
-        return InstructionSet(**attrs_dict)
+        return cls(**attrs_dict)
 
     converter.register_structure_hook(InstructionSet, structure_instructionset)
 
@@ -580,7 +580,7 @@ def _add_cattrs_hooks():
             if field.name in igrp_dict:
                 attrs_dict[field.name] = converter.structure(igrp_dict[field.name], field.type)
 
-        return InstructionGroup(**attrs_dict)
+        return cls(**attrs_dict)
 
     converter.register_structure_hook(InstructionGroup, structure_instructiongroup)
 
@@ -598,22 +598,34 @@ def _add_cattrs_hooks():
             if field.name in instr_dict:
                 attrs_dict[field.name] = converter.structure(instr_dict[field.name], field.type)
 
-        return Instruction(**attrs_dict)
+        return cls(**attrs_dict)
 
     converter.register_structure_hook(Instruction, structure_instruction)
 
     def structure_trit(trit_str: str, cls: type[Trits]) -> Trits:
         if not issubclass(cls, Trits):
             raise TypeError(f"got cls {cls} not Trits")
-        return Trits(trit_str)
+        return cls(trit_str)
 
     converter.register_structure_hook(Trits, structure_trit)
 
     def structure_squareop(sqop_str: str, cls: type[SquareOp]) -> SquareOp:
-        print(f"sqop_str: {sqop_str}", flush=True)
         if not issubclass(cls, SquareOp):
             raise TypeError(f"got cls {cls} not SquareOp")
-        return SquareOp(sqop_str)
+        if isinstance(sqop_str, dict):
+            if "var" not in sqop_str:
+                raise ValueError(f"SquareOp var is missing: '{sqop_str}'")
+        else:
+            raise NotImplementedError("structure_squareop not dict")
+        args = None
+        if "arguments" in sqop_str:
+            if not isinstance(sqop_str["arguments"], list):
+                args = tuple(sqop_str["arguments"])
+            else:
+                args = tuple(sqop_str["arguments"])
+        if args is None:
+            args = tuple()
+        return cls(sqop_str["var"], args)
 
     converter.register_structure_hook(SquareOp, structure_squareop)
 
