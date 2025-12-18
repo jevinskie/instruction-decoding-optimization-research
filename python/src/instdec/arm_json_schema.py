@@ -114,6 +114,13 @@ class UnaryOp:
     _type: Literal["AST.UnaryOp"] = attrs.field(default="AST.UnaryOp", repr=False, alias="_type")
 
 
+@defauto
+class SquareOp:
+    var: Expression
+    arguments: tuple[Expression, ...] | Expression | None
+    _type: Literal["AST.SquareOp"] = attrs.field(default="AST.SquareOp", repr=False, alias="_type")
+
+
 seen_function_names: set[str] = set()
 
 
@@ -132,7 +139,7 @@ class Function:
 
 
 # Define Expression as a union of all possible AST node types
-Expression = Bool | BinaryOp | Function | Identifier | Set | UnaryOp | Value
+Expression = Bool | BinaryOp | Function | Identifier | Set | SquareOp | UnaryOp | Value
 Valueish = Value | Set
 
 
@@ -508,6 +515,7 @@ JSONSchemaObjectClasses = (
     OperationAlias,
     Range,
     Set,
+    SquareOp,
     Trits,
     UnaryOp,
     Value,
@@ -600,6 +608,14 @@ def _add_cattrs_hooks():
         return Trits(trit_str)
 
     converter.register_structure_hook(Trits, structure_trit)
+
+    def structure_squareop(sqop_str: str, cls: type[SquareOp]) -> SquareOp:
+        print(f"sqop_str: {sqop_str}", flush=True)
+        if not issubclass(cls, SquareOp):
+            raise TypeError(f"got cls {cls} not SquareOp")
+        return SquareOp(sqop_str)
+
+    converter.register_structure_hook(SquareOp, structure_squareop)
 
 
 _add_cattrs_hooks()

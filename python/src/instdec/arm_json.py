@@ -24,6 +24,7 @@ from .arm_json_schema import (
     JSONSchemaObject,
     JSONSchemaObjectClasses,
     Set,
+    SquareOp,
     UnaryOp,
     UnOp,
     Value,
@@ -50,6 +51,10 @@ def expr_get_objs(expr: Expression) -> list[JSONSchemaObject]:
         elif isinstance(e, Set):
             for v in e.values:
                 helper(v)
+        elif isinstance(e, SquareOp):
+            helper(e.var)
+            for a in e.arguments:
+                helper(a)
 
     helper(expr)
     return res
@@ -64,6 +69,10 @@ def expr_idents(expr: Expression) -> list[str]:
             helper(e.right)
         elif isinstance(e, UnaryOp):
             helper(e.expr)
+        elif isinstance(e, SquareOp):
+            helper(e.var)
+            for a in e.arguments:
+                helper(a)
         elif isinstance(e, Identifier):
             idents.append(e.value)
 
@@ -101,6 +110,10 @@ class Interpteter:
                 if isinstance(rv, Set):
                     raise ValueError("eval BinaryOp rv is Set")
                 return self.eval_binop(cur_node, lv, rv)
+            elif isinstance(cur_node, SquareOp):
+                print("BAD BAD BAD", flush=True)
+                Interpteter(cur_node.var).evaluate()
+                raise NotImplementedError("SquareOp Interpreter.evaluate")
             elif isinstance(cur_node, UnaryOp):
                 ov = Interpteter(cur_node.expr).evaluate()
                 if isinstance(ov, Set):
@@ -278,6 +291,10 @@ def get_exprs_of_op(op: BinOp | UnOp, exprs: list[Expression | None]) -> list[Ex
             if is_unop and e.op == op:
                 res.append(e)
             helper(e.expr)
+        elif isinstance(e, SquareOp):
+            helper(e.var)
+            for a in e.arguments:
+                helper(a)
 
     for expr in exprs:
         if expr is None:
