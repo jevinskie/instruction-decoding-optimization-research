@@ -1,17 +1,19 @@
+#include <arm_neon.h>
 #include <array>
 #include <cstddef>
 #include <cstdint>
 
 using cnt_t                        = uint32_t;
 using vec_elem_t                   = cnt_t;
-constexpr size_t vec_elem_sz_bytes = sizeof(vec_elem_t); // 4
-typedef vec_elem_t vN_elem_t __attribute__((vector_size(128 / 8 /* 16 */)));
+constexpr size_t vec_elem_sz_bytes = sizeof(vec_elem_t); // 4 bytes
+typedef vec_elem_t vN_elem_t __attribute__((vector_size(128 / 8 /* N = 16 */)));
 using val_t                          = uint32_t;
-constexpr size_t num_bits            = sizeof(val_t) * 8; // 32
+constexpr size_t num_bits            = sizeof(val_t) * 8; // 32 bits
 using cnt_neon_t                     = vN_elem_t;
 constexpr uint32_t vec_type_num_elem = sizeof(vN_elem_t) / sizeof(vec_elem_t);
 using cnt_lst_t                      = std::array<cnt_t, num_bits>;
-using cnt_neon_lst_t = std::array<vN_elem_t, num_bits / vec_type_num_elem>; // 8 elements, 128 bytes
+using cnt_neon_lst_t =
+    std::array<vN_elem_t, num_bits / vec_type_num_elem>; // 8 SIMD regs, 128 bytes
 
 static constexpr cnt_neon_t lut_nib[] = {{0, 0, 0, 0}, {0, 0, 0, 1}, {0, 0, 1, 0}, {0, 0, 1, 1},
                                          {0, 1, 0, 0}, {0, 1, 0, 1}, {0, 1, 1, 0}, {0, 1, 1, 1},
@@ -119,9 +121,15 @@ void count_neon(val_t val, cnt_neon_lst_t &vcnt) {
 }
 
 [[gnu::always_inline]]
-uint64_t expand_8_to_64(uint8_t v) {
+constexpr uint64_t expand_8_to_64(uint8_t v) {
     return (((v & 0x55u) * 0x02040810204081ull) | ((v & 0xAAu) * 0x02040810204081ull)) &
            0x0101010101010101ull;
+}
+
+constexpr auto frob(uint8_t v) {
+    const auto v64    = expand_8_to_64(v);
+    const auto v64_x2 = vdupq_n_u64(v64);
+    return v64;
 }
 
 void count_swar(val_t val, cnt_neon_lst_t &vcnt) {
