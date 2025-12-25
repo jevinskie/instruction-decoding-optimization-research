@@ -4,20 +4,21 @@
 
 using cnt_t                        = uint32_t;
 using vec_elem_t                   = cnt_t;
-constexpr size_t vec_elem_sz_bytes = sizeof(vec_elem_t);
-typedef vec_elem_t vN_elem_t __attribute__((vector_size(128 / 8)));
+constexpr size_t vec_elem_sz_bytes = sizeof(vec_elem_t); // 4
+typedef vec_elem_t vN_elem_t __attribute__((vector_size(128 / 8 /* 16 */)));
 using val_t                          = uint32_t;
-constexpr size_t num_bits            = sizeof(val_t) * 8;
+constexpr size_t num_bits            = sizeof(val_t) * 8; // 32
 using cnt_neon_t                     = vN_elem_t;
 constexpr uint32_t vec_type_num_elem = sizeof(vN_elem_t) / sizeof(vec_elem_t);
 using cnt_lst_t                      = std::array<cnt_t, num_bits>;
-using cnt_neon_lst_t                 = std::array<vN_elem_t, num_bits / vec_type_num_elem>;
+using cnt_neon_lst_t = std::array<vN_elem_t, num_bits / vec_type_num_elem>; // 8 elements, 128 bytes
 
 static constexpr cnt_neon_t lut_nib[] = {{0, 0, 0, 0}, {0, 0, 0, 1}, {0, 0, 1, 0}, {0, 0, 1, 1},
                                          {0, 1, 0, 0}, {0, 1, 0, 1}, {0, 1, 1, 0}, {0, 1, 1, 1},
                                          {1, 0, 0, 0}, {1, 0, 0, 1}, {1, 0, 1, 0}, {1, 0, 1, 1},
                                          {1, 1, 0, 0}, {1, 1, 0, 1}, {1, 1, 1, 0}, {1, 1, 1, 1}};
 
+#if 0
 void count_orig(val_t val, cnt_lst_t &cnt) {
     if (val & 0x00FFu) {
         if (val & 0x0001u)
@@ -92,6 +93,7 @@ void count_orig(val_t val, cnt_lst_t &cnt) {
             cnt[31]++;
     }
 }
+#endif
 
 void count_neon(val_t val, cnt_neon_lst_t &vcnt) {
     cnt_neon_lst_t addend;
