@@ -28,6 +28,8 @@ def dump_instructions(raw_json_dict: dict) -> arm_json.ParseContext:
 def real_main(args: argparse.Namespace):
     raw_json_dict = dict(json.load(open(args.instr_json)))
     raw_json_dict["instructions"] = [i for i in raw_json_dict["instructions"] if i["name"] == "A64"]
+    with open("dump.json", "w") as f:
+        json.dump(raw_json_dict, f)
     ctx = dump_instructions(raw_json_dict)
     if not args.dump:
         # app = InstrExploreApp(git_repo_path=args.repo)
