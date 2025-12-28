@@ -126,12 +126,6 @@ constexpr uint64_t expand_8_to_64(uint8_t v) {
            0x0101010101010101ull;
 }
 
-constexpr auto frob(uint8_t v) {
-    const auto v64    = expand_8_to_64(v);
-    const auto v64_x2 = vdupq_n_u64(v64);
-    return v64;
-}
-
 void count_swar(val_t val, cnt_neon_lst_t &vcnt) {
     cnt_neon_lst_t addend;
     uint64_t a, b, c, d = 0;
@@ -149,5 +143,15 @@ void count_swar(val_t val, cnt_neon_lst_t &vcnt) {
     }
     for (int i = 0; i < vcnt.size(); ++i) {
         vcnt[i] += addend[i];
+    }
+}
+
+using counts_mem_t = std::array<uint32x4x4_t, 2>;
+
+void add_counts_mem(const counts_mem_t &addend, counts_mem_t &mcnt) {
+    for (size_t io = 0; io < mcnt.size(); ++io) {
+        for (size_t ii = 0; ii < std::size(counts_mem_t::value_type{}.val); ++ii) {
+            mcnt[io].val[ii] += addend[io].val[ii];
+        }
     }
 }
