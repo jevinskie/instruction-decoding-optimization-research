@@ -48,6 +48,7 @@ print("bvm:")
 print(bvm)
 
 bvp = bvv16 * bvm
+bvp = (bvp & (1 << 4)) >> 4
 print("bvp:")
 print(bvp)
 bvps = simplify(bvp)
