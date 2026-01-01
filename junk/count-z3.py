@@ -85,7 +85,7 @@ bvm = BitVec("bvm", w)
 for i in range(w):
     bvm &= ~BitVecVal(1 << i, w)
     bvm |= ZeroExt(w - 1, BitVec(f"m{i}", 1)) << i
-bvm = BitVecVal(0x077C_B531, w)
+bvm = BitVecVal(0x1, w)
 print("bvm:")
 print(bvm)
 
