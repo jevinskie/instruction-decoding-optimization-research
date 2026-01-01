@@ -20,82 +20,50 @@ static constexpr cnt_neon_t lut_nib[] = {{0, 0, 0, 0}, {0, 0, 0, 1}, {0, 0, 1, 0
                                          {1, 0, 0, 0}, {1, 0, 0, 1}, {1, 0, 1, 0}, {1, 0, 1, 1},
                                          {1, 1, 0, 0}, {1, 1, 0, 1}, {1, 1, 1, 0}, {1, 1, 1, 1}};
 
-#if 0
 void count_orig(val_t val, cnt_lst_t &cnt) {
+    // clang-format off
     if (val & 0x00FFu) {
-        if (val & 0x0001u)
-            cnt[0]++;
-        if (val & 0x0002u)
-            cnt[1]++;
-        if (val & 0x0004u)
-            cnt[2]++;
-        if (val & 0x0008u)
-            cnt[3]++;
-        if (val & 0x0010u)
-            cnt[4]++;
-        if (val & 0x0020u)
-            cnt[5]++;
-        if (val & 0x0040u)
-            cnt[6]++;
-        if (val & 0x0080u)
-            cnt[7]++;
+        if (val & 0x0001u) cnt[0]++;
+        if (val & 0x0002u) cnt[1]++;
+        if (val & 0x0004u) cnt[2]++;
+        if (val & 0x0008u) cnt[3]++;
+        if (val & 0x0010u) cnt[4]++;
+        if (val & 0x0020u) cnt[5]++;
+        if (val & 0x0040u) cnt[6]++;
+        if (val & 0x0080u) cnt[7]++;
     }
     if (val & 0xFF00u) {
-        if (val & 0x0100u)
-            cnt[8]++;
-        if (val & 0x0200u)
-            cnt[9]++;
-        if (val & 0x0400u)
-            cnt[10]++;
-        if (val & 0x0800u)
-            cnt[11]++;
-        if (val & 0x1000u)
-            cnt[12]++;
-        if (val & 0x2000u)
-            cnt[13]++;
-        if (val & 0x4000u)
-            cnt[14]++;
-        if (val & 0x8000u)
-            cnt[15]++;
+        if (val & 0x0100u) cnt[8]++;
+        if (val & 0x0200u) cnt[9]++;
+        if (val & 0x0400u) cnt[10]++;
+        if (val & 0x0800u) cnt[11]++;
+        if (val & 0x1000u) cnt[12]++;
+        if (val & 0x2000u) cnt[13]++;
+        if (val & 0x4000u) cnt[14]++;
+        if (val & 0x8000u) cnt[15]++;
     }
     if (val & 0x00FF0000u) {
-        if (val & 0x00010000u)
-            cnt[16]++;
-        if (val & 0x00020000u)
-            cnt[17]++;
-        if (val & 0x00040000u)
-            cnt[18]++;
-        if (val & 0x00080000u)
-            cnt[19]++;
-        if (val & 0x00100000u)
-            cnt[20]++;
-        if (val & 0x00200000u)
-            cnt[21]++;
-        if (val & 0x00400000u)
-            cnt[22]++;
-        if (val & 0x00800000u)
-            cnt[23]++;
+        if (val & 0x00010000u) cnt[16]++;
+        if (val & 0x00020000u) cnt[17]++;
+        if (val & 0x00040000u) cnt[18]++;
+        if (val & 0x00080000u) cnt[19]++;
+        if (val & 0x00100000u) cnt[20]++;
+        if (val & 0x00200000u) cnt[21]++;
+        if (val & 0x00400000u) cnt[22]++;
+        if (val & 0x00800000u) cnt[23]++;
     }
     if (val & 0xFF000000u) {
-        if (val & 0x01000000u)
-            cnt[24]++;
-        if (val & 0x02000000u)
-            cnt[25]++;
-        if (val & 0x04000000u)
-            cnt[26]++;
-        if (val & 0x08000000u)
-            cnt[27]++;
-        if (val & 0x10000000u)
-            cnt[28]++;
-        if (val & 0x20000000u)
-            cnt[29]++;
-        if (val & 0x40000000u)
-            cnt[30]++;
-        if (val & 0x80000000u)
-            cnt[31]++;
+        if (val & 0x01000000u) cnt[24]++;
+        if (val & 0x02000000u) cnt[25]++;
+        if (val & 0x04000000u) cnt[26]++;
+        if (val & 0x08000000u) cnt[27]++;
+        if (val & 0x10000000u) cnt[28]++;
+        if (val & 0x20000000u) cnt[29]++;
+        if (val & 0x40000000u) cnt[30]++;
+        if (val & 0x80000000u) cnt[31]++;
     }
+    // clang-format on
 }
-#endif
 
 void count_neon(val_t val, cnt_neon_lst_t &vcnt) {
     cnt_neon_lst_t addend;
@@ -146,12 +114,12 @@ void count_swar(val_t val, cnt_neon_lst_t &vcnt) {
     }
 }
 
-using counts_mem_t = std::array<uint32x4x4_t, 2>;
+using counts_t = std::array<uint32x4x4_t, 2>;
 
-void add_counts_mem(const counts_mem_t &addend, counts_mem_t &mcnt) {
-    for (size_t io = 0; io < mcnt.size(); ++io) {
-        for (size_t ii = 0; ii < std::size(counts_mem_t::value_type{}.val); ++ii) {
-            mcnt[io].val[ii] += addend[io].val[ii];
+void add_counts(const counts_t &addend, counts_t &accum) {
+    for (size_t io = 0; io < accum.size(); ++io) {
+        for (size_t ii = 0; ii < std::size(accum[io].val); ++ii) {
+            accum[io].val[ii] += addend[io].val[ii];
         }
     }
 }
