@@ -65,6 +65,55 @@ void count_orig(val_t val, cnt_lst_t &cnt) {
     // clang-format on
 }
 
+void count_autovec(val_t val, cnt_lst_t &cnt) {
+    uint32_t addend[32] = {};
+    // clang-format off
+    if (val & 0x00FFu) {
+        if (val & 0x0001u) addend[0]++;
+        if (val & 0x0002u) addend[1]++;
+        if (val & 0x0004u) addend[2]++;
+        if (val & 0x0008u) addend[3]++;
+        if (val & 0x0010u) addend[4]++;
+        if (val & 0x0020u) addend[5]++;
+        if (val & 0x0040u) addend[6]++;
+        if (val & 0x0080u) addend[7]++;
+    }
+    if (val & 0xFF00u) {
+        if (val & 0x0100u) addend[8]++;
+        if (val & 0x0200u) addend[9]++;
+        if (val & 0x0400u) addend[10]++;
+        if (val & 0x0800u) addend[11]++;
+        if (val & 0x1000u) addend[12]++;
+        if (val & 0x2000u) addend[13]++;
+        if (val & 0x4000u) addend[14]++;
+        if (val & 0x8000u) addend[15]++;
+    }
+    if (val & 0x00FF0000u) {
+        if (val & 0x00010000u) addend[16]++;
+        if (val & 0x00020000u) addend[17]++;
+        if (val & 0x00040000u) addend[18]++;
+        if (val & 0x00080000u) addend[19]++;
+        if (val & 0x00100000u) addend[20]++;
+        if (val & 0x00200000u) addend[21]++;
+        if (val & 0x00400000u) addend[22]++;
+        if (val & 0x00800000u) addend[23]++;
+    }
+    if (val & 0xFF000000u) {
+        if (val & 0x01000000u) addend[24]++;
+        if (val & 0x02000000u) addend[25]++;
+        if (val & 0x04000000u) addend[26]++;
+        if (val & 0x08000000u) addend[27]++;
+        if (val & 0x10000000u) addend[28]++;
+        if (val & 0x20000000u) addend[29]++;
+        if (val & 0x40000000u) addend[30]++;
+        if (val & 0x80000000u) addend[31]++;
+    }
+    // clang-format on
+    for (int i = 0; i < cnt.size(); ++i) {
+        cnt[i] += addend[i];
+    }
+}
+
 void count_neon(val_t val, cnt_neon_lst_t &vcnt) {
     cnt_neon_lst_t addend;
     if (val & 0x00FFu) {
