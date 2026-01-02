@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
+import z3.z3printer as z3printer
 from rich import print
 from z3 import (
     Z3_OP_BMUL,
     And,
     BitVec,
+    BitVecNumRef,
     BitVecVal,
     BoolRef,
     Implies,
@@ -24,6 +26,40 @@ BoolRef.__or__ = lambda self, other: Or(self, other)
 BoolRef.__xor__ = lambda self, other: Xor(self, other)
 BoolRef.__invert__ = lambda self: Not(self)
 BoolRef.__rshift__ = lambda self, other: Implies(self, other)  # type: ignore
+
+
+def BitVecNumRef_rich_repr(v):
+    assert is_bv_value(v)
+    yield str(v)
+    yield "n", v.size()
+    # if is_bv_value(v):
+    #     yield str(v)
+    #     yield "n", v.size()
+    # else:
+    #     yield v
+    # yield ("BVV[", v, v.size(), "]")
+    # yield v
+    # yield v.size()
+    # yield "]"
+
+
+# setattr(BitVecNumRef, "__rich_repr__", BitVecNumRef_rich_repr)
+
+_orig_bvv_as_string = BitVecNumRef.as_string
+
+
+def BitVecNumRef_as_string(v):
+    return "BVV<" + _orig_bvv_as_string(v) + f":{v.size()}>"
+
+
+# setattr(BitVecNumRef, "as_string", BitVecNumRef_as_string)
+
+
+def my_pv_bv(self, a):
+    return z3printer.to_format(f"{a.as_long():#x}i{a.size()}")
+
+
+z3printer.Formatter.pp_bv = my_pv_bv
 
 
 # LLM slop
@@ -85,7 +121,7 @@ bvm = BitVec("bvm", w)
 for i in range(w):
     bvm &= ~BitVecVal(1 << i, w)
     bvm |= ZeroExt(w - 1, BitVec(f"m{i}", 1)) << i
-bvm = BitVecVal(0x1, w)
+bvm = BitVecVal(0x8421, w)
 print("bvm:")
 print(bvm)
 
