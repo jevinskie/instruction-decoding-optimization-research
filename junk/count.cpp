@@ -91,29 +91,38 @@ struct box_t {
 
 enum class box_type_t {
     ASCII,
+    HEAVY_LIGHT,
+    HEAVY,
+    LIGHT,
     ROUNDED,
-    HEAVY_THIN,
 };
 
 static constexpr box_t box_ascii{"+", "+", "-", "|", "+", "+"};
-static constexpr box_t box_rounded{"+", "+", "-", "|", "+", "+"};
-static constexpr box_t box_heavy_thin{"+", "+", "-", "|", "+", "+"};
+static constexpr box_t box_heavy_light{"┏", "┓", "━", "┃", "┗", "┛"};
+static constexpr box_t box_heavy{"┏", "┓", "━", "┃", "┗", "┛"};
+static constexpr box_t box_light{"┌", "┐", "─", "│", "└", "┘"};
+static constexpr box_t box_rounded{"╭", "╮", "─", "│", "╰", "╯"};
 
 static constexpr const box_t &get_box(const box_type_t bt) {
+    using btt = box_type_t;
     switch (bt) {
-    case box_type_t::ASCII:
+    case btt::ASCII:
         return box_ascii;
-    case box_type_t::ROUNDED:
+    case btt::HEAVY_LIGHT:
+        return box_heavy_light;
+    case btt::HEAVY:
+        return box_heavy;
+    case btt::LIGHT:
+        return box_light;
+    case btt::ROUNDED:
         return box_rounded;
-    case box_type_t::HEAVY_THIN:
-        return box_heavy_thin;
     }
 }
 
-std::string format_vec128(const auto v, const box_type_t bt = box_type_t::ASCII) {
+std::string format_vec128(const auto v, const box_type_t bt = box_type_t::ROUNDED) {
     const auto nelem = vec_nelem(v);
-    const auto box   = get_box(bt);
-    return {};
+    const auto b     = get_box(bt);
+    return fmt::format("{0}{4}{1}\n{5} {5}\n{2}{4}{3}", b.tl, b.tr, b.bl, b.br, b.th, b.tv);
 }
 
 void print_vec128(const auto v) {
@@ -282,7 +291,8 @@ void add_counts(const counts_t &addend, counts_t &accum) {
 int main(void) {
     fmt::print("main\n");
     for (size_t i = 0; i < lut_nib.size(); ++i) {
-        fmt::print("lut_nib[{:2d}]: '{:s}'\n", i, format_vec128(lut_nib[i]));
+        fmt::print("lut_nib[{:2d}]:\n", i);
+        fmt::print("{:s}\n", format_vec128(lut_nib[i]));
         print_vec128(lut_nib[i]);
     }
     return 0;
