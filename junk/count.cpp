@@ -80,13 +80,28 @@ static constexpr uint8_t vec_nelem(const int64x2_t v) {
     return 2;
 }
 
+struct corner_t {
+    const std::string_view tl;  /// top left
+    const std::string_view tr;  /// top right
+    const std::string_view bl;  /// bottom left
+    const std::string_view br;  /// bottom right
+    const std::string_view tds; /// top down space
+    const std::string_view bus; /// bottom up space
+    const std::string_view tdb; /// top down bar
+    const std::string_view bub; /// bottom up bar
+    const std::string_view x;   /// cross
+};
+
+struct edge_t {
+    const std::string_view oh; /// outer horizontal
+    const std::string_view ov; /// outer vertical
+    const std::string_view ih; /// inner horizontal
+    const std::string_view iv; /// inner vertical
+};
+
 struct box_t {
-    const std::string_view tl;
-    const std::string_view tr;
-    const std::string_view th;
-    const std::string_view tv;
-    const std::string_view bl;
-    const std::string_view br;
+    const corner_t c; /// corner
+    const edge_t e;   /// edge
 };
 
 enum class box_type_t {
@@ -97,11 +112,13 @@ enum class box_type_t {
     ROUNDED,
 };
 
-static constexpr box_t box_ascii{"+", "+", "-", "|", "+", "+"};
-static constexpr box_t box_heavy_light{"┏", "┓", "━", "┃", "┗", "┛"};
-static constexpr box_t box_heavy{"┏", "┓", "━", "┃", "┗", "┛"};
-static constexpr box_t box_light{"┌", "┐", "─", "│", "└", "┘"};
-static constexpr box_t box_rounded{"╭", "╮", "─", "│", "╰", "╯"};
+// clang-format off
+static constexpr box_t box_ascii      {{"+", "+", "+", "+", "", "", "", "", "+"}, {"-", "|", "-", "|"}};
+static constexpr box_t box_heavy_light{{"┏", "┓", "┗", "┛", "╂", "", "", "", "+"}, {"━", "┃", "─", "│"}};
+static constexpr box_t box_heavy      {{"┏", "┓", "┗", "┛", "╋", "", "", "", "+"}, {"━", "┃", "━", "┃"}};
+static constexpr box_t box_light      {{"┌", "┐", "└", "┘", "┼", "", "", "", "+"}, {"─", "│", "─", "│"}};
+static constexpr box_t box_rounded    {{"╭", "╮", "╰", "╯", "┼", "", "", "", "+"}, {"─", "│", "─", "│"}};
+// clang-format on
 
 static constexpr const box_t &get_box(const box_type_t bt) {
     using btt = box_type_t;
@@ -122,7 +139,11 @@ static constexpr const box_t &get_box(const box_type_t bt) {
 std::string format_vec128(const auto v, const box_type_t bt = box_type_t::ROUNDED) {
     const auto nelem = vec_nelem(v);
     const auto b     = get_box(bt);
-    return fmt::format("{0}{4}{1}\n{5} {5}\n{2}{4}{3}", b.tl, b.tr, b.bl, b.br, b.th, b.tv);
+    return fmt::format("{0}{1}{2}{1}{3}\n"
+                       "{4}x{5}y{6}\n"
+                       "{4}a{5}b{6}\n"
+                       "{7}{8}{9}{8}{10}",
+                       b.c.tr, b.e.oh, b.c.td, b.c.tds);
 }
 
 void print_vec128(const auto v) {
