@@ -79,7 +79,7 @@ def expand_mul_by_const(var, const, width):
 
 
 iw = 4
-w = 32
+w = 8
 
 bvv = BitVec("bvv", iw)
 for i in range(iw):
@@ -93,7 +93,7 @@ bvm = BitVec("bvm", w)
 for i in range(w):
     bvm &= ~BitVecVal(1 << i, w)
     bvm |= ZeroExt(w - 1, BitVec(f"m{i}", 1)) << i
-bvm = BitVecVal(0x8421, w)
+bvm = BitVecVal(0x11, w)
 print("bvm:")
 print(bvm)
 
