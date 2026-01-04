@@ -2,11 +2,14 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 
-#include <fmt/color.h>
+// clang-format off
 #include <fmt/format.h>
+#include <fmt/color.h>
 #include <fmt/ranges.h>
 #include <fmt/std.h>
+// clang-format on
 
 using cnt_t                        = uint32_t;
 using vec_elem_t                   = cnt_t;
@@ -20,10 +23,42 @@ using cnt_lst_t                      = std::array<cnt_t, num_bits>;
 using cnt_neon_lst_t =
     std::array<vN_elem_t, num_bits / vec_type_num_elem>; // 8 SIMD regs, 128 bytes
 
-static constexpr cnt_neon_t lut_nib[] = {{0, 0, 0, 0}, {0, 0, 0, 1}, {0, 0, 1, 0}, {0, 0, 1, 1},
-                                         {0, 1, 0, 0}, {0, 1, 0, 1}, {0, 1, 1, 0}, {0, 1, 1, 1},
-                                         {1, 0, 0, 0}, {1, 0, 0, 1}, {1, 0, 1, 0}, {1, 0, 1, 1},
-                                         {1, 1, 0, 0}, {1, 1, 0, 1}, {1, 1, 1, 0}, {1, 1, 1, 1}};
+struct vec128_array_t {
+    alignas(uint8x16_t) uint8_t vals[sizeof(uint8x16_t)];
+};
+
+static constexpr std::array<cnt_neon_t, 16> lut_nib{{{0, 0, 0, 0},
+                                                     {0, 0, 0, 1},
+                                                     {0, 0, 1, 0},
+                                                     {0, 0, 1, 1},
+                                                     {0, 1, 0, 0},
+                                                     {0, 1, 0, 1},
+                                                     {0, 1, 1, 0},
+                                                     {0, 1, 1, 1},
+                                                     {1, 0, 0, 0},
+                                                     {1, 0, 0, 1},
+                                                     {1, 0, 1, 0},
+                                                     {1, 0, 1, 1},
+                                                     {1, 1, 0, 0},
+                                                     {1, 1, 0, 1},
+                                                     {1, 1, 1, 0},
+                                                     {1, 1, 1, 1}}};
+
+void print_counts(const cnt_lst_t &cnt) {
+    for (size_t i = 0; i < cnt.size(); ++i) {
+        fmt::print("cnt[{:02d}] = {:4d}\n", i, cnt[i]);
+    }
+}
+
+void print_vec128(auto v) {
+    static_assert(sizeof(v) == sizeof(vec128_array_t) &&
+                  alignof(decltype(v)) == alignof(vec128_array_t));
+    vec128_array_t vec{};
+    memcpy(&vec.vals, &v, sizeof(v));
+    for (size_t i = 0; i < sizeof(vec.vals); ++i) {
+        fmt::print("v[{:2d}] = {:#04x}\n", i, vec.vals[i]);
+    }
+}
 
 void count_orig(val_t val, cnt_lst_t &cnt) {
     // clang-format off
@@ -180,5 +215,9 @@ void add_counts(const counts_t &addend, counts_t &accum) {
 
 int main(void) {
     fmt::print("main\n");
+    for (size_t i = 0; i < lut_nib.size(); ++i) {
+        fmt::print("lut_nib[{:2d}]:\n", i);
+        print_vec128(lut_nib[i]);
+    }
     return 0;
 }
