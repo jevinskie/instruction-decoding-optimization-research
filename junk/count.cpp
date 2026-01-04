@@ -3,6 +3,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <string>
+#include <string_view>
+#include <type_traits>
 
 // clang-format off
 #include <fmt/format.h>
@@ -10,6 +13,8 @@
 #include <fmt/ranges.h>
 #include <fmt/std.h>
 // clang-format on
+
+using std::literals::string_view_literals::operator""sv;
 
 using cnt_t                        = uint32_t;
 using vec_elem_t                   = cnt_t;
@@ -50,13 +55,43 @@ void print_counts(const cnt_lst_t &cnt) {
     }
 }
 
-void print_vec128(auto v) {
+static constexpr uint8_t vec_nelem(const uint8x16_t v) {
+    return 16;
+}
+static constexpr uint8_t vec_nelem(const int8x16_t v) {
+    return 16;
+}
+static constexpr uint8_t vec_nelem(const uint16x8_t v) {
+    return 8;
+}
+static constexpr uint8_t vec_nelem(const int16x8_t v) {
+    return 8;
+}
+static constexpr uint8_t vec_nelem(const uint32x4_t v) {
+    return 4;
+}
+static constexpr uint8_t vec_nelem(const int32x4_t v) {
+    return 4;
+}
+static constexpr uint8_t vec_nelem(const uint64x2_t v) {
+    return 2;
+}
+static constexpr uint8_t vec_nelem(const int64x2_t v) {
+    return 2;
+}
+
+std::string format_vec128(const auto v) {
+    const auto nelem = vec_nelem(v);
+    return {};
+}
+
+void print_vec128(const auto v) {
     static_assert(sizeof(v) == sizeof(vec128_array_t) &&
                   alignof(decltype(v)) == alignof(vec128_array_t));
     vec128_array_t vec{};
     memcpy(&vec.vals, &v, sizeof(v));
     for (size_t i = 0; i < sizeof(vec.vals); ++i) {
-        fmt::print("v[{:2d}] = {:#04x}\n", i, vec.vals[i]);
+        fmt::print("v[{:2d}] = {:#04x} {:s}\n", i, vec.vals[i], format_vec128(v));
     }
 }
 
