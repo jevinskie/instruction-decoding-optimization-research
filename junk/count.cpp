@@ -80,8 +80,39 @@ static constexpr uint8_t vec_nelem(const int64x2_t v) {
     return 2;
 }
 
-std::string format_vec128(const auto v) {
+struct box_t {
+    const std::string_view tl;
+    const std::string_view tr;
+    const std::string_view th;
+    const std::string_view tv;
+    const std::string_view bl;
+    const std::string_view br;
+};
+
+enum class box_type_t {
+    ASCII,
+    ROUNDED,
+    HEAVY_THIN,
+};
+
+static constexpr box_t box_ascii{"+", "+", "-", "|", "+", "+"};
+static constexpr box_t box_rounded{"+", "+", "-", "|", "+", "+"};
+static constexpr box_t box_heavy_thin{"+", "+", "-", "|", "+", "+"};
+
+static constexpr const box_t &get_box(const box_type_t bt) {
+    switch (bt) {
+    case box_type_t::ASCII:
+        return box_ascii;
+    case box_type_t::ROUNDED:
+        return box_rounded;
+    case box_type_t::HEAVY_THIN:
+        return box_heavy_thin;
+    }
+}
+
+std::string format_vec128(const auto v, const box_type_t bt = box_type_t::ASCII) {
     const auto nelem = vec_nelem(v);
+    const auto box   = get_box(bt);
     return {};
 }
 
@@ -91,7 +122,7 @@ void print_vec128(const auto v) {
     vec128_array_t vec{};
     memcpy(&vec.vals, &v, sizeof(v));
     for (size_t i = 0; i < sizeof(vec.vals); ++i) {
-        fmt::print("v[{:2d}] = {:#04x} {:s}\n", i, vec.vals[i], format_vec128(v));
+        fmt::print("v[{:2d}] = {:#04x}\n", i, vec.vals[i]);
     }
 }
 
@@ -251,7 +282,7 @@ void add_counts(const counts_t &addend, counts_t &accum) {
 int main(void) {
     fmt::print("main\n");
     for (size_t i = 0; i < lut_nib.size(); ++i) {
-        fmt::print("lut_nib[{:2d}]:\n", i);
+        fmt::print("lut_nib[{:2d}]: '{:s}'\n", i, format_vec128(lut_nib[i]));
         print_vec128(lut_nib[i]);
     }
     return 0;
