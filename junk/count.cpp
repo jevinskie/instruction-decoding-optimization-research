@@ -28,6 +28,17 @@ using cnt_lst_t                      = std::array<cnt_t, num_bits>;
 using cnt_neon_lst_t =
     std::array<vN_elem_t, num_bits / vec_type_num_elem>; // 8 SIMD regs, 128 bytes
 
+using v128_t = union v128_u {
+    alignas(uint8x16_t) uint8_t u8[16];
+    alignas(uint8x16_t) uint16_t u16[8];
+    alignas(uint8x16_t) uint32_t u32[4];
+    alignas(uint8x16_t) uint64_t u64[2];
+    alignas(uint8x16_t) int8_t i8[16];
+    alignas(uint8x16_t) int16_t i16[8];
+    alignas(uint8x16_t) int32_t i32[4];
+    alignas(uint8x16_t) int64_t i64[2];
+};
+
 struct vec128_array_t {
     alignas(uint8x16_t) uint8_t vals[sizeof(uint8x16_t)];
 };
@@ -85,10 +96,10 @@ struct corner_t {
     const std::string_view tr;  /// top right
     const std::string_view bl;  /// bottom left
     const std::string_view br;  /// bottom right
-    const std::string_view tds; /// top down space
-    const std::string_view bus; /// bottom up space
-    const std::string_view tdb; /// top down bar
-    const std::string_view bub; /// bottom up bar
+    const std::string_view td;  /// top down
+    const std::string_view bu;  /// bottom up
+    const std::string_view ovl; /// outer vertical left
+    const std::string_view ovr; /// outer vertical right
     const std::string_view x;   /// cross
 };
 
@@ -112,12 +123,14 @@ enum class box_type_t {
     ROUNDED,
 };
 
+// https://unicode.org/charts/nameslist/n_2500.html
+
 // clang-format off
-static constexpr box_t box_ascii      {{"+", "+", "+", "+", "", "", "", "", "+"}, {"-", "|", "-", "|"}};
-static constexpr box_t box_heavy_light{{"┏", "┓", "┗", "┛", "╂", "", "", "", "+"}, {"━", "┃", "─", "│"}};
-static constexpr box_t box_heavy      {{"┏", "┓", "┗", "┛", "╋", "", "", "", "+"}, {"━", "┃", "━", "┃"}};
-static constexpr box_t box_light      {{"┌", "┐", "└", "┘", "┼", "", "", "", "+"}, {"─", "│", "─", "│"}};
-static constexpr box_t box_rounded    {{"╭", "╮", "╰", "╯", "┼", "", "", "", "+"}, {"─", "│", "─", "│"}};
+static constexpr box_t box_ascii      {{"+", "+", "+", "+", "+", "+", "+", "+", "+"}, {"=", "|", "-", "|"}};
+static constexpr box_t box_heavy_light{{"┏", "┓", "┗", "┛", "┯", "┷", "┠", "┨", "╂"}, {"━", "┃", "─", "│"}};
+static constexpr box_t box_heavy      {{"┏", "┓", "┗", "┛", "┳", "┻", "┣", "┫", "╋"}, {"━", "┃", "━", "┃"}};
+static constexpr box_t box_light      {{"┌", "┐", "└", "┘", "┬", "┴", "├", "┤", "┼"}, {"─", "│", "─", "│"}};
+static constexpr box_t box_rounded    {{"╭", "╮", "╰", "╯", "┬", "┴", "├", "┤", "┼"}, {"─", "│", "─", "│"}};
 // clang-format on
 
 static constexpr const box_t &get_box(const box_type_t bt) {
@@ -136,14 +149,22 @@ static constexpr const box_t &get_box(const box_type_t bt) {
     }
 }
 
-std::string format_vec128(const auto v, const box_type_t bt = box_type_t::ROUNDED) {
+enum class theme_t {
+    BLACK_WHITE,
+    COLOR,
+};
+
+std::string format_vec128(const auto v, const box_type_t bt = box_type_t::ROUNDED,
+                          const theme_t theme = theme_t::COLOR) {
     const auto nelem = vec_nelem(v);
     const auto b     = get_box(bt);
     return fmt::format("{0}{1}{2}{1}{3}\n"
                        "{4}x{5}y{6}\n"
+                       "{7}{8}{9}{8}{10}\n"
                        "{4}a{5}b{6}\n"
-                       "{7}{8}{9}{8}{10}",
-                       b.c.tr, b.e.oh, b.c.td, b.c.tds);
+                       "{11}{1}{12}{1}{13}",
+                       b.c.tl, b.e.oh, b.c.td, b.c.tr, b.e.ov, b.e.iv, b.e.ov, b.c.ovl, b.e.ih,
+                       b.c.x, b.c.ovr, b.c.bl, b.c.bu, b.c.br);
 }
 
 void print_vec128(const auto v) {
