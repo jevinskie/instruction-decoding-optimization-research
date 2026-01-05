@@ -27,6 +27,7 @@ constexpr uint32_t vec_type_num_elem = sizeof(vN_elem_t) / sizeof(vec_elem_t);
 using cnt_lst_t                      = std::array<cnt_t, num_bits>;
 using cnt_neon_lst_t =
     std::array<vN_elem_t, num_bits / vec_type_num_elem>; // 8 SIMD regs, 128 bytes
+using cnt_byte_lst_t = std::array<cnt_t, 8>;
 
 using v128_t = union v128_u {
     alignas(uint8x16_t) uint8_t u8[16];
@@ -326,6 +327,28 @@ void count_swar(val_t val, cnt_neon_lst_t &vcnt) {
 }
 
 using counts_t = std::array<uint32x4x4_t, 2>;
+
+// count_byte(u32 cnts_subspan[8], u8 b)
+// # times four
+// DUP v0.8b, b
+// USHL v0.8b, {0..-7} # byte order might need {-7..0}
+// # load 4 cycles early? What’s the latency dougallj??
+// LD2 v{X, X+1}.4d, [cnts_subspan]
+// DUP v1.8b, #1
+// AND v2.8b, v0.8b, v1.8b
+
+// u16x8 addend
+// u32x4x2 augend
+// UXTL v3.8s, v2.8b
+// UXTL2 v4.8s, v2.8b
+// UADDL vX.4d, vX.4d, v3.8s
+// UADDL2 vX+1.4d, vX+1.4d, v4.8s
+// ST2 [cnts_subspan], v{X, X+1}.4s
+void add_byte_counts(cnt_byte_lst_t &bc, const uint8_t bv) {
+    const uint8x8_t v0 = vdup_n_u8(bv);
+    constexpr int8x8_t bit_shifts{0, 1, 2, 3, 4, 5, 6, 7};
+    const uint8x8_t v1 = vshl_u8(v0, bit_shifts);
+}
 
 void add_counts(const counts_t &addend, counts_t &accum) {
     for (size_t io = 0; io < accum.size(); ++io) {
