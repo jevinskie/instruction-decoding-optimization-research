@@ -7,14 +7,16 @@
 #include <string>
 #include <string_view>
 
+#define USE_IO 0
+
+#if USE_IO
 // clang-format off
 #include <fmt/format.h>
 #include <fmt/color.h>
 #include <fmt/ranges.h>
 #include <fmt/std.h>
 // clang-format on
-
-using std::literals::string_view_literals::operator""sv;
+#endif
 
 using cnt_t                        = uint32_t;
 using vec_elem_t                   = cnt_t;
@@ -61,6 +63,7 @@ static constexpr std::array<cnt_neon_t, 16> lut_nib{{{0, 0, 0, 0},
                                                      {1, 1, 1, 0},
                                                      {1, 1, 1, 1}}};
 
+#if USE_IO
 void print_counts(const cnt_lst_t &cnt) {
     for (size_t i = 0; i < cnt.size(); ++i) {
         fmt::print("cnt[{:02d}] = {:4d}\n", i, cnt[i]);
@@ -182,6 +185,7 @@ void print_vec128(const auto v) {
         fmt::print("v[{:2d}] = {:#04x}\n", i, vec.vals[i]);
     }
 }
+#endif // USE_IO
 
 void count_orig(val_t val, cnt_lst_t &cnt) {
     // clang-format off
@@ -339,7 +343,7 @@ void add_byte_counts(const std::span<uint32_t, 8> &bc, const uint8x8_t vbv) {
     vst1q_u32_x2(bc.data(), new_vX);
 }
 
-void add_word_counts(cnt_lst_t &wc, const uint32_t wv) {
+void add_word_counts_by_byte(cnt_lst_t &wc, const uint32_t wv) {
     const std::span<uint32_t, 8> s0{&wc[0], &wc[8]};
     const std::span<uint32_t, 8> s1{&wc[8], &wc[16]};
     const std::span<uint32_t, 8> s2{&wc[16], &wc[24]};
@@ -353,6 +357,63 @@ void add_word_counts(cnt_lst_t &wc, const uint32_t wv) {
     add_byte_counts(s2, vdup_n_u8(b2));
     add_byte_counts(s3, vdup_n_u8(b3));
 }
+
+void add_byte_counts_scalar(const std::span<uint32_t, 8> &bc, const uint8_t bv) {
+    constexpr int8x8_t bit_shifts{0, -1, -2, -3, -4, -5, -6, -7};
+    const uint32x4x2_t vX     = vld1q_u32_x2(bc.data());
+    const uint8x8_t vbum      = vshl_u8(vdup_n_u8(bv), bit_shifts);
+    const uint8x8_t vb        = vand_u8(vbum, vdup_n_u8(1));
+    const uint16x8_t vbs      = vmovl_u8(vb);
+    const uint32x4x2_t new_vX = {vaddw_u16(vX.val[0], vget_low_u16(vbs)),
+                                 vaddw_high_u16(vX.val[1], vbs)};
+    vst1q_u32_x2(bc.data(), new_vX);
+}
+
+void add_word_counts_by_byte_scalar(cnt_lst_t &wc, const uint32_t wv) {
+    const std::span<uint32_t, 8> s0{&wc[0], &wc[8]};
+    const std::span<uint32_t, 8> s1{&wc[8], &wc[16]};
+    const std::span<uint32_t, 8> s2{&wc[16], &wc[24]};
+    const std::span<uint32_t, 8> s3{&wc[24], &wc[32]};
+    const uint8_t b0 = (wv >> 0) & 0xff;
+    const uint8_t b1 = (wv >> 8) & 0xff;
+    const uint8_t b2 = (wv >> 16) & 0xff;
+    const uint8_t b3 = (wv >> 24) & 0xff;
+    add_byte_counts_scalar(s0, b0);
+    add_byte_counts_scalar(s1, b1);
+    add_byte_counts_scalar(s2, b2);
+    add_byte_counts_scalar(s3, b3);
+}
+
+void add_half_counts(const std::span<uint32_t, 16> &bc, const uint16_t hv) {
+    constexpr int8x8_t bit_shifts{0, -1, -2, -3, -4, -5, -6, -7};
+    const uint8x8_t ones_u8x8 = vdup_n_u8(1);
+    const uint8x8_t vbvl      = vdup_n_u8(static_cast<uint8_t>(hv));
+    const uint8x8_t vbvh      = vdup_n_u8(static_cast<uint8_t>(hv >> 8));
+    const uint32x4x4_t vX     = vld1q_u32_x4(bc.data());
+    const uint8x8_t vbuml     = vshl_u8(vbvl, bit_shifts);
+    const uint8x8_t vbumh     = vshl_u8(vbvh, bit_shifts);
+    const uint8x8_t vbl       = vand_u8(vbuml, ones_u8x8);
+    const uint8x8_t vbh       = vand_u8(vbumh, ones_u8x8);
+    const uint16x8_t vbsl     = vmovl_u8(vbl);
+    const uint16x8_t vbsh     = vmovl_u8(vbh);
+    const uint32x4x4_t new_vX = {
+        vaddw_u16(vX.val[0], vget_low_u16(vbsl)),
+        vaddw_high_u16(vX.val[1], vbsl),
+        vaddw_u16(vX.val[2], vget_low_u16(vbsh)),
+        vaddw_high_u16(vX.val[3], vbsh),
+    };
+    vst1q_u32_x4(bc.data(), new_vX);
+}
+
+void add_word_counts_by_half(cnt_lst_t &wc, const uint32_t wv) {
+    const std::span<uint32_t, 16> s0{&wc[0], &wc[16]};
+    const std::span<uint32_t, 16> s1{&wc[16], &wc[32]};
+    const uint8_t h0 = (wv >> 0) & 0xffffu;
+    const uint8_t h1 = (wv >> 16) & 0xffffu;
+    add_half_counts(s0, h0);
+    add_half_counts(s1, h1);
+}
+
 void add_counts(const counts_t &addend, counts_t &accum) {
     for (size_t io = 0; io < accum.size(); ++io) {
         for (size_t ii = 0; ii < std::size(accum[io].val); ++ii) {
@@ -362,11 +423,13 @@ void add_counts(const counts_t &addend, counts_t &accum) {
 }
 
 int main(void) {
+#if USE_IO
     fmt::print("main\n");
     for (size_t i = 0; i < lut_nib.size(); ++i) {
         fmt::print("lut_nib[{:2d}]:\n", i);
         fmt::print("{:s}\n", format_vec128(lut_nib[i]));
         print_vec128(lut_nib[i]);
     }
+#endif
     return 0;
 }
