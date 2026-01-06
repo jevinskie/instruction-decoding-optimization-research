@@ -376,6 +376,10 @@ void add_word_counts(cnt_lst_t &wc, const uint32_t wv) {
     // add_byte_counts(s2, vdup_n_u8(b2));
     // add_byte_counts(s3, vdup_n_u8(b3));
     const uint8x8x4_t vb = vld4_u8(reinterpret_cast<const uint8_t *>(&wv));
+    add_byte_counts(s0, vb.val[0]);
+    add_byte_counts(s1, vb.val[1]);
+    add_byte_counts(s2, vb.val[2]);
+    add_byte_counts(s3, vb.val[3]);
 }
 
 void add_counts(const counts_t &addend, counts_t &accum) {
