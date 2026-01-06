@@ -3,9 +3,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <span>
 #include <string>
 #include <string_view>
-#include <type_traits>
 
 // clang-format off
 #include <fmt/format.h>
@@ -344,10 +344,38 @@ using counts_t = std::array<uint32x4x4_t, 2>;
 // UADDL vX.4d, vX.4d, v3.8s
 // UADDL2 vX+1.4d, vX+1.4d, v4.8s
 // ST2 [cnts_subspan], v{X, X+1}.4s
-void add_byte_counts(cnt_byte_lst_t &bc, const uint8_t bv) {
-    const uint8x8_t v0 = vdup_n_u8(bv);
-    constexpr int8x8_t bit_shifts{0, 1, 2, 3, 4, 5, 6, 7};
-    const uint8x8_t v1 = vshl_u8(v0, bit_shifts);
+void add_byte_counts(const std::span<uint32_t, 8> &bc, const uint8x8_t vbv) {
+    constexpr int8x8_t bit_shifts{0, -1, -2, -3, -4, -5, -6, -7};
+    const uint8x8_t vbum  = vshl_u8(vbv, bit_shifts);
+    const uint32x4x2_t vX = vld1q_u32_x2(bc.data());
+    const uint8x8_t vbm   = vdup_n_u8(1);
+    const uint8x8_t vb    = vand_u8(vbum, vbm);
+    const uint16x8_t vbs  = vmovl_u8(vb);
+    const uint16x4_t vbsl = vget_low_u16(vbs);
+    const uint16x4_t vbsh = vget_high_u16(vbs);
+
+    // const uint32x4_t new_vX0 = vaddw_u16(vX.val[0], vbsl);
+    // const uint32x4_t new_vX1 = vaddw_u16(vX.val[1], vbsh);
+    // const uint32x4_t new_vX1 = vaddw_high_u16(vX.val[1], vbs);
+    // const uint32x4x2_t new_VX = {new_vX0, new_vX1};
+    const uint32x4x2_t new_vX = {vaddw_u16(vX.val[0], vbsl), vaddw_high_u16(vX.val[1], vbs)};
+    vst1q_u32_x2(bc.data(), new_vX);
+}
+
+void add_word_counts(cnt_lst_t &wc, const uint32_t wv) {
+    const std::span<uint32_t, 8> s0{&wc[0], &wc[8]};
+    const std::span<uint32_t, 8> s1{&wc[8], &wc[16]};
+    const std::span<uint32_t, 8> s2{&wc[16], &wc[24]};
+    const std::span<uint32_t, 8> s3{&wc[24], &wc[32]};
+    // const uint8_t b0 = (wv >> 0) & 0xff;
+    // const uint8_t b1 = (wv >> 8) & 0xff;
+    // const uint8_t b2 = (wv >> 16) & 0xff;
+    // const uint8_t b3 = (wv >> 24) & 0xff;
+    // add_byte_counts(s0, vdup_n_u8(b0));
+    // add_byte_counts(s1, vdup_n_u8(b1));
+    // add_byte_counts(s2, vdup_n_u8(b2));
+    // add_byte_counts(s3, vdup_n_u8(b3));
+    const uint8x8x4_t vb = vld4_u8(reinterpret_cast<const uint8_t *>(&wv));
 }
 
 void add_counts(const counts_t &addend, counts_t &accum) {
