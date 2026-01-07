@@ -10,3 +10,9 @@
 [submodule "3rdparty/structopt"]
 	path = 3rdparty/structopt
 	url = https://github.com/p-ranav/structopt
+[submodule "3rdparty/benchmark"]
+	path = 3rdparty/benchmark
+	url = https://github.com/google/benchmark
+[submodule "3rdparty/googletest"]
+	path = 3rdparty/googletest
+	url = https://github.com/google/googletest

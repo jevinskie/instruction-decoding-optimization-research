@@ -1,13 +1,22 @@
 set(FMT_DOC OFF CACHE INTERNAL "")
 set(FMT_TEST OFF CACHE INTERNAL "")
-add_subdirectory(fmt)
+add_subdirectory(fmt EXCLUDE_FROM_ALL)
 
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 set(JSON_Install OFF CACHE INTERNAL "")
-add_subdirectory(json)
+add_subdirectory(json EXCLUDE_FROM_ALL)
 
 set(SCN_USE_NATIVE_ARCH ON CACHE INTERNAL "")
-add_subdirectory(scnlib)
-set_target_properties(scn PROPERTIES EXCLUDE_FROM_ALL ON)
+add_subdirectory(scnlib EXCLUDE_FROM_ALL)
 
 add_subdirectory(structopt)
+
+option(BUILD_GMOCK OFF)
+option(INSTALL_GTEST OFF)
+add_subdirectory(googletest EXCLUDE_FROM_ALL)
+option(BENCHMARK_ENABLE_TESTING OFF)
+option(BENCHMARK_ENABLE_LTO ON)
+option(BENCHMARK_ENABLE_INSTALL OFF)
+option(BENCHMARK_ENABLE_GTEST_TESTS OFF)
+option(BENCHMARK_USE_BUNDLED_GTEST OFF)
+add_subdirectory(benchmark EXCLUDE_FROM_ALL)

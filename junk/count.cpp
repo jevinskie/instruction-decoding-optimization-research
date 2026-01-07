@@ -7,6 +7,8 @@
 #include <string>
 #include <string_view>
 
+#include <benchmark/benchmark.h>
+
 #define USE_IO 0
 
 #if USE_IO
@@ -414,6 +416,37 @@ void add_word_counts_by_half(cnt_lst_t &wc, const uint32_t wv) {
     add_half_counts(s1, h1);
 }
 
+uint32x4x4_t add_half_counts_reg(const uint32x4x4_t vX, const uint16_t hv) {
+    constexpr int8x8_t bit_shifts{0, -1, -2, -3, -4, -5, -6, -7};
+    const uint8x8_t ones_u8x8 = vdup_n_u8(1);
+    const uint8x8_t vbvl      = vdup_n_u8(static_cast<uint8_t>(hv));
+    const uint8x8_t vbvh      = vdup_n_u8(static_cast<uint8_t>(hv >> 8));
+    const uint8x8_t vbuml     = vshl_u8(vbvl, bit_shifts);
+    const uint8x8_t vbumh     = vshl_u8(vbvh, bit_shifts);
+    const uint8x8_t vbl       = vand_u8(vbuml, ones_u8x8);
+    const uint8x8_t vbh       = vand_u8(vbumh, ones_u8x8);
+    const uint16x8_t vbsl     = vmovl_u8(vbl);
+    const uint16x8_t vbsh     = vmovl_u8(vbh);
+    const uint32x4x4_t new_vX = {
+        vaddw_u16(vX.val[0], vget_low_u16(vbsl)),
+        vaddw_high_u16(vX.val[1], vbsl),
+        vaddw_u16(vX.val[2], vget_low_u16(vbsh)),
+        vaddw_high_u16(vX.val[3], vbsh),
+    };
+    return new_vX;
+}
+
+void add_word_counts_by_half_reg(cnt_lst_t &wc, const uint32_t wv) {
+    const uint32x4x4_t vXL  = vld1q_u32_x4(&wc[0]);
+    const uint32x4x4_t vXH  = vld1q_u32_x4(&wc[16]);
+    const uint8_t h0        = (wv >> 0) & 0xffffu;
+    const uint8_t h1        = (wv >> 16) & 0xffffu;
+    const uint32x4x4_t rvXL = add_half_counts_reg(vXL, h0);
+    const uint32x4x4_t rvXH = add_half_counts_reg(vXH, h1);
+    vst1q_u32_x4(&wc[0], rvXL);
+    vst1q_u32_x4(&wc[16], rvXH);
+}
+
 void add_counts(const counts_t &addend, counts_t &accum) {
     for (size_t io = 0; io < accum.size(); ++io) {
         for (size_t ii = 0; ii < std::size(accum[io].val); ++ii) {
@@ -422,6 +455,7 @@ void add_counts(const counts_t &addend, counts_t &accum) {
     }
 }
 
+#if 0
 int main(void) {
 #if USE_IO
     fmt::print("main\n");
@@ -433,3 +467,21 @@ int main(void) {
 #endif
     return 0;
 }
+#endif
+
+static void BM_StringCreation(benchmark::State &state) {
+    for (auto _ : state)
+        std::string empty_string;
+}
+// Register the function as a benchmark
+BENCHMARK(BM_StringCreation);
+
+// Define another benchmark
+static void BM_StringCopy(benchmark::State &state) {
+    std::string x = "hello";
+    for (auto _ : state)
+        std::string copy(x);
+}
+BENCHMARK(BM_StringCopy);
+
+BENCHMARK_MAIN();
