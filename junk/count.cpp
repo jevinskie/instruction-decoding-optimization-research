@@ -109,7 +109,8 @@ static constexpr std::array<cnt_neon_t, 16> lut_nib{{{0, 0, 0, 0},
                                                      {1, 1, 1, 1}}};
 
 // seed 0x79e826be seems lucky
-static constexpr uint32_t xorshift32_seed = 0x79e826be;
+// static constexpr uint32_t xorshift32_seed = 0x79e826be;
+static constexpr uint32_t xorshift32_seed = 0x7a56'943c;
 
 [[gnu::always_inline]]
 static constexpr uint32_t xorshift32(uint32_t y) {
@@ -440,6 +441,58 @@ void add_word_counts_by_byte_scalar(cnt_lst_t &wc, const uint32_t wv) {
     add_byte_counts_scalar(s3, b3);
 }
 
+uint32x4x2_t add_byte_counts_reg(const uint32x4x2_t vX, const uint8_t bv) {
+    constexpr int8x8_t bit_shifts{0, -1, -2, -3, -4, -5, -6, -7};
+    const uint8x8_t vbum      = vshl_u8(vdup_n_u8(bv), bit_shifts);
+    const uint8x8_t vb        = vand_u8(vbum, vdup_n_u8(1));
+    const uint16x8_t vbs      = vmovl_u8(vb);
+    const uint32x4x2_t new_vX = {vaddw_u16(vX.val[0], vget_low_u16(vbs)),
+                                 vaddw_high_u16(vX.val[1], vbs)};
+    return new_vX;
+}
+
+void add_word_counts_by_byte_reg(cnt_lst_t &wc, const uint32_t wv) {
+    const std::span<uint32_t, 8> s0{&wc[0], &wc[8]};
+    const std::span<uint32_t, 8> s1{&wc[8], &wc[16]};
+    const std::span<uint32_t, 8> s2{&wc[16], &wc[24]};
+    const std::span<uint32_t, 8> s3{&wc[24], &wc[32]};
+    const uint8_t b0 = (wv >> 0) & 0xff;
+    const uint8_t b1 = (wv >> 8) & 0xff;
+    const uint8_t b2 = (wv >> 16) & 0xff;
+    const uint8_t b3 = (wv >> 24) & 0xff;
+    const auto v0    = vld1q_u32_x2(s0.data());
+    const auto v1    = vld1q_u32_x2(s0.data());
+    const auto v2    = vld1q_u32_x2(s0.data());
+    const auto v3    = vld1q_u32_x2(s0.data());
+    const auto nv0   = add_byte_counts_reg(v0, b0);
+    const auto nv1   = add_byte_counts_reg(v1, b1);
+    const auto nv2   = add_byte_counts_reg(v2, b2);
+    const auto nv3   = add_byte_counts_reg(v3, b3);
+    vst1q_u32_x2(s0.data(), nv0);
+    vst1q_u32_x2(s1.data(), nv1);
+    vst1q_u32_x2(s2.data(), nv2);
+    vst1q_u32_x2(s3.data(), nv3);
+}
+
+void add_word_counts_by_byte_reg_cond(cnt_lst_t &wc, const uint32_t wv) {
+    if (const uint8_t b0 = (wv >> 0) & 0xff) {
+        const std::span<uint32_t, 8> s0{&wc[0], &wc[8]};
+        vst1q_u32_x2(s0.data(), add_byte_counts_reg(vld1q_u32_x2(s0.data()), b0));
+    }
+    if (const uint8_t b1 = (wv >> 8) & 0xff) {
+        const std::span<uint32_t, 8> s1{&wc[8], &wc[16]};
+        vst1q_u32_x2(s1.data(), add_byte_counts_reg(vld1q_u32_x2(s1.data()), b1));
+    }
+    if (const uint8_t b2 = (wv >> 16) & 0xff) {
+        const std::span<uint32_t, 8> s2{&wc[16], &wc[24]};
+        vst1q_u32_x2(s2.data(), add_byte_counts_reg(vld1q_u32_x2(s2.data()), b2));
+    }
+    if (const uint8_t b3 = (wv >> 24) & 0xff) {
+        const std::span<uint32_t, 8> s3{&wc[24], &wc[32]};
+        vst1q_u32_x2(s3.data(), add_byte_counts_reg(vld1q_u32_x2(s3.data()), b3));
+    }
+}
+
 void add_half_counts(const std::span<uint32_t, 16> &bc, const uint16_t hv) {
     constexpr int8x8_t bit_shifts{0, -1, -2, -3, -4, -5, -6, -7};
     const uint8x8_t ones_u8x8 = vdup_n_u8(1);
@@ -470,7 +523,7 @@ void add_word_counts_by_half(cnt_lst_t &wc, const uint32_t wv) {
     add_half_counts(s1, h1);
 }
 
-uint32x4x4_t add_half_counts_reg(const uint32x4x4_t vX, const uint16_t hv) {
+static uint32x4x4_t add_half_counts_reg(const uint32x4x4_t vX, const uint16_t hv) {
     constexpr int8x8_t bit_shifts{0, -1, -2, -3, -4, -5, -6, -7};
     const uint8x8_t ones_u8x8 = vdup_n_u8(1);
     const uint8x8_t vbvl      = vdup_n_u8(static_cast<uint8_t>(hv));
@@ -490,7 +543,7 @@ uint32x4x4_t add_half_counts_reg(const uint32x4x4_t vX, const uint16_t hv) {
     return new_vX;
 }
 
-void add_word_counts_by_half_reg(cnt_lst_t &wc, const uint32_t wv) {
+static void add_word_counts_by_half_reg(cnt_lst_t &wc, const uint32_t wv) {
     const uint32x4x4_t vXL  = vld1q_u32_x4(&wc[0]);
     const uint32x4x4_t vXH  = vld1q_u32_x4(&wc[16]);
     const uint8_t h0        = (wv >> 0) & 0xffffu;
@@ -601,6 +654,28 @@ static void BM_NeonByte(benchmark::State &state) {
     }
 }
 BENCHMARK(BM_NeonByte);
+
+static void BM_NeonByteReg(benchmark::State &state) {
+    uint32_t r = xorshift32_seed;
+    alignas(uint32x4x4_t) cnt_lst_t cnts{};
+    for (auto _ : state) {
+        r = xorshift32(r);
+        add_word_counts_by_byte_reg(cnts, r);
+        USE_CNTS(cnts);
+    }
+}
+BENCHMARK(BM_NeonByteReg);
+
+static void BM_NeonByteRegCond(benchmark::State &state) {
+    uint32_t r = xorshift32_seed;
+    alignas(uint32x4x4_t) cnt_lst_t cnts{};
+    for (auto _ : state) {
+        r = xorshift32(r);
+        add_word_counts_by_byte_reg_cond(cnts, r);
+        USE_CNTS(cnts);
+    }
+}
+BENCHMARK(BM_NeonByteRegCond);
 
 static void BM_NeonHalf(benchmark::State &state) {
     uint32_t r = xorshift32_seed;
