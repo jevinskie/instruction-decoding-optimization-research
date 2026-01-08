@@ -27,12 +27,26 @@ xs32_patterns = [
     "y^=y>>c; y^=y>>a; y^=y<<b;",
 ]
 
-c = StringList()
-c @= """
-#include <stdint.h>
 
-#error hello
-# """.splitlines()
+def lssl(s: str) -> list[str]:
+    return s.lstrip().splitlines()
+
+
+c = StringList()
+c @= lssl("""
+#include <stdint.h>
+""")
+
+for trip_idx, trip in enumerate(xs32_triples):
+    for pat_idx, pat in enumerate(xs32_patterns):
+        pat = (
+            pat
+            .replace("a", f"{trip[0]:2d}")
+            .replace("b", f"{trip[1]:2d}")
+            .replace("c", f"{trip[2]:2d}")
+        )
+        c @= f"uint32_t trip_{trip[0]:02d}_{trip[1]:02d}_{trip[2]:02d}_pat_{pat_idx}(uint32_t y) {{ {pat} return y; }}"
+
 
 with open("xs32.c", "w") as f:
     f.write(str(c))

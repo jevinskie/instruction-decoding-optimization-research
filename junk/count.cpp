@@ -7,9 +7,12 @@
 #include <string>
 #include <string_view>
 
-#include <benchmark/benchmark.h>
-
+#ifndef USE_IO
 #define USE_IO 0
+#endif
+#ifndef USE_BENCH
+#define USE_BENCH 0
+#endif
 
 #if USE_IO
 // clang-format off
@@ -18,6 +21,46 @@
 #include <fmt/ranges.h>
 #include <fmt/std.h>
 // clang-format on
+#endif
+
+#if USE_BENCH
+#include <benchmark/benchmark.h>
+
+#define USE_CNTS(cnts)                      \
+    do {                                    \
+        benchmark::DoNotOptimize(cnts[0]);  \
+        benchmark::DoNotOptimize(cnts[1]);  \
+        benchmark::DoNotOptimize(cnts[2]);  \
+        benchmark::DoNotOptimize(cnts[3]);  \
+        benchmark::DoNotOptimize(cnts[4]);  \
+        benchmark::DoNotOptimize(cnts[5]);  \
+        benchmark::DoNotOptimize(cnts[6]);  \
+        benchmark::DoNotOptimize(cnts[7]);  \
+        benchmark::DoNotOptimize(cnts[8]);  \
+        benchmark::DoNotOptimize(cnts[9]);  \
+        benchmark::DoNotOptimize(cnts[10]); \
+        benchmark::DoNotOptimize(cnts[11]); \
+        benchmark::DoNotOptimize(cnts[12]); \
+        benchmark::DoNotOptimize(cnts[13]); \
+        benchmark::DoNotOptimize(cnts[14]); \
+        benchmark::DoNotOptimize(cnts[15]); \
+        benchmark::DoNotOptimize(cnts[16]); \
+        benchmark::DoNotOptimize(cnts[17]); \
+        benchmark::DoNotOptimize(cnts[18]); \
+        benchmark::DoNotOptimize(cnts[19]); \
+        benchmark::DoNotOptimize(cnts[20]); \
+        benchmark::DoNotOptimize(cnts[21]); \
+        benchmark::DoNotOptimize(cnts[22]); \
+        benchmark::DoNotOptimize(cnts[23]); \
+        benchmark::DoNotOptimize(cnts[24]); \
+        benchmark::DoNotOptimize(cnts[25]); \
+        benchmark::DoNotOptimize(cnts[26]); \
+        benchmark::DoNotOptimize(cnts[27]); \
+        benchmark::DoNotOptimize(cnts[28]); \
+        benchmark::DoNotOptimize(cnts[29]); \
+        benchmark::DoNotOptimize(cnts[30]); \
+        benchmark::DoNotOptimize(cnts[31]); \
+    } while (0)
 #endif
 
 using cnt_t                        = uint32_t;
@@ -64,6 +107,17 @@ static constexpr std::array<cnt_neon_t, 16> lut_nib{{{0, 0, 0, 0},
                                                      {1, 1, 0, 1},
                                                      {1, 1, 1, 0},
                                                      {1, 1, 1, 1}}};
+
+// seed 0x79e826be seems lucky
+static constexpr uint32_t xorshift32_seed = 0x79e826be;
+
+[[gnu::always_inline]]
+static constexpr uint32_t xorshift32(uint32_t y) {
+    y ^= y << 13;
+    y ^= y >> 17;
+    y ^= y << 5;
+    return y;
+}
 
 #if USE_IO
 void print_counts(const cnt_lst_t &cnt) {
@@ -284,7 +338,7 @@ void count_autovec(val_t val, cnt_lst_t &cnt) {
 }
 
 void count_neon(val_t val, cnt_neon_lst_t &vcnt) {
-    cnt_neon_lst_t addend;
+    cnt_neon_lst_t addend{};
     if (val & 0x00FFu) {
         addend[0] = lut_nib[(val >> 0) & 0xFu];
         addend[1] = lut_nib[(val >> 4) & 0xFu];
@@ -312,8 +366,8 @@ constexpr uint64_t expand_8_to_64(uint8_t v) {
            0x0101010101010101ull;
 }
 
-void count_swar(val_t val, cnt_neon_lst_t &vcnt) {
-    cnt_neon_lst_t addend;
+void count_swar(val_t val, cnt_lst_t &cnt) {
+    cnt_lst_t addend{};
     uint64_t a, b, c, d = 0;
     if (const uint8_t bv = (val >> 0) & 0xFFu) {
         a = expand_8_to_64(bv);
@@ -327,8 +381,8 @@ void count_swar(val_t val, cnt_neon_lst_t &vcnt) {
     if (const uint8_t bv = (val >> 24) & 0xFFu) {
         d = expand_8_to_64(bv);
     }
-    for (int i = 0; i < vcnt.size(); ++i) {
-        vcnt[i] += addend[i];
+    for (int i = 0; i < cnt.size(); ++i) {
+        cnt[i] += addend[i];
     }
 }
 
@@ -469,20 +523,95 @@ int main(void) {
 }
 #endif
 
-static void BM_StringCreation(benchmark::State &state) {
-    for (auto _ : state)
-        std::string empty_string;
-    // state.SetBytesProcessed(state.iterations() * state.range(0));
+#if USE_BENCH
+static void BM_Empty(benchmark::State &state) {
+    for (auto _ : state) {
+        benchmark::DoNotOptimize(_);
+    }
 }
-// Register the function as a benchmark
-BENCHMARK(BM_StringCreation);
+BENCHMARK(BM_Empty);
 
-// Define another benchmark
-static void BM_StringCopy(benchmark::State &state) {
-    std::string x = "hello";
-    for (auto _ : state)
-        std::string copy(x);
+static void BM_Increment(benchmark::State &state) {
+    uint32_t i = xorshift32_seed;
+    for (auto _ : state) {
+        ++i;
+        benchmark::DoNotOptimize(i);
+    }
 }
-BENCHMARK(BM_StringCopy);
+BENCHMARK(BM_Increment);
+
+static void BM_Multiply(benchmark::State &state) {
+    uint32_t i = xorshift32_seed;
+    for (auto _ : state) {
+        i *= i;
+        benchmark::DoNotOptimize(i);
+    }
+}
+BENCHMARK(BM_Multiply);
+
+static void BM_PRNG(benchmark::State &state) {
+    uint32_t r = xorshift32_seed;
+    for (auto _ : state) {
+        r = xorshift32(r);
+        benchmark::DoNotOptimize(r);
+    }
+}
+BENCHMARK(BM_PRNG);
+
+static void BM_Orig(benchmark::State &state) {
+    uint32_t r = xorshift32_seed;
+    alignas(uint32x4x4_t) cnt_lst_t cnts{};
+    for (auto _ : state) {
+        r = xorshift32(r);
+        count_orig(r, cnts);
+        USE_CNTS(cnts);
+    }
+}
+BENCHMARK(BM_Orig);
+
+static void BM_SWAR(benchmark::State &state) {
+    uint32_t r = xorshift32_seed;
+    alignas(uint32x4x4_t) cnt_lst_t cnts{};
+    for (auto _ : state) {
+        r = xorshift32(r);
+        count_swar(r, cnts);
+        USE_CNTS(cnts);
+    }
+}
+BENCHMARK(BM_SWAR);
+
+static void BM_Autovec(benchmark::State &state) {
+    uint32_t r = xorshift32_seed;
+    alignas(uint32x4x4_t) cnt_lst_t cnts{};
+    for (auto _ : state) {
+        r = xorshift32(r);
+        count_autovec(r, cnts);
+        USE_CNTS(cnts);
+    }
+}
+BENCHMARK(BM_Autovec);
+
+static void BM_NeonByte(benchmark::State &state) {
+    uint32_t r = xorshift32_seed;
+    alignas(uint32x4x4_t) cnt_lst_t cnts{};
+    for (auto _ : state) {
+        r = xorshift32(r);
+        add_word_counts_by_byte(cnts, r);
+        USE_CNTS(cnts);
+    }
+}
+BENCHMARK(BM_NeonByte);
+
+static void BM_NeonHalf(benchmark::State &state) {
+    uint32_t r = xorshift32_seed;
+    alignas(uint32x4x4_t) cnt_lst_t cnts{};
+    for (auto _ : state) {
+        r = xorshift32(r);
+        add_word_counts_by_half_reg(cnts, r);
+        USE_CNTS(cnts);
+    }
+}
+BENCHMARK(BM_NeonHalf);
 
 BENCHMARK_MAIN();
+#endif // USE_BENCH
