@@ -472,6 +472,7 @@ int main(void) {
 static void BM_StringCreation(benchmark::State &state) {
     for (auto _ : state)
         std::string empty_string;
+    // state.SetBytesProcessed(state.iterations() * state.range(0));
 }
 // Register the function as a benchmark
 BENCHMARK(BM_StringCreation);
