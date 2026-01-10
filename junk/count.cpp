@@ -517,8 +517,8 @@ void add_half_counts(const std::span<uint32_t, 16> &bc, const uint16_t hv) {
 void add_word_counts_by_half(cnt_lst_t &wc, const uint32_t wv) {
     const std::span<uint32_t, 16> s0{&wc[0], &wc[16]};
     const std::span<uint32_t, 16> s1{&wc[16], &wc[32]};
-    const uint8_t h0 = (wv >> 0) & 0xffffu;
-    const uint8_t h1 = (wv >> 16) & 0xffffu;
+    const uint16_t h0 = (wv >> 0) & 0xffffu;
+    const uint16_t h1 = (wv >> 16) & 0xffffu;
     add_half_counts(s0, h0);
     add_half_counts(s1, h1);
 }
@@ -546,8 +546,8 @@ static uint32x4x4_t add_half_counts_reg(const uint32x4x4_t vX, const uint16_t hv
 static void add_word_counts_by_half_reg(cnt_lst_t &wc, const uint32_t wv) {
     const uint32x4x4_t vXL  = vld1q_u32_x4(&wc[0]);
     const uint32x4x4_t vXH  = vld1q_u32_x4(&wc[16]);
-    const uint8_t h0        = (wv >> 0) & 0xffffu;
-    const uint8_t h1        = (wv >> 16) & 0xffffu;
+    const uint16_t h0       = (wv >> 0) & 0xffffu;
+    const uint16_t h1       = (wv >> 16) & 0xffffu;
     const uint32x4x4_t rvXL = add_half_counts_reg(vXL, h0);
     const uint32x4x4_t rvXH = add_half_counts_reg(vXH, h1);
     vst1q_u32_x4(&wc[0], rvXL);
@@ -617,8 +617,9 @@ static void BM_Orig(benchmark::State &state) {
     for (auto _ : state) {
         r = xorshift32(r);
         count_orig(r, cnts);
-        USE_CNTS(cnts);
+        // USE_CNTS(cnts);
     }
+    USE_CNTS(cnts);
 }
 BENCHMARK(BM_Orig);
 
@@ -628,8 +629,9 @@ static void BM_SWAR(benchmark::State &state) {
     for (auto _ : state) {
         r = xorshift32(r);
         count_swar(r, cnts);
-        USE_CNTS(cnts);
+        // USE_CNTS(cnts);
     }
+    USE_CNTS(cnts);
 }
 BENCHMARK(BM_SWAR);
 
@@ -639,8 +641,9 @@ static void BM_Autovec(benchmark::State &state) {
     for (auto _ : state) {
         r = xorshift32(r);
         count_autovec(r, cnts);
-        USE_CNTS(cnts);
+        // USE_CNTS(cnts);
     }
+    USE_CNTS(cnts);
 }
 BENCHMARK(BM_Autovec);
 
@@ -650,8 +653,9 @@ static void BM_NeonByte(benchmark::State &state) {
     for (auto _ : state) {
         r = xorshift32(r);
         add_word_counts_by_byte(cnts, r);
-        USE_CNTS(cnts);
+        // USE_CNTS(cnts);
     }
+    USE_CNTS(cnts);
 }
 BENCHMARK(BM_NeonByte);
 
@@ -661,8 +665,9 @@ static void BM_NeonByteReg(benchmark::State &state) {
     for (auto _ : state) {
         r = xorshift32(r);
         add_word_counts_by_byte_reg(cnts, r);
-        USE_CNTS(cnts);
+        // USE_CNTS(cnts);
     }
+    USE_CNTS(cnts);
 }
 BENCHMARK(BM_NeonByteReg);
 
@@ -672,8 +677,9 @@ static void BM_NeonByteRegCond(benchmark::State &state) {
     for (auto _ : state) {
         r = xorshift32(r);
         add_word_counts_by_byte_reg_cond(cnts, r);
-        USE_CNTS(cnts);
+        // USE_CNTS(cnts);
     }
+    USE_CNTS(cnts);
 }
 BENCHMARK(BM_NeonByteRegCond);
 
@@ -683,10 +689,11 @@ static void BM_NeonHalf(benchmark::State &state) {
     for (auto _ : state) {
         r = xorshift32(r);
         add_word_counts_by_half_reg(cnts, r);
-        USE_CNTS(cnts);
+        // USE_CNTS(cnts);
     }
+    USE_CNTS(cnts);
 }
 BENCHMARK(BM_NeonHalf);
 
-BENCHMARK_MAIN();
+// BENCHMARK_MAIN();
 #endif // USE_BENCH
